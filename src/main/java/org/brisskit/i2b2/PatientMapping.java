@@ -4,6 +4,7 @@
 package org.brisskit.i2b2;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -24,7 +25,7 @@ public class PatientMapping {
 			"INSERT INTO <DB_SCHEMA_NAME>.PATIENT_MAPPING" +
 			    "( PATIENT_IDE" + 			//  VARCHAR(200)  NOT NULL,
 			    ", PATIENT_IDE_SOURCE" + 	//	VARCHAR(50)  NOT NULL,
-			    ", PATIENT_NUM" + 			//  INT NOT NULL,
+//			    ", PATIENT_NUM" + 			//  INT NOT NULL,
 			    ", PATIENT_IDE_STATUS" + 	//	VARCHAR(50) NULL,
 			    ", PROJECT_ID" + 			//  VARCHAR(50) NOT NULL,
 			    ", UPLOAD_DATE" + 			//  TIMESTAMP NULL,
@@ -36,7 +37,7 @@ public class PatientMapping {
 			"VALUES" +
 			   "( <PATIENT_IDE>" +
 			   ", <PATIENT_IDE_SOURCE>" +
-			   ", <PATIENT_NUM>" +
+//			   ", <PATIENT_NUM>" +
 			   ", <PATIENT_IDE_STATUS>" +         
 			   ", <PROJECT_ID>" +   
 			   ", now()" +
@@ -72,7 +73,7 @@ public class PatientMapping {
 			
 			sqlCmd = sqlCmd.replace( "<PATIENT_IDE>", utils.enfoldString( patient_ide ) ) ;
 			sqlCmd = sqlCmd.replace( "<PATIENT_IDE_SOURCE>", utils.enfoldString( patient_ide_source ) ) ;
-			sqlCmd = sqlCmd.replace( "<PATIENT_NUM>", utils.enfoldInteger( patient_num ) ) ;
+//			sqlCmd = sqlCmd.replace( "<PATIENT_NUM>", utils.enfoldInteger( patient_num ) ) ;
 			sqlCmd = sqlCmd.replace( "<PATIENT_IDE_STATUS>", utils.enfoldNullableString( patient_ide_status ) ) ;
 			sqlCmd = sqlCmd.replace( "<PROJECT_ID>", utils.enfoldString( project_id ) ) ;
 			// UPLOAD_DATE		defaults to now()
@@ -85,7 +86,10 @@ public class PatientMapping {
 			Statement st = connection.createStatement();
 			
 			st.execute( sqlCmd ) ;
-
+			ResultSet rs = st.executeQuery( "select currval( 'PATIENT_MAPPING_PATIENT_NUM_seq');" ) ;
+			rs.next();
+			patient_num = rs.getInt(1) ;		
+			rs.close() ;
 		}
 		catch( SQLException sqlx ) {
 			throw new UploaderException( "Failed to insert into patient mapping.", sqlx ) ;
@@ -136,9 +140,9 @@ public class PatientMapping {
 	}
 
 
-	public void setPatient_num(Integer patient_num) {
-		this.patient_num = patient_num;
-	}
+//	public void setPatient_num(Integer patient_num) {
+//		this.patient_num = patient_num;
+//	}
 	
 	public Integer getPatient_num() {
 		return this.patient_num ;

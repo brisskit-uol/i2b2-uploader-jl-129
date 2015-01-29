@@ -124,9 +124,6 @@ public class I2B2Project {
     //
     // Initial encounter number
     private int encounterNumber = 1 ;
-    //
-    // Initial patient number
-    private int patientNumber = 1 ;
     
     private Map<String,Integer> patientMappings = new HashMap<String,Integer>() ;
     
@@ -531,14 +528,11 @@ public class I2B2Project {
 				} // end of inner while - processing cell	
 				
 				//
-				// We set the internal i2b2 number for the mapping to source...
-				// NB: patientNumber must only be changed in the current method!!!!
-				pMap.setPatient_num( patientNumber++ ) ;
-				this.patientMappings.put( pMap.getPatient_ide(), pMap.getPatient_num() ) ;
-				
-				//
 				// Write mapping to i2b2
 				pMap.serializeToDatabase( Base.getSimpleConnectionPG() ) ;
+				//
+				// Record the mapping between external id and internal id...
+				this.patientMappings.put( pMap.getPatient_ide(), pMap.getPatient_num() ) ;
 				
 			} // end of outer while - processing row
 			
@@ -620,8 +614,8 @@ public class I2B2Project {
 					else if( name.equalsIgnoreCase( "id" ) ) {
 						//
 						// We do not expect the spreadsheet to contain the i2b2 internal patient number,
-						// but we can use the source-system id to retrieve the internal number we gave 
-						// the patient at patient mapping time...
+						// but we can use the source-system id to retrieve the internal number generated
+						// at patient mapping time...
 						String sourceSystemPatientID = value ;
 						pDim.setPatient_num( patientMappings.get( sourceSystemPatientID ) ) ;
 						//
@@ -1176,9 +1170,12 @@ public class I2B2Project {
 			enterTrace( "I2B2Project.Factory.newInstance()" ) ;
 			I2B2Project project = new I2B2Project( projectId, userName ) ;
 			try {
-				if( !projectExists( project ) ) {
+				if( projectExists( project ) ) {
+					
+				}
+				else {
 					CreateDBPG.createI2B2Database( projectId, userName );
-				}				
+				}
 				return project ;
 			}
 			finally {
@@ -1227,7 +1224,9 @@ public class I2B2Project {
 				return exists ;
 			}
 			catch( SQLException sqlx ) {
-				throw new UploaderException( "Could not confirm project existed or not. Project id: " + project.getProjectId(), sqlx ) ;
+				String message =  "Could not confirm project existed or not. Project id: " + project.getProjectId() ;
+				log.error( message, sqlx ) ;
+				throw new UploaderException( message, sqlx ) ;
 			}
 			finally {
 				exitTrace( "I2B2Project.Factory.projectExists()" ) ;

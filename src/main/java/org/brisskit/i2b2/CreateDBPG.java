@@ -221,6 +221,12 @@ public class CreateDBPG extends Base {
 					                       + System.getProperty( "file.separator") 
 					                       + fileName 
 					                       + ".deployed" ) ) ;
+			
+			//
+			// Attempt to delete the real ds file...
+			Files.deleteIfExists( Paths.get( jboss_deploy_dir 
+					                       + System.getProperty( "file.separator") 
+					                       + fileName ) ) ;
 	
 		}
 		catch( Exception ex ) {
