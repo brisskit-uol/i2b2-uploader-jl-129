@@ -35,12 +35,8 @@ public class I2B2ProjectTests extends TestCase {
 	public void testI2B2Project() {
 		
 		try {
-			I2B2Project project = new I2B2Project( "project1"
-					 , "kjshf"
-                    , new File( "somespreadsheet.xls" ) ) ;
-
+			I2B2Project project = I2B2Project.Factory._newInstance( "project1", "kjshf" ) ;
 			assert( project.getProjectId().equals( "project1" ) ) ;
-			assert( project.getSpreadsheetFile().getName().equals( "somespreadsheet.xls" ) ) ;
 		}
 		catch( UploaderException cex ) {			
 			cex.printStackTrace( System.out ) ;
@@ -56,12 +52,41 @@ public class I2B2ProjectTests extends TestCase {
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/EG1-laheart.xlsx").getFile());
 //		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/GP_CUT1.xlsx").getFile());		
 		try {
-			I2B2Project project = new I2B2Project( "laheart"
-                    , "qwerty"
-                    , spreadsheetFile ) ;
-			project.deleteProject() ;
-			project.createDBArtifacts() ;
-			project.processSpreadsheet() ;
+			I2B2Project project = I2B2Project.Factory._newInstance( "laheart", "qwerty" ) ;
+			if( I2B2Project.Factory.projectExists( project ) ) {
+				I2B2Project.Factory.destroy( project ) ;
+			}	
+			project = I2B2Project.Factory.newInstance( "laheart", "qwerty" ) ;
+			project.processSpreadsheet( spreadsheetFile ) ;
+		}
+		catch( UploaderException cex ) {			
+			cex.printStackTrace( System.out ) ;
+			fail( "CreationException thrown: " + cex.getLocalizedMessage() ) ;
+		}
+		
+	}
+	
+	
+	public void testDeletion() { 
+		
+		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-02.xls").getFile());
+//		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/EG1-laheart.xlsx").getFile());
+//		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/GP_CUT1.xlsx").getFile());		
+		try {
+			//
+			// First create the project (and deploy to JBoss)
+			I2B2Project project = I2B2Project.Factory.newInstance( "test02dele", "qwerty" ) ;
+			project.processSpreadsheet( spreadsheetFile ) ;
+			//
+			// Wait until JBoss gets a chance to deploy it...
+			try { 
+				Thread.sleep( 60000 ) ;
+			}
+			catch( InterruptedException iex ) {
+				;
+			}
+			I2B2Project.Factory.destroy( project ) ;
+			
 		}
 		catch( UploaderException cex ) {			
 			cex.printStackTrace( System.out ) ;
@@ -71,15 +96,16 @@ public class I2B2ProjectTests extends TestCase {
 	}
 
 	
-//	public void testDeleteProject() {
-//		try {
-//			I2B2Project.deleteProject( "laheart" ) ;
-//		}
-//		catch( UploaderException cex ) {			
-//			cex.printStackTrace( System.out ) ;
-//			fail( "CreationException thrown: " + cex.getLocalizedMessage() ) ;
-//		}
-//	}
+	public void testDeletionOfNonExistentProject() {
+		try {
+			I2B2Project project = I2B2Project.Factory._newInstance( "projectX", "qwerty" ) ;
+			I2B2Project.Factory.destroy( project ) ;
+			fail( "Should not be able to delete a non-existent project: projectX" ) ;
+		}
+		catch( UploaderException cex ) {			
+			
+		}
+	}
 
 	public void testReadSpreadsheet() {
 		
@@ -88,7 +114,8 @@ public class I2B2ProjectTests extends TestCase {
 
 		
 		try {
-			I2B2Project project = new I2B2Project( "infarction", "kjshf", spreadsheetFile ) ;
+			I2B2Project project = I2B2Project.Factory._newInstance( "infarction", "kjshf" ) ;
+			project.setSpreadsheetFile( spreadsheetFile ) ;
 			project.readSpreadsheet() ;
 			
 			Row columnNames = project.getColumnNames() ;

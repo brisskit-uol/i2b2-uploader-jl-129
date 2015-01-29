@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.ParseException;
@@ -151,57 +152,20 @@ public class I2B2Project {
     //
     // projectId must be alpha-numeric starting with an alpha,
     // and with no spaces.
-    public I2B2Project( String projectId
-    				  , String userName
-    		          , File spreadsheetFile ) throws UploaderException {
+    private I2B2Project( String projectId
+    				   , String userName ) throws UploaderException {
     	enterTrace( "I2B2Project()" ) ;
     	this.projectId = projectId ;
     	this.userName = userName ;
-    	this.spreadsheetFile = spreadsheetFile ;
     	CreateDBPG.setUp() ;
     	exitTrace( "I2B2Project()" ) ;
     }
     
     
-    public void createDBArtifacts() throws UploaderException {
-		enterTrace( "I2B2Project.createDBArtifacts()" ) ;
-		try {
-			CreateDBPG.createI2B2Database( projectId, userName );
-		}
-		finally {
-			exitTrace( "I2B2Project.createDBArtifacts()" ) ;
-		}
-	}
-    
-    
-    /**
-     * This will delete a project and all of its data.
-     * 
-     * 
-     * @throws UploaderException
-     */
-    public void deleteProject() throws UploaderException {
-		enterTrace( "i2b2Project.deleteProject()" ) ;
-		try {
-			String sqlCmd = COMPLETELY_DELETE_PROJECT_SQL_COMMAND ;							
-			sqlCmd = sqlCmd.replaceAll( "<DB_SCHEMA_NAME>", projectId ) ;
-			sqlCmd = sqlCmd.replace( "<DB_USER_NAME>", projectId ) ;
-			sqlCmd = sqlCmd.replace( "<PROJECT_ID>", projectId ) ;
-			Statement st = Base.getSimpleConnectionPG().createStatement() ;
-			st.execute( sqlCmd ) ;				
-		}
-		catch( SQLException sqlex ) {
-			throw new UploaderException( sqlex ) ;
-		}
-		finally {
-			exitTrace( "i2b2Project.deleteProject()" ) ;
-		}
-	}
-    
-    
-    public void processSpreadsheet() throws UploaderException {
+    public synchronized void processSpreadsheet( File spreadSheetFile ) throws UploaderException {
     	enterTrace( "I2B2Project.processSpreadsheet" ) ;
     	try {
+    		this.spreadsheetFile = spreadSheetFile ;
     		readSpreadsheet() ;
 			produceOntology() ;
 			producePatientMapping() ;
@@ -1163,6 +1127,10 @@ public class I2B2Project {
 	}
 
 
+	protected void setSpreadsheetFile( File file )  {
+		this.spreadsheetFile = file ;
+	}
+	
 	public File getSpreadsheetFile() {
 		return spreadsheetFile;
 	}
@@ -1200,6 +1168,88 @@ public class I2B2Project {
 	public ArrayList<ObservationFact> getObservatonFacts() {
 		return observatonFacts;
 	}
+	
+	public static class Factory {
+		
+		public static I2B2Project newInstance( String projectId
+				                             , String userName ) throws UploaderException {
+			enterTrace( "I2B2Project.Factory.newInstance()" ) ;
+			I2B2Project project = new I2B2Project( projectId, userName ) ;
+			try {
+				if( !projectExists( project ) ) {
+					CreateDBPG.createI2B2Database( projectId, userName );
+				}				
+				return project ;
+			}
+			finally {
+				exitTrace( "I2B2Project.Factory.newInstance()" ) ;
+			}
+		}
+		
+		
+		public static void destroy( I2B2Project project ) throws UploaderException {
+			enterTrace( "I2B2Project.Factory.destroy()" ) ;
+			try {
+				if( projectExists( project ) ) {
+					String sqlCmd = COMPLETELY_DELETE_PROJECT_SQL_COMMAND ;							
+					sqlCmd = sqlCmd.replaceAll( "<DB_SCHEMA_NAME>", project.getProjectId() ) ;
+					sqlCmd = sqlCmd.replace( "<DB_USER_NAME>", project.getProjectId() ) ;
+					sqlCmd = sqlCmd.replace( "<PROJECT_ID>", project.getProjectId() ) ;
+					Statement st = Base.getSimpleConnectionPG().createStatement() ;
+					st.execute( sqlCmd ) ;
+					CreateDBPG.undeployFromJBoss( project.getProjectId() ) ;
+				}	
+				else {
+					throw new UploaderException( "Cannot delete non-existent project: " + project.getProjectId() ) ;
+				}
+			}
+			catch( SQLException sqlex ) {
+				throw new UploaderException( "Failed to delete project: " + project.getProjectId(), sqlex ) ;
+			}	
+			finally {
+				exitTrace( "I2B2Project.Factory.destroy()" ) ;
+			}
+		}
+		
+		
+		protected static boolean projectExists( I2B2Project project ) throws UploaderException {
+			enterTrace( "I2B2Project.Factory.projectExists()" ) ;
+			boolean exists = false ;
+			try {
+				String sqlPMCmd = "select * from i2b2pm.pm_project_data where project_id = '<PROJECT_ID>' ;" ;
+				sqlPMCmd = sqlPMCmd.replaceAll( "<PROJECT_ID>", project.getProjectId() ) ;
+				Statement st = Base.getSimpleConnectionPG().createStatement() ;
+				ResultSet rs = st.executeQuery( sqlPMCmd ) ;
+				if( rs.next() ) {
+					exists = true ;
+				}
+				rs.close() ;
+				return exists ;
+			}
+			catch( SQLException sqlx ) {
+				throw new UploaderException( "Could not confirm project existed or not. Project id: " + project.getProjectId(), sqlx ) ;
+			}
+			finally {
+				exitTrace( "I2B2Project.Factory.projectExists()" ) ;
+			}
+		}
+		
+		//
+		// NB: Methods that start with an underscore are for the convenience of testing only.
+		//     You have been warned.
+		protected static I2B2Project _newInstance( String projectId
+				                                 , String userName ) throws UploaderException {
+			enterTrace( "I2B2Project.Factory.newInstance()" ) ;
+			I2B2Project project = new I2B2Project( projectId, userName ) ;
+			try {			
+				return project ;
+			}
+			finally {
+				exitTrace( "I2B2Project.Factory.newInstance()" ) ;
+			}
+		}
+		
+	} // end of Factory class
 
 	
 }

@@ -201,6 +201,39 @@ public class CreateDBPG extends Base {
 	}
 	
 	
+	protected static void undeployFromJBoss( String projectId ) throws UploaderException {
+		enterTrace( "CreateDBPG.undeployFromJBoss()" ) ;
+
+		try {
+			
+			String fileName = projectId + "-ds.xml" ;						
+			//
+			// Delete old dodeploy control file if it exists.
+			Files.deleteIfExists( Paths.get( jboss_deploy_dir 
+					                       + System.getProperty( "file.separator") 
+					                       + fileName 
+					                       + ".dodeploy" ) ) ;
+
+			//
+			// Attempt to delete any old control file which says 
+			// this has been already deployed...
+			Files.deleteIfExists( Paths.get( jboss_deploy_dir 
+					                       + System.getProperty( "file.separator") 
+					                       + fileName 
+					                       + ".deployed" ) ) ;
+	
+		}
+		catch( Exception ex ) {
+			String message = "Failed to undeploy from JBoss, project: " + projectId ;
+			log.error( message, ex ) ;
+			throw new UploaderException( message, ex ) ;
+		}
+		finally {
+			exitTrace( "CreateDBPG.undeployFromJBoss()" ) ;
+		}
+	}
+	
+	
 	private static void deployToJBoss( String projectId ) throws UploaderException {
 		enterTrace( "CreateDBPG.deployToJBoss()" ) ;
 		
