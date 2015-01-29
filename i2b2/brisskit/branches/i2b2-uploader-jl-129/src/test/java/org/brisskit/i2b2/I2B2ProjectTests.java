@@ -33,21 +33,23 @@ public class I2B2ProjectTests extends TestCase {
 	}
 
 	public void testI2B2Project() {
-		
+		enterTrace( "==>>testI2B2Project()" ) ;
 		try {
 			I2B2Project project = I2B2Project.Factory._newInstance( "project1", "kjshf" ) ;
 			assert( project.getProjectId().equals( "project1" ) ) ;
 		}
 		catch( UploaderException cex ) {			
 			cex.printStackTrace( System.out ) ;
-			fail( "CreationException thrown: " + cex.getLocalizedMessage() ) ;
+			fail( "testI2B2Project() failed: " + cex.getLocalizedMessage() ) ;
 		}
-			
+		finally {
+			exitTrace( "==>>testI2B2Project()" ) ;
+		}
 	}
 
 	
-	public void testCreate() { 
-		
+	public void testCreateNewProject() { 
+		enterTrace( "==>>testCreateNewProject()" ) ;
 //		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-02.xls").getFile());
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/EG1-laheart.xlsx").getFile());
 //		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/GP_CUT1.xlsx").getFile());		
@@ -63,12 +65,15 @@ public class I2B2ProjectTests extends TestCase {
 			cex.printStackTrace( System.out ) ;
 			fail( "CreationException thrown: " + cex.getLocalizedMessage() ) ;
 		}
+		finally {
+			exitTrace( "==>>testCreateNewProject()" ) ;
+		}
 		
 	}
 	
 	
-	public void testDeletion() { 
-		
+	public void testDeletionOfProject() { 
+		enterTrace( "==>>testDeletionOfProject()" ) ;
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-02.xls").getFile());
 //		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/EG1-laheart.xlsx").getFile());
 //		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/GP_CUT1.xlsx").getFile());		
@@ -92,11 +97,14 @@ public class I2B2ProjectTests extends TestCase {
 			cex.printStackTrace( System.out ) ;
 			fail( "CreationException thrown: " + cex.getLocalizedMessage() ) ;
 		}
-		
+		finally {
+			exitTrace( "==>>testDeletionOfProject()" ) ;
+		}
 	}
 
 	
 	public void testDeletionOfNonExistentProject() {
+		enterTrace( "==>>testDeletionOfNonExistentProject()" ) ;
 		try {
 			I2B2Project project = I2B2Project.Factory._newInstance( "projectX", "qwerty" ) ;
 			I2B2Project.Factory.destroy( project ) ;
@@ -105,14 +113,15 @@ public class I2B2ProjectTests extends TestCase {
 		catch( UploaderException cex ) {			
 			
 		}
+		finally {
+			exitTrace( "==>>testDeletionOfNonExistentProject()" ) ;
+		}
 	}
 
 	public void testReadSpreadsheet() {
-		
+		enterTrace( "==>>testReadSpreadsheet()" ) ;
 //		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-02.xls").getFile());
-		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/EG1-laheart.xlsx").getFile());
-
-		
+		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/EG1-laheart.xlsx").getFile());		
 		try {
 			I2B2Project project = I2B2Project.Factory._newInstance( "infarction", "kjshf" ) ;
 			project.setSpreadsheetFile( spreadsheetFile ) ;
@@ -167,7 +176,30 @@ public class I2B2ProjectTests extends TestCase {
 		catch( UploaderException cex ) {
 			fail( "CreationException thrown: " + cex.getLocalizedMessage() ) ;
 		}
+		finally {
+			exitTrace( "==>>testReadSpreadsheet()" ) ;
+		}
 						
+	}
+	
+	/**
+	 * Utility routine to enter a structured message in the trace log that the given method 
+	 * has been entered. 
+	 * 
+	 * @param entry: the name of the method entered
+	 */
+	public static void enterTrace( String entry ) {
+		I2B2Project.enterTrace( log, entry ) ;
+	}
+
+    /**
+     * Utility routine to enter a structured message in the trace log that the given method 
+	 * has been exited. 
+	 * 
+     * @param entry: the name of the method exited
+     */
+    public static void exitTrace( String entry ) {
+    	I2B2Project.exitTrace( log, entry ) ;
 	}
 	
 }
