@@ -1,3 +1,7 @@
+SELECT schema_name FROM information_schema.schemata WHERE schema_name = 'laheart';
+
+
+
 /* reinitialization sql for a project with id "searchable_text" 
    NB: Will delete everything from PM where domain_id = 'BRISSKIT' */
 
