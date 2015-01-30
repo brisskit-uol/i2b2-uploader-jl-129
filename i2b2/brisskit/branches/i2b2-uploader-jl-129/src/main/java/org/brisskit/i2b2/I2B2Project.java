@@ -1212,20 +1212,26 @@ public class I2B2Project {
 			enterTrace( "I2B2Project.Factory.projectExists()" ) ;
 			boolean exists = false ;
 			try {
+				//
+				// We make two attempts to see whether a project exists
+				// First by querying the pm table
+				// Second by seeing whether the schema exists
+				// (If either of these returns true, the project exists in our terms)...
 				String sqlPMCmd = "select * from i2b2pm.pm_project_data where project_id = '<PROJECT_ID>' ;" ;
 				sqlPMCmd = sqlPMCmd.replaceAll( "<PROJECT_ID>", project.getProjectId() ) ;
 				Statement st = Base.getSimpleConnectionPG().createStatement() ;
 				ResultSet rs = st.executeQuery( sqlPMCmd ) ;
 				if( rs.next() ) {
 					exists = true ;
-					return exists ;
 				}
-				String sqlSchemaCmd = "SELECT schema_name FROM information_schema.schemata WHERE schema_name = '<SCHEMA_NAME>';" ;
-				sqlSchemaCmd = sqlSchemaCmd.replaceAll( "<SCHEMA_NAME>", project.getProjectId() ) ;
-				rs = st.executeQuery( sqlSchemaCmd ) ;
-				if( rs.next() ) {
-					exists = true ;
-				}
+				else {
+					String sqlSchemaCmd = "SELECT schema_name FROM information_schema.schemata WHERE schema_name = '<SCHEMA_NAME>';" ;
+					sqlSchemaCmd = sqlSchemaCmd.replaceAll( "<SCHEMA_NAME>", project.getProjectId() ) ;
+					rs = st.executeQuery( sqlSchemaCmd ) ;
+					if( rs.next() ) {
+						exists = true ;
+					}
+				}				
 				rs.close() ;
 				return exists ;
 			}
