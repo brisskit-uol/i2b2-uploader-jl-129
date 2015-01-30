@@ -218,6 +218,7 @@ public class OntologyBranch {
 			             , HashSet<String> values
 			             , HashSet<String> pathsAndCodes
 			             , ProjectUtils utils ) {
+		enterTrace( "OntologyBranch()" ) ;
 		this.projectId = projectId ;
 		this.colName = colName ;
 		this.toolTip = toolTip ;
@@ -228,11 +229,12 @@ public class OntologyBranch {
 		this.pathsAndCodes = pathsAndCodes ;
 		this.values = values ;
 		this.utils = utils ;
+		exitTrace( "OntologyBranch()" ) ;
 	}
 	
 	
 	public void serializeToDatabase( Connection connection ) throws UploaderException {
-		enterTrace( "OntologyBranch.serializeToDatabase()" ) ;
+		enterTrace( "OntologyBranch()" ) ;
 		try {			
 			insertRoot( connection) ;
 			

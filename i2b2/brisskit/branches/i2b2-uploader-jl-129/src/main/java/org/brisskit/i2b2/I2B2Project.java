@@ -121,6 +121,8 @@ public class I2B2Project {
     private Row ontologyCodes ;
     private int numberColumns ;
     
+    private boolean newProject = true ;
+    
     //
     // Initial encounter number
 //    private int encounterNumber = 1 ;
@@ -163,11 +165,27 @@ public class I2B2Project {
     	enterTrace( "I2B2Project.processSpreadsheet" ) ;
     	try {
     		this.spreadsheetFile = spreadSheetFile ;
-    		readSpreadsheet() ;
-			produceOntology() ;
-			producePatientMapping() ;
-			producePatientDimension() ;		
-			produceFacts() ;
+    		if( !newProject ) {
+    			log.debug( "=====================================================" ) ;
+    			log.debug( "Processing spreadsheet for an existing project: start" ) ;
+    			log.debug( "=====================================================" ) ;
+    			readSpreadsheet() ;
+    			produceOntology() ;
+    			producePatientMapping() ;
+    			producePatientDimension() ;		
+    			produceFacts() ;
+    			log.debug( "===================================================" ) ;
+    			log.debug( "Processing spreadsheet for an existing project: end" ) ;
+    			log.debug( "===================================================" ) ;
+    		}
+    		else {
+    			readSpreadsheet() ;
+    			produceOntology() ;
+    			producePatientMapping() ;
+    			producePatientDimension() ;		
+    			produceFacts() ;
+    			newProject = false ;
+    		}    		
     	}
     	finally {
     		exitTrace( "I2B2Project.processSpreadsheet" ) ;
@@ -785,7 +803,7 @@ public class I2B2Project {
 			//
 			// Indicates that we are creating the project's ontology
 			// here for the very first time, as derived from the spreadsheet.
-			if( isVirginOntology() ) {
+			if( newProject ) {
 				Iterator<OntologyBranch> itOb = ontBranches.values().iterator() ;
 				while( itOb.hasNext() ) {
 					OntologyBranch ob = itOb.next() ;
@@ -803,39 +821,6 @@ public class I2B2Project {
 		finally {
 			exitTrace( "produceOntology()" ) ;
 		}		
-	}
-	
-	//
-	// Indicates that we are creating the project's ontology
-	// here for the very first time, as derived from the spreadsheet.
-	// It means we must write the stuff to the database!!!
-	// The setting is derived from the spreadsheet by implication; ie: if tooltips
-	// are missing (row present but no values), then this is the situation where
-	// we are simply processing the spreadsheet for data (observation facts etc)
-	// and we need ontology data simply for producing observation facts.
-	//
-	// This method requires more work, or at least some experimentation.
-	private boolean isVirginOntology() {
-		boolean virginOntology = true ;
-		//
-		// The first column is for id and may not have a tool tip anyway
-		for( int i=1; i<6; i++ ) {
-			
-			Cell toolTipCell = dataSheet.getRow( I2B2Project.TOOLTIPS_ROW_INDEX ).getCell( i ) ;
-			try {
-				String tooltip = utils.getValueAsString( toolTipCell ) ;
-				if( utils.isNull( tooltip ) ) {
-					virginOntology = false ;
-				}
-				else if( tooltip.length() == 0 ) {
-					virginOntology = false ;
-				}
-			}
-			catch( Throwable th ) {
-				virginOntology = false ;
-			}
-		}
-		return virginOntology ;
 	}
 	
 	
@@ -1170,7 +1155,8 @@ public class I2B2Project {
 			enterTrace( "I2B2Project.Factory.newInstance()" ) ;
 			I2B2Project project = new I2B2Project( projectId, userName ) ;
 			try {
-				if( projectExists( project ) ) {					
+				if( projectExists( project ) ) {
+					project.newProject = false ;
 				}
 				else {
 					CreateDBPG.createI2B2Database( projectId, userName );
@@ -1208,8 +1194,8 @@ public class I2B2Project {
 		}
 		
 		
-		protected static boolean projectExists( I2B2Project project ) throws UploaderException {
-			enterTrace( "I2B2Project.Factory.projectExists()" ) ;
+		public static boolean projectExists( I2B2Project project ) throws UploaderException {
+			enterTrace( "I2B2Project.Factory.projectExists(I2B2Project)" ) ;
 			boolean exists = false ;
 			try {
 				//
@@ -1241,7 +1227,20 @@ public class I2B2Project {
 				throw new UploaderException( message, sqlx ) ;
 			}
 			finally {
-				exitTrace( "I2B2Project.Factory.projectExists()" ) ;
+				exitTrace( "I2B2Project.Factory.projectExists(I2B2Project)" ) ;
+			}
+		}
+		
+		
+		public static boolean projectExists( String projectId ) throws UploaderException {
+			enterTrace( "I2B2Project.Factory.projectExists(String)" ) ;
+			
+			try {
+				I2B2Project project = new I2B2Project( projectId, "dummyUserName" ) ;
+				return projectExists( project ) ;
+			}
+			finally {
+				exitTrace( "I2B2Project.Factory.projectExists(String)" ) ;
 			}
 		}
 		
