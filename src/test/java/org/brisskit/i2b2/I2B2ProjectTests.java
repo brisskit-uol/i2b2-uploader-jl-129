@@ -32,30 +32,15 @@ public class I2B2ProjectTests extends TestCase {
 		super.tearDown();
 	}
 
-	public void testI2B2Project() {
-		enterTrace( "==>>testI2B2Project()" ) ;
-		try {
-			I2B2Project project = I2B2Project.Factory._newInstance( "project1", "kjshf" ) ;
-			assert( project.getProjectId().equals( "project1" ) ) ;
-		}
-		catch( UploaderException cex ) {			
-			cex.printStackTrace( System.out ) ;
-			fail( "testI2B2Project() failed: " + cex.getLocalizedMessage() ) ;
-		}
-		finally {
-			exitTrace( "==>>testI2B2Project()" ) ;
-		}
-	}
-
 	
-	public void testCreateNewProject() { 
+	public void _testCreateNewProject() { 
 		enterTrace( "==>>testCreateNewProject()" ) ;
 //		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-02.xls").getFile());
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/EG1-laheart.xlsx").getFile());
 //		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/GP_CUT1.xlsx").getFile());		
 		try {
 			I2B2Project project = I2B2Project.Factory._newInstance( "laheart", "qwerty" ) ;
-			if( I2B2Project.Factory.projectExists( project ) ) {
+			if( I2B2Project.Factory.projectExists( "laheart" ) ) {
 				I2B2Project.Factory.delete( project ) ;
 			}	
 			project = I2B2Project.Factory.newInstance( "laheart", "qwerty" ) ;
@@ -63,18 +48,89 @@ public class I2B2ProjectTests extends TestCase {
 		}
 		catch( UploaderException cex ) {			
 			cex.printStackTrace( System.out ) ;
-			fail( "CreationException thrown: " + cex.getLocalizedMessage() ) ;
+			fail( "UploaderException thrown: " + cex.getLocalizedMessage() ) ;
 		}
 		finally {
 			exitTrace( "==>>testCreateNewProject()" ) ;
 		}
 		
 	}
+
+	
+	public void testSupplementingExistingProject() { 
+		enterTrace( "==>>testSupplementingExistingProject()" ) ;
+		File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());
+		File spreadsheetFile2 = new File(getClass().getClassLoader().getResource("spreadsheets/test-02.xls").getFile());
+//		File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/EG1-laheart.xlsx").getFile());
+//		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/GP_CUT1.xlsx").getFile());		
+		try {
+			//
+			// Delete project if it already exists...
+			I2B2Project project = I2B2Project.Factory._newInstance( "testnn", "qwerty" ) ;
+			if( I2B2Project.Factory.projectExists( project ) ) {
+				I2B2Project.Factory.delete( project ) ;				
+			}
+			//
+			// Create new project with all it db artifacts
+			project = I2B2Project.Factory.newInstance( "testnn", "qwerty" ) ;
+			//
+			// Process the first spreadsheet...
+			project.processSpreadsheet( spreadsheetFile1 ) ;
+			//
+			// Get a new instance of the project...
+			project = I2B2Project.Factory.newInstance( "testnn", "qwerty" ) ;
+			//
+			// And attempt to process subsequent spreadsheet...
+			project.processSpreadsheet( spreadsheetFile2 ) ;
+		}
+		catch( UploaderException cex ) {			
+			cex.printStackTrace( System.out ) ;
+			fail( "UploaderException thrown: " + cex.getLocalizedMessage() ) ;
+		}
+		finally {
+			exitTrace( "==>>testSupplementingExistingProject()" ) ;
+		}
+		
+	}
+		
+		
+		public void testSupplementingExistingProject_SameInstance() { 
+			enterTrace( "==>>testSupplementingExistingProject_SameInstance()" ) ;
+			File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());
+			File spreadsheetFile2 = new File(getClass().getClassLoader().getResource("spreadsheets/test-02.xls").getFile());
+//			File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/EG1-laheart.xlsx").getFile());
+//			File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/GP_CUT1.xlsx").getFile());		
+			try {
+				//
+				// Delete project if it already exists...
+				I2B2Project project = I2B2Project.Factory._newInstance( "testnn", "qwerty" ) ;
+				if( I2B2Project.Factory.projectExists( project ) ) {
+					I2B2Project.Factory.delete( project ) ;				
+				}
+				//
+				// Create new project with all it db artifacts
+				project = I2B2Project.Factory.newInstance( "testnn", "qwerty" ) ;
+				//
+				// Process the first spreadsheet...
+				project.processSpreadsheet( spreadsheetFile1 ) ;
+				//
+				// And attempt to process subsequent spreadsheet...
+				project.processSpreadsheet( spreadsheetFile2 ) ;
+			}
+			catch( UploaderException cex ) {			
+				cex.printStackTrace( System.out ) ;
+				fail( "UploaderException thrown: " + cex.getLocalizedMessage() ) ;
+			}
+			finally {
+				exitTrace( "==>>testSupplementingExistingProject_SameInstance()" ) ;
+			}
+		
+	}
 	
 	
-	public void testDeletionOfProject() { 
+	public void _testDeletionOfProject() { 
 		enterTrace( "==>>testDeletionOfProject()" ) ;
-		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-02.xls").getFile());
+		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());
 //		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/EG1-laheart.xlsx").getFile());
 //		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/GP_CUT1.xlsx").getFile());		
 		try {
