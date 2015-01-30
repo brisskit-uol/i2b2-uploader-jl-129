@@ -24,7 +24,7 @@ public class I2B2ProjectTests extends TestCase {
 		super(name);
 	}
 
-	protected void setUp() throws Exception {
+	protected void setUp() throws Exception { 
 		super.setUp();
 	}
 
@@ -56,7 +56,7 @@ public class I2B2ProjectTests extends TestCase {
 		try {
 			I2B2Project project = I2B2Project.Factory._newInstance( "laheart", "qwerty" ) ;
 			if( I2B2Project.Factory.projectExists( project ) ) {
-				I2B2Project.Factory.destroy( project ) ;
+				I2B2Project.Factory.delete( project ) ;
 			}	
 			project = I2B2Project.Factory.newInstance( "laheart", "qwerty" ) ;
 			project.processSpreadsheet( spreadsheetFile ) ;
@@ -79,18 +79,11 @@ public class I2B2ProjectTests extends TestCase {
 //		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/GP_CUT1.xlsx").getFile());		
 		try {
 			//
-			// First create the project (and deploy to JBoss)
+			// First - if need be - create the project and deploy to JBoss...
 			I2B2Project project = I2B2Project.Factory.newInstance( "test02dele", "qwerty" ) ;
-			project.processSpreadsheet( spreadsheetFile ) ;
 			//
-			// Wait until JBoss gets a chance to deploy it...
-			try { 
-				Thread.sleep( 60000 ) ;
-			}
-			catch( InterruptedException iex ) {
-				;
-			}
-			I2B2Project.Factory.destroy( project ) ;
+			// Now delete it...
+			I2B2Project.Factory.delete( project ) ;
 			
 		}
 		catch( UploaderException cex ) {			
@@ -107,7 +100,7 @@ public class I2B2ProjectTests extends TestCase {
 		enterTrace( "==>>testDeletionOfNonExistentProject()" ) ;
 		try {
 			I2B2Project project = I2B2Project.Factory._newInstance( "projectX", "qwerty" ) ;
-			I2B2Project.Factory.destroy( project ) ;
+			I2B2Project.Factory.delete( project ) ;
 			fail( "Should not be able to delete a non-existent project: projectX" ) ;
 		}
 		catch( UploaderException cex ) {			

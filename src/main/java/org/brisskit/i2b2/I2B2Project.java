@@ -123,7 +123,7 @@ public class I2B2Project {
     
     //
     // Initial encounter number
-    private int encounterNumber = 1 ;
+//    private int encounterNumber = 1 ;
     
     private Map<String,Integer> patientMappings = new HashMap<String,Integer>() ;
     
@@ -910,7 +910,7 @@ public class I2B2Project {
 		enterTrace( "I2B2Project.produceDateFact()" ) ;
 		try {
 			ObservationFact of = new ObservationFact( utils ) ;				
-			of.setEncounter_num( encounterNumber++ ) ;
+//			of.setEncounter_num( encounterNumber++ ) ;
 			of.setPatient_num( patientNumber ) ;
 			
 			of.setConcept_cd( ontCode ) ;
@@ -946,7 +946,7 @@ public class I2B2Project {
 		enterTrace( "I2B2Project.produceNumericFact()" ) ;
 		try {
 			ObservationFact of = new ObservationFact( utils ) ;				
-			of.setEncounter_num( encounterNumber++ ) ;
+//			of.setEncounter_num( encounterNumber++ ) ;
 			of.setPatient_num( patientNumber ) ;
 				
 			of.setProvider_id( "@" ) ;
@@ -986,7 +986,7 @@ public class I2B2Project {
 		enterTrace( "I2B2Project.produceStringFact()" ) ;
 		try {
 			ObservationFact of = new ObservationFact( utils ) ;				
-			of.setEncounter_num( encounterNumber++ ) ;
+//			of.setEncounter_num( encounterNumber++ ) ;
 			of.setPatient_num( patientNumber ) ;
 			
 			
@@ -1170,8 +1170,7 @@ public class I2B2Project {
 			enterTrace( "I2B2Project.Factory.newInstance()" ) ;
 			I2B2Project project = new I2B2Project( projectId, userName ) ;
 			try {
-				if( projectExists( project ) ) {
-					
+				if( projectExists( project ) ) {					
 				}
 				else {
 					CreateDBPG.createI2B2Database( projectId, userName );
@@ -1184,8 +1183,8 @@ public class I2B2Project {
 		}
 		
 		
-		public static void destroy( I2B2Project project ) throws UploaderException {
-			enterTrace( "I2B2Project.Factory.destroy()" ) ;
+		public static void delete( I2B2Project project ) throws UploaderException {
+			enterTrace( "I2B2Project.Factory.delete()" ) ;
 			try {
 				if( projectExists( project ) ) {
 					String sqlCmd = COMPLETELY_DELETE_PROJECT_SQL_COMMAND ;							
@@ -1204,7 +1203,7 @@ public class I2B2Project {
 				throw new UploaderException( "Failed to delete project: " + project.getProjectId(), sqlex ) ;
 			}	
 			finally {
-				exitTrace( "I2B2Project.Factory.destroy()" ) ;
+				exitTrace( "I2B2Project.Factory.delete()" ) ;
 			}
 		}
 		
@@ -1217,6 +1216,13 @@ public class I2B2Project {
 				sqlPMCmd = sqlPMCmd.replaceAll( "<PROJECT_ID>", project.getProjectId() ) ;
 				Statement st = Base.getSimpleConnectionPG().createStatement() ;
 				ResultSet rs = st.executeQuery( sqlPMCmd ) ;
+				if( rs.next() ) {
+					exists = true ;
+					return exists ;
+				}
+				String sqlSchemaCmd = "SELECT schema_name FROM information_schema.schemata WHERE schema_name = '<SCHEMA_NAME>';" ;
+				sqlSchemaCmd = sqlSchemaCmd.replaceAll( "<SCHEMA_NAME>", project.getProjectId() ) ;
+				rs = st.executeQuery( sqlSchemaCmd ) ;
 				if( rs.next() ) {
 					exists = true ;
 				}
