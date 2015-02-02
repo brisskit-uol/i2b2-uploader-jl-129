@@ -110,8 +110,8 @@ public class I2B2Project {
 	private static StringBuffer logIndent = null ;
 	
 	private String projectId ;
-	private String userName ;
     private File spreadsheetFile ;
+    private boolean spreadsheetHasStartDateColumn = false ;
     private Workbook workbook ;
     private Sheet dataSheet ;
     private Sheet lookupSheet ;
@@ -151,18 +151,30 @@ public class I2B2Project {
     //
     // projectId must be alpha-numeric starting with an alpha,
     // and with no spaces.
-    private I2B2Project( String projectId
-    				   , String userName ) throws UploaderException {
+    private I2B2Project( String projectId ) throws UploaderException {
     	enterTrace( "I2B2Project()" ) ;
     	this.projectId = projectId ;
-    	this.userName = userName ;
     	CreateDBPG.setUp() ;
     	exitTrace( "I2B2Project()" ) ;
     }
     
     
     public synchronized void processSpreadsheet( File spreadSheetFile ) throws UploaderException {
-    	enterTrace( "I2B2Project.processSpreadsheet" ) ;
+    	enterTrace( "I2B2Project.processSpreadsheet(File)" ) ;
+    	try {
+    		//
+    		// Default observation date set to run date...
+    		processSpreadsheet( spreadSheetFile, new Date() ) ;
+    	}
+    	finally {
+    		exitTrace( "I2B2Project.processSpreadsheet(File)" ) ;
+    	}
+    }
+    
+    
+    public synchronized void processSpreadsheet( File spreadSheetFile
+    										   , Date defaultObservationDate ) throws UploaderException {
+    	enterTrace( "I2B2Project.processSpreadsheet(File,Date)" ) ;
     	try {
     		this.spreadsheetFile = spreadSheetFile ;
     		if( !newProject ) {
@@ -173,7 +185,7 @@ public class I2B2Project {
     			produceOntology() ;
     			producePatientMapping() ;
     			producePatientDimension() ;		
-    			produceFacts() ;
+    			produceFacts( defaultObservationDate ) ;
     			log.debug( "===================================================" ) ;
     			log.debug( "Processing spreadsheet for an existing project: end" ) ;
     			log.debug( "===================================================" ) ;
@@ -183,12 +195,12 @@ public class I2B2Project {
     			produceOntology() ;
     			producePatientMapping() ;
     			producePatientDimension() ;		
-    			produceFacts() ;
+    			produceFacts( defaultObservationDate ) ;
     			newProject = false ;
     		}    		
     	}
     	finally {
-    		exitTrace( "I2B2Project.processSpreadsheet" ) ;
+    		exitTrace( "I2B2Project.processSpreadsheet(File,Date)" ) ;
     	}
     }
 	
@@ -241,7 +253,21 @@ public class I2B2Project {
 			//  ie: a path statement)
 		    columnNames = dataSheet.getRow( COLUMN_NAME_ROW_INDEX ) ;
 		    toolTips = dataSheet.getRow( TOOLTIPS_ROW_INDEX ) ;
-		    ontologyCodes = dataSheet.getRow( ONTOLOGY_CODES_ROW_INDEX ) ;		    
+		    ontologyCodes = dataSheet.getRow( ONTOLOGY_CODES_ROW_INDEX ) ;	
+		    //
+		    // Check on the existence (or not) of observation start date column:
+		    Iterator<Cell> it = columnNames.cellIterator() ;
+		    spreadsheetHasStartDateColumn = false ;
+		    while( it.hasNext() ) {
+		    	Cell cell = it.next() ;
+		    	String value = utils.getValueAsString( cell ) ;
+		    	if( !utils.isNull( value ) ) {
+		    		if( value.equalsIgnoreCase( "OBS_START_DATE" ) ) {
+		    			spreadsheetHasStartDateColumn = true ;
+		    			break ;
+		    		}
+		    	}
+		    }
 		    //
 		    // Could do with some basic checks to see all rows have the same number of columns!
 		    numberColumns = columnNames.getLastCellNum() ;
@@ -824,10 +850,11 @@ public class I2B2Project {
 	}
 	
 	
-	protected void produceFacts() throws UploaderException {
+	protected void produceFacts( Date defaultObservationStartDate ) throws UploaderException {
 		enterTrace( "I2B2Project.produceFacts()" ) ;
 		try {
 			Iterator<Row> rowIt = dataSheet.iterator() ;
+			Date observationStartDate = null ;
 			//
 			// Tab past metadata rows...
 			rowIt.next() ;
@@ -838,6 +865,17 @@ public class I2B2Project {
 			while( rowIt.hasNext() ) {
 				Row dataRow = rowIt.next() ;
 				int patientNumber = getPatientNumber( dataRow ) ;
+				if( spreadsheetHasStartDateColumn ) {
+					observationStartDate = getObservationStartDate( dataRow ) ;
+					//
+					// It might still return null if the column is empty...
+					if( observationStartDate == null ) {
+						observationStartDate = defaultObservationStartDate ;
+					}
+				}
+				else {
+					observationStartDate = defaultObservationStartDate ;
+				}
 				//
 				// Process the cells for each row...
 				Iterator<Cell> cellIt = dataRow.cellIterator() ;
@@ -855,21 +893,32 @@ public class I2B2Project {
 					else if( ontCode.startsWith( "p_map:" ) || ontCode.startsWith( "p_dim:" ) ) {
 						continue ;
 					}
+					else if( ontCode.equalsIgnoreCase( "OBS_START_DATE" ) ) {
+						continue ;
+					}
 					else {
 						OntologyBranch ontBranch = getOntologyBranch( ontCode ) ;
 						OntologyBranch.Type type = ontBranch.getType() ;
 						String units = ontBranch.getUnits() ;
-						ObservationFact of = null ;
+						ObservationFact of = null ;						
 						switch ( type ) {
 						case DATE:
 							of = produceDateFact( patientNumber, ontCode, cell ) ;
 							break ;
 						case NUMERIC:
-							of = produceNumericFact( patientNumber, ontCode, units, cell ) ;
+							of = produceNumericFact( patientNumber
+									               , ontCode
+									               , units
+									               , cell 
+									               , observationStartDate ) ;
 							break ;
 						case STRING:
 						default:
-							of = produceStringFact( patientNumber, ontCode, units, cell ) ;
+							of = produceStringFact( patientNumber
+									              , ontCode
+									              , units
+									              , cell 
+									              , observationStartDate ) ;
 							break;
 						}
 						
@@ -927,7 +976,8 @@ public class I2B2Project {
 	private ObservationFact produceNumericFact( int patientNumber
                                               , String ontCode
                                               , String units
-                                              , Cell cell ) throws UploaderException {
+                                              , Cell cell
+                                              , Date observationStartDate ) throws UploaderException {
 		enterTrace( "I2B2Project.produceNumericFact()" ) ;
 		try {
 			ObservationFact of = new ObservationFact( utils ) ;				
@@ -935,7 +985,7 @@ public class I2B2Project {
 			of.setPatient_num( patientNumber ) ;
 				
 			of.setProvider_id( "@" ) ;
-			of.setStart_date( new Date() ) ;
+			of.setStart_date( observationStartDate ) ;
 			
 			String value = utils.getValueAsString( cell ) ;			
 			//
@@ -967,7 +1017,8 @@ public class I2B2Project {
 	private ObservationFact produceStringFact( int patientNumber
                                              , String ontCode
                                              , String units
-                                             , Cell cell ) throws UploaderException {
+                                             , Cell cell
+                                             , Date observationStartDate ) throws UploaderException {
 		enterTrace( "I2B2Project.produceStringFact()" ) ;
 		try {
 			ObservationFact of = new ObservationFact( utils ) ;				
@@ -976,7 +1027,7 @@ public class I2B2Project {
 			
 			
 			of.setProvider_id( "@" ) ;
-			of.setStart_date( new Date() ) ;
+			of.setStart_date( observationStartDate ) ;
 		
 			of.setValtype_cd( "T" ) ;					
 			String value = utils.getValueAsString( cell ) ;	
@@ -1032,6 +1083,45 @@ public class I2B2Project {
 		// Given the source system patient identifier (as a string), 
 		// we use the mappings to get the i2b2 internal id...		
 		return this.patientMappings.get( sourcePatientNoAsString ) ;
+	}
+	
+	
+	public Date getObservationStartDate( Row dataRow ) throws UploaderException {
+		enterTrace( "I2B2Project.getObservationStartDate()" ) ;
+		Date obsStartDate = null ;
+		String dateAsString = null ;
+		try {
+			Iterator<Cell> cellIt = dataRow.getSheet().getRow( I2B2Project.COLUMN_NAME_ROW_INDEX ).cellIterator() ;			
+			int startDateIndex = -1 ;
+			while( cellIt.hasNext() ) {
+				Cell cell = cellIt.next() ;
+				String value = utils.getValueAsString( cell ) ;
+				//
+				// Search for the source systems id...
+				if( value.equalsIgnoreCase( "OBS_START_DATE" ) ) {
+					startDateIndex = cell.getColumnIndex() ;
+					break ;
+				}			
+			}
+			if( startDateIndex != -1 ) {
+				dateAsString = utils.getValueAsString( dataRow.getCell( startDateIndex ) ) ;
+				if( utils.isNull( dateAsString ) ) {
+					dateAsString = null ;
+				}
+				else {
+					obsStartDate = utils.parseDate( dateAsString )  ;	
+				}
+			}
+			return obsStartDate ;
+		}
+		catch( ParseException  pex) {
+			String message = "Failed to parse column value as a observation start date: " + dateAsString ;
+			log.error( message, pex ) ;
+			throw new UploaderException( message, pex ) ;
+		}
+		finally {
+			exitTrace( "I2B2Project.getObservationStartDate()" ) ;
+		}		
 	}
 	
 
@@ -1150,16 +1240,15 @@ public class I2B2Project {
 	
 	public static class Factory {
 		
-		public static I2B2Project newInstance( String projectId
-				                             , String userName ) throws UploaderException {
+		public static I2B2Project newInstance( String projectId ) throws UploaderException {
 			enterTrace( "I2B2Project.Factory.newInstance()" ) ;
-			I2B2Project project = new I2B2Project( projectId, userName ) ;
+			I2B2Project project = new I2B2Project( projectId ) ;
 			try {
 				if( projectExists( project ) ) {
 					project.newProject = false ;
 				}
 				else {
-					CreateDBPG.createI2B2Database( projectId, userName );
+					CreateDBPG.createI2B2Database( projectId );
 				}
 				return project ;
 			}
@@ -1172,7 +1261,7 @@ public class I2B2Project {
 		public static void delete( String projectId ) throws UploaderException {
 			enterTrace( "I2B2Project.Factory.delete(String)" ) ;
 			try {
-				I2B2Project project = new I2B2Project( projectId, "dummyUserName" ) ;
+				I2B2Project project = new I2B2Project( projectId ) ;
 				delete( project ) ;
 			}	
 			finally {
@@ -1183,14 +1272,21 @@ public class I2B2Project {
 		
 		public static void delete( I2B2Project project ) throws UploaderException {
 			enterTrace( "I2B2Project.Factory.delete(I2B2Project)" ) ;
+			Connection connection = null ;
 			try {
 				if( projectExists( project.getProjectId() ) ) {
+					connection = Base.getSimpleConnectionPG() ;
+					connection.setTransactionIsolation( Connection.TRANSACTION_SERIALIZABLE ) ;
+					connection.setAutoCommit( false ) ;
 					String sqlCmd = COMPLETELY_DELETE_PROJECT_SQL_COMMAND ;							
 					sqlCmd = sqlCmd.replaceAll( "<DB_SCHEMA_NAME>", project.getProjectId() ) ;
 					sqlCmd = sqlCmd.replace( "<DB_USER_NAME>", project.getProjectId() ) ;
 					sqlCmd = sqlCmd.replace( "<PROJECT_ID>", project.getProjectId() ) ;
-					Statement st = Base.getSimpleConnectionPG().createStatement() ;
+					Statement st = connection.createStatement() ;
 					st.execute( sqlCmd ) ;
+					connection.commit() ;
+					connection.setTransactionIsolation( Connection.TRANSACTION_SERIALIZABLE ) ;
+					connection.setAutoCommit( true ) ;
 					CreateDBPG.undeployFromJBoss( project.getProjectId() ) ;
 				}	
 				else {
@@ -1198,6 +1294,7 @@ public class I2B2Project {
 				}
 			}
 			catch( SQLException sqlex ) {
+				if( connection != null ) try { connection.rollback() ; } catch( SQLException ex ) { ; }
 				throw new UploaderException( "Failed to delete project: " + project.getProjectId(), sqlex ) ;
 			}	
 			finally {
@@ -1209,6 +1306,7 @@ public class I2B2Project {
 		public static boolean projectExists( I2B2Project project ) throws UploaderException {
 			enterTrace( "I2B2Project.Factory.projectExists(I2B2Project)" ) ;
 			boolean exists = false ;
+			Connection connection = null ;
 			try {
 				//
 				// We make two attempts to see whether a project exists
@@ -1217,7 +1315,10 @@ public class I2B2Project {
 				// (If either of these returns true, the project exists in our terms)...
 				String sqlPMCmd = "select * from i2b2pm.pm_project_data where project_id = '<PROJECT_ID>' ;" ;
 				sqlPMCmd = sqlPMCmd.replaceAll( "<PROJECT_ID>", project.getProjectId() ) ;
-				Statement st = Base.getSimpleConnectionPG().createStatement() ;
+				connection = Base.getSimpleConnectionPG() ;
+//				connection.setTransactionIsolation( Connection.TRANSACTION_SERIALIZABLE ) ;
+//				connection.setAutoCommit( false ) ;
+				Statement st = connection.createStatement() ;
 				ResultSet rs = st.executeQuery( sqlPMCmd ) ;
 				if( rs.next() ) {
 					exists = true ;
@@ -1231,11 +1332,15 @@ public class I2B2Project {
 					}
 				}				
 				rs.close() ;
+//				connection.commit() ;
+//				connection.setTransactionIsolation( Connection.TRANSACTION_SERIALIZABLE ) ;
+//				connection.setAutoCommit( true ) ;
 				return exists ;
 			}
 			catch( SQLException sqlx ) {
 				String message =  "Could not confirm project existed or not. Project id: " + project.getProjectId() ;
 				log.error( message, sqlx ) ;
+				if( connection != null ) try { connection.rollback() ; } catch( SQLException ex ) { ; }
 				throw new UploaderException( message, sqlx ) ;
 			}
 			finally {
@@ -1247,7 +1352,7 @@ public class I2B2Project {
 		public static boolean projectExists( String projectId ) throws UploaderException {
 			enterTrace( "I2B2Project.Factory.projectExists(I2B2Project)" ) ;		
 			try {
-				I2B2Project project = new I2B2Project( projectId, "dummyUserName" ) ;
+				I2B2Project project = new I2B2Project( projectId ) ;
 				return projectExists( project ) ;
 			}
 			finally {
