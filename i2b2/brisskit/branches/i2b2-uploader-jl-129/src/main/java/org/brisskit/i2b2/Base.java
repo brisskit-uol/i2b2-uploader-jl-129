@@ -38,27 +38,36 @@ public class Base {
 	
 	static public void setUp() throws UploaderException {
 		enterTrace( "Base.setUp()" ) ; 
-		
+		InputStream configPropertiesStream = null ;
 		try {
 			
-			InputStream configPropertiesStream = Base.class.getClassLoader().getResourceAsStream( "uploader.properties" ) ;
+			if( jboss_deploy_dir == null ) {
+				
+				configPropertiesStream = Base.class.getClassLoader().getResourceAsStream( "uploader.properties" ) ;			
+				props.load( configPropertiesStream ) ;
+
+				String env = props.getProperty( ENVIRONMENT );
+
+				pg_db_name = props.getProperty( env + "." + PG_DB_NAME );
+				pg_db_url  = props.getProperty( env + "." + PG_DB_URL );
+				pg_db_u = props.getProperty( env + "." + PG_DB_U );
+				pg_db_p = props.getProperty( env + "." + PG_DB_P );
+				jboss_deploy_dir = props.getProperty( env + "." + JBOSS_DEPLOYMENT_DIRECTORY );
+
+				log.info(env + "." + PG_DB_NAME + "= " + pg_db_name);				;
+				log.info(env + "." + PG_DB_U + "= " + pg_db_u);
+				log.info(env + "." + PG_DB_P + "= " + pg_db_p);	
+				log.info(env + "." + PG_DB_URL + "= " + pg_db_url);
+				log.info(env + "." + JBOSS_DEPLOYMENT_DIRECTORY + "= " + jboss_deploy_dir);
+
+				try { 
+					configPropertiesStream.close() ; 
+				}
+				catch( IOException iox ) {
+					log.warn( "Could not close configPropertiesStream", iox ) ;
+				}
+			}
 			
-			props.load( configPropertiesStream ) ;
-
-			String env = props.getProperty( ENVIRONMENT );
-
-			pg_db_name = props.getProperty( env + "." + PG_DB_NAME );
-			pg_db_url  = props.getProperty( env + "." + PG_DB_URL );
-			pg_db_u = props.getProperty( env + "." + PG_DB_U );
-			pg_db_p = props.getProperty( env + "." + PG_DB_P );
-			jboss_deploy_dir = props.getProperty( env + "." + JBOSS_DEPLOYMENT_DIRECTORY );
-
-			log.info(env + "." + PG_DB_NAME + "= " + pg_db_name);				;
-			log.info(env + "." + PG_DB_U + "= " + pg_db_u);
-			log.info(env + "." + PG_DB_P + "= " + pg_db_p);	
-			log.info(env + "." + PG_DB_URL + "= " + pg_db_url);
-			log.info(env + "." + JBOSS_DEPLOYMENT_DIRECTORY + "= " + jboss_deploy_dir);
-
 		} catch (IOException e) {
 			throw new UploaderException( e ) ;
 		}
