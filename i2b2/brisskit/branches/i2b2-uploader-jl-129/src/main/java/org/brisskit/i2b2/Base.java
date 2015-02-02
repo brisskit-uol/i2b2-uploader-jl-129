@@ -78,7 +78,7 @@ public class Base {
 	}
 	
 	
-	static public Connection getSimpleConnectionPG() throws UploaderException {
+	static public Connection _getSimpleConnectionPG() throws UploaderException {
 		enterTrace( "getSimpleConnectionPG()" ) ;
 		
 		String DB_CONN_STRING = "jdbc:postgresql://" + pg_db_url + "/"+ pg_db_name +"?user=" + pg_db_u+ "&password=" + pg_db_p;
@@ -105,6 +105,40 @@ public class Base {
 		}
 		exitTrace( "getSimpleConnectionPG()" ) ;
 		return con;
+	}
+	
+	static public Connection getSimpleConnectionPG() throws UploaderException {
+		enterTrace( "getSimpleConnectionPG()" ) ;
+		try {
+			if (con == null) {
+				
+				Class.forName( "org.postgresql.Driver" ).newInstance();
+				
+				con = DriverManager.getConnection( "jdbc:postgresql://" + pg_db_url + "/"+ pg_db_name +"?user=" + pg_db_u+ "&password=" + pg_db_p 
+						                         , pg_db_name
+						                         , pg_db_p ) ;
+			}
+			return con;
+		}
+		catch( InstantiationException iex ) {
+			log.error( "Cannot load db driver: " + "org.postgresql.Driver", iex ) ;
+			throw new UploaderException( iex ) ;
+		}
+		catch( IllegalAccessException iax ) {
+			log.error( "Cannot load db driver: " + "org.postgresql.Driver", iax ) ;
+			throw new UploaderException( iax ) ;
+		}
+		catch( ClassNotFoundException cnfex ) {
+			log.error( "Cannot load db driver: " + "org.postgresql.Driver", cnfex ) ;
+			throw new UploaderException( cnfex ) ;
+		}
+		catch( SQLException sqlex ) {
+			log.error( "Driver loaded, but cannot connect to db: " + "jdbc:postgresql://" + pg_db_url + "/"+ pg_db_name +"?user=" + pg_db_u+ "&password=" + pg_db_p ) ;
+			throw new UploaderException( sqlex ) ;
+		}
+		finally {
+			exitTrace( "getSimpleConnectionPG()" ) ;
+		}	
 	}
 	
 	/**

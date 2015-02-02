@@ -42,7 +42,7 @@ public class I2B2ProjectTests extends TestCase {
 			if( I2B2Project.Factory.projectExists( "laheart" ) ) {
 				I2B2Project.Factory.delete( "laheart" ) ;
 			}	
-			I2B2Project project = I2B2Project.Factory.newInstance( "laheart", "qwerty" ) ;
+			I2B2Project project = I2B2Project.Factory.newInstance( "laheart" ) ;
 			project.processSpreadsheet( spreadsheetFile ) ;
 		}
 		catch( UploaderException cex ) {			
@@ -51,6 +51,27 @@ public class I2B2ProjectTests extends TestCase {
 		}
 		finally {
 			exitTrace( "==>>testCreateNewProject()" ) ;
+		}
+		
+	}
+	
+	
+	public void testCreateNewProjectWithStartDateColumn() { 
+		enterTrace( "==>>testCreateNewProjectWithStartDateColumn()" ) ;
+		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-03-startdatecol.xls").getFile() ) ;	
+		try {
+			if( I2B2Project.Factory.projectExists( "test03_startdatecols" ) ) {
+				I2B2Project.Factory.delete( "test03_startdatecols" ) ;
+			}	
+			I2B2Project project = I2B2Project.Factory.newInstance( "test03_startdatecols" ) ;
+			project.processSpreadsheet( spreadsheetFile ) ;
+		}
+		catch( UploaderException cex ) {			
+			cex.printStackTrace( System.out ) ;
+			fail( "UploaderException thrown: " + cex.getLocalizedMessage() ) ;
+		}
+		finally {
+			exitTrace( "==>>testCreateNewProjectWithStartDateColumn()" ) ;
 		}
 		
 	}
@@ -70,13 +91,13 @@ public class I2B2ProjectTests extends TestCase {
 			}
 			//
 			// Create new project with all it db artifacts
-			I2B2Project project = I2B2Project.Factory.newInstance( "testnn", "qwerty" ) ;
+			I2B2Project project = I2B2Project.Factory.newInstance( "testnn" ) ;
 			//
 			// Process the first spreadsheet...
 			project.processSpreadsheet( spreadsheetFile1 ) ;
 			//
 			// Get a new instance of the project...
-			project = I2B2Project.Factory.newInstance( "testnn", "qwerty" ) ;
+			project = I2B2Project.Factory.newInstance( "testnn" ) ;
 			//
 			// And attempt to process subsequent spreadsheet...
 			project.processSpreadsheet( spreadsheetFile2 ) ;
@@ -106,7 +127,7 @@ public class I2B2ProjectTests extends TestCase {
 				}
 				//
 				// Create new project with all it db artifacts
-				I2B2Project project = I2B2Project.Factory.newInstance( "testnn", "qwerty" ) ;
+				I2B2Project project = I2B2Project.Factory.newInstance( "testnn" ) ;
 				//
 				// Process the first spreadsheet...
 				project.processSpreadsheet( spreadsheetFile1 ) ;
@@ -131,7 +152,7 @@ public class I2B2ProjectTests extends TestCase {
 			//
 			// First - if need be - create the project and deploy to JBoss...			
 			if( !I2B2Project.Factory.projectExists( "test02dele" ) ) {
-				I2B2Project.Factory.newInstance( "test02dele", "qwerty" ) ;
+				I2B2Project.Factory.newInstance( "test02dele" ) ;
 			}
 			//
 			// Now delete it...
