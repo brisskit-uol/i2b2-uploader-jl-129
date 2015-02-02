@@ -83,8 +83,7 @@ public class PatientMapping {
 			sqlCmd = sqlCmd.replace( "<SOURCESYSTEM_CD>", utils.enfoldNullableString( sourcesystem_id ) ) ;
 			// UPLOAD_ID 		missed out
 			
-			Statement st = connection.createStatement();
-			
+			Statement st = connection.createStatement();			
 			st.execute( sqlCmd ) ;
 			ResultSet rs = st.executeQuery( "select currval( 'PATIENT_MAPPING_PATIENT_NUM_seq');" ) ;
 			rs.next();

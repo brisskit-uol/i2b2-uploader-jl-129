@@ -141,7 +141,7 @@ public class I2B2Project {
     private ProjectUtils utils = new ProjectUtils() ;
     
     @SuppressWarnings("unused")
-	private I2B2Project() {}
+	protected I2B2Project() {}
     
     //
     // Removed admin userid and password.
@@ -1169,10 +1169,22 @@ public class I2B2Project {
 		}
 		
 		
-		public static void delete( I2B2Project project ) throws UploaderException {
-			enterTrace( "I2B2Project.Factory.delete()" ) ;
+		public static void delete( String projectId ) throws UploaderException {
+			enterTrace( "I2B2Project.Factory.delete(String)" ) ;
 			try {
-				if( projectExists( project ) ) {
+				I2B2Project project = new I2B2Project( projectId, "dummyUserName" ) ;
+				delete( project ) ;
+			}	
+			finally {
+				exitTrace( "I2B2Project.Factory.delete(String)" ) ;
+			}
+		}
+		
+		
+		public static void delete( I2B2Project project ) throws UploaderException {
+			enterTrace( "I2B2Project.Factory.delete(I2B2Project)" ) ;
+			try {
+				if( projectExists( project.getProjectId() ) ) {
 					String sqlCmd = COMPLETELY_DELETE_PROJECT_SQL_COMMAND ;							
 					sqlCmd = sqlCmd.replaceAll( "<DB_SCHEMA_NAME>", project.getProjectId() ) ;
 					sqlCmd = sqlCmd.replace( "<DB_USER_NAME>", project.getProjectId() ) ;
@@ -1189,7 +1201,7 @@ public class I2B2Project {
 				throw new UploaderException( "Failed to delete project: " + project.getProjectId(), sqlex ) ;
 			}	
 			finally {
-				exitTrace( "I2B2Project.Factory.delete()" ) ;
+				exitTrace( "I2B2Project.Factory.delete(I2B2Project)" ) ;
 			}
 		}
 		
@@ -1233,29 +1245,13 @@ public class I2B2Project {
 		
 		
 		public static boolean projectExists( String projectId ) throws UploaderException {
-			enterTrace( "I2B2Project.Factory.projectExists(String)" ) ;
-			
+			enterTrace( "I2B2Project.Factory.projectExists(I2B2Project)" ) ;		
 			try {
 				I2B2Project project = new I2B2Project( projectId, "dummyUserName" ) ;
 				return projectExists( project ) ;
 			}
 			finally {
-				exitTrace( "I2B2Project.Factory.projectExists(String)" ) ;
-			}
-		}
-		
-		//
-		// NB: Methods that start with an underscore are for the convenience of testing only.
-		//     You have been warned.
-		protected static I2B2Project _newInstance( String projectId
-				                                 , String userName ) throws UploaderException {
-			enterTrace( "I2B2Project.Factory.newInstance()" ) ;
-			I2B2Project project = new I2B2Project( projectId, userName ) ;
-			try {			
-				return project ;
-			}
-			finally {
-				exitTrace( "I2B2Project.Factory.newInstance()" ) ;
+				exitTrace( "I2B2Project.Factory.projectExists(I2B2Project)" ) ;
 			}
 		}
 		

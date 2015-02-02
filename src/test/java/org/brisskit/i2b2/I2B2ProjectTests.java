@@ -33,17 +33,16 @@ public class I2B2ProjectTests extends TestCase {
 	}
 
 	
-	public void _testCreateNewProject() { 
+	public void testCreateNewProject() { 
 		enterTrace( "==>>testCreateNewProject()" ) ;
 //		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-02.xls").getFile());
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/EG1-laheart.xlsx").getFile());
 //		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/GP_CUT1.xlsx").getFile());		
 		try {
-			I2B2Project project = I2B2Project.Factory._newInstance( "laheart", "qwerty" ) ;
 			if( I2B2Project.Factory.projectExists( "laheart" ) ) {
-				I2B2Project.Factory.delete( project ) ;
+				I2B2Project.Factory.delete( "laheart" ) ;
 			}	
-			project = I2B2Project.Factory.newInstance( "laheart", "qwerty" ) ;
+			I2B2Project project = I2B2Project.Factory.newInstance( "laheart", "qwerty" ) ;
 			project.processSpreadsheet( spreadsheetFile ) ;
 		}
 		catch( UploaderException cex ) {			
@@ -66,13 +65,12 @@ public class I2B2ProjectTests extends TestCase {
 		try {
 			//
 			// Delete project if it already exists...
-			I2B2Project project = I2B2Project.Factory._newInstance( "testnn", "qwerty" ) ;
-			if( I2B2Project.Factory.projectExists( project ) ) {
-				I2B2Project.Factory.delete( project ) ;				
+			if( I2B2Project.Factory.projectExists( "testnn" ) ) {
+				I2B2Project.Factory.delete( "testnn" ) ;				
 			}
 			//
 			// Create new project with all it db artifacts
-			project = I2B2Project.Factory.newInstance( "testnn", "qwerty" ) ;
+			I2B2Project project = I2B2Project.Factory.newInstance( "testnn", "qwerty" ) ;
 			//
 			// Process the first spreadsheet...
 			project.processSpreadsheet( spreadsheetFile1 ) ;
@@ -103,13 +101,12 @@ public class I2B2ProjectTests extends TestCase {
 			try {
 				//
 				// Delete project if it already exists...
-				I2B2Project project = I2B2Project.Factory._newInstance( "testnn", "qwerty" ) ;
-				if( I2B2Project.Factory.projectExists( project ) ) {
-					I2B2Project.Factory.delete( project ) ;				
+				if( I2B2Project.Factory.projectExists( "testnn" ) ) {
+					I2B2Project.Factory.delete( "testnn" ) ;				
 				}
 				//
 				// Create new project with all it db artifacts
-				project = I2B2Project.Factory.newInstance( "testnn", "qwerty" ) ;
+				I2B2Project project = I2B2Project.Factory.newInstance( "testnn", "qwerty" ) ;
 				//
 				// Process the first spreadsheet...
 				project.processSpreadsheet( spreadsheetFile1 ) ;
@@ -128,18 +125,17 @@ public class I2B2ProjectTests extends TestCase {
 	}
 	
 	
-	public void _testDeletionOfProject() { 
-		enterTrace( "==>>testDeletionOfProject()" ) ;
-		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());
-//		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/EG1-laheart.xlsx").getFile());
-//		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/GP_CUT1.xlsx").getFile());		
+	public void testDeletionOfProject() { 
+		enterTrace( "==>>testDeletionOfProject()" ) ;		
 		try {
 			//
-			// First - if need be - create the project and deploy to JBoss...
-			I2B2Project project = I2B2Project.Factory.newInstance( "test02dele", "qwerty" ) ;
+			// First - if need be - create the project and deploy to JBoss...			
+			if( !I2B2Project.Factory.projectExists( "test02dele" ) ) {
+				I2B2Project.Factory.newInstance( "test02dele", "qwerty" ) ;
+			}
 			//
 			// Now delete it...
-			I2B2Project.Factory.delete( project ) ;
+			I2B2Project.Factory.delete( "test02dele" ) ;
 			
 		}
 		catch( UploaderException cex ) {			
@@ -155,8 +151,7 @@ public class I2B2ProjectTests extends TestCase {
 	public void testDeletionOfNonExistentProject() {
 		enterTrace( "==>>testDeletionOfNonExistentProject()" ) ;
 		try {
-			I2B2Project project = I2B2Project.Factory._newInstance( "projectX", "qwerty" ) ;
-			I2B2Project.Factory.delete( project ) ;
+			I2B2Project.Factory.delete( "projectX" ) ;
 			fail( "Should not be able to delete a non-existent project: projectX" ) ;
 		}
 		catch( UploaderException cex ) {			
@@ -172,7 +167,7 @@ public class I2B2ProjectTests extends TestCase {
 //		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-02.xls").getFile());
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/EG1-laheart.xlsx").getFile());		
 		try {
-			I2B2Project project = I2B2Project.Factory._newInstance( "infarction", "kjshf" ) ;
+			I2B2Project project = new I2B2Project() ;
 			project.setSpreadsheetFile( spreadsheetFile ) ;
 			project.readSpreadsheet() ;
 			
