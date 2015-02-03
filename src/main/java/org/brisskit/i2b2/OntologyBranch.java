@@ -12,6 +12,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -136,6 +137,17 @@ public class OntologyBranch {
 			+ " </Analysis>" 
 			+ "</ValueMetadata>";
 	
+	
+	//
+	// Required query for establishing whether the concept code
+	// is already in the database.
+	// NB:
+	// (1) The ontcode can be extended for enumeric numerations.
+	// (2) We are only interested in Leaf nodes.
+	public static final String CONCEPT_CODE_SQL_SELECT_COMMAND = 
+			"SELECT * FROM <DB_SCHEMA_NAME>.<PROJECT_METADATA_TABLE> " +
+			"WHERE C_BASECODE LIKE '<BASECODE>%' AND C_VISUALATTRIBUTES LIKE 'L%';" ;
+	
 
 	public static final String CONCEPT_DIM_SQL_INSERT_COMMAND = 
 			"SET SCHEMA '<DB_SCHEMA_NAME>';" +
@@ -207,6 +219,8 @@ public class OntologyBranch {
 	//
 	// Only required if code lookups are provided 
 	private Map<String,String> lookups ;
+	
+	private OntologyBranch() {}
 	
 	private OntologyBranch( String projectId
 	  		              , String colName
@@ -857,11 +871,24 @@ public class OntologyBranch {
 	}
 	
 	
-	public boolean existsWithinDataBase( Connection connection ) {
+	public boolean existsWithinDataBase( Connection connection ) throws UploaderException {
 		enterTrace( "OntologyBranch.existsWithinDataBase()" ) ;
+		boolean exists = false ;
 		try {
-			
-			return true ;
+			//
+			// See whether the base code exists in the db...
+			Statement st = connection.createStatement() ;
+			String sqlCmd = CONCEPT_CODE_SQL_SELECT_COMMAND ;
+			sqlCmd = sqlCmd.replace( "<BASECODE>", ontCode ) ;
+			ResultSet rs = st.executeQuery( sqlCmd ) ;
+			if( rs.next() ) {
+				exists = true ;
+			}			
+			rs.close() ;
+			return exists ;
+		}
+		catch( SQLException sqlx ) {
+			throw new UploaderException( "Failed to detect whether concept code was in DB or not.", sqlx ) ;
 		}
 		finally {
 			exitTrace( "OntologyBranch.existsWithinDataBase()" ) ;
@@ -907,6 +934,42 @@ public class OntologyBranch {
     public static void exitTrace( String entry ) {
     	I2B2Project.exitTrace( log, entry ) ;
 	}
+    
+    private static Type extractDataTypeFromMetadataXml( String metadataxml ) {
+    	enterTrace( "OntologyBranch.extractDataTypeFromMetadataXml()" ) ;
+    	try {
+    		// <DataType><data-type-goes-here></DataType>
+    		int fromIndex = metadataxml.indexOf( "<DataType>" ) + 10 ;
+    		int toIndex = metadataxml.indexOf( "</DataType>" ) ;
+    		String dataType = metadataxml.substring( fromIndex, toIndex ) ;
+    		if( dataType.equalsIgnoreCase( "String" ) ) {
+    			return Type.STRING ;
+    		}
+    		else if( dataType.equalsIgnoreCase( "PosFloat" ) ) {
+    			return Type.NUMERIC ;
+    		}
+    		//
+    		// If not, ensure things fall in a heap...
+    		return null ;
+    	}
+    	finally {
+    		exitTrace( "OntologyBranch.extractDataTypeFromMetadataXml()" ) ;
+    	}
+    }
+    
+    private static String extractUnitsFromMetadataXml( String metadataxml ) {
+    	enterTrace( "OntologyBranch.extractUnitsFromMetadataXml()" ) ;
+    	try {
+    		// <NormalUnits><units-go-here></NormalUnits>
+    		int fromIndex = metadataxml.indexOf( "<NormalUnits>" ) + 13 ;
+    		int toIndex = metadataxml.indexOf( "</NormalUnits>" ) ;
+    		String units = metadataxml.substring( fromIndex, toIndex ) ;
+    		return units ;
+    	}
+    	finally {
+    		exitTrace( "OntologyBranch.extractUnitsFromMetadataXml()" ) ;
+    	}
+    }
 
     public static class Factory {
     	
@@ -946,10 +1009,71 @@ public class OntologyBranch {
 								    			, String ontCode
 								    			, ProjectUtils utils ) throws UploaderException {
     		enterTrace( "OntologyBranch.Factory.newInstance()" ) ;
-    		OntologyBranch ob = null ;
+    		OntologyBranch ob = new OntologyBranch() ;
     		try {
-
-    			return ob ;
+    			Connection connection = Base.getSimpleConnectionPG() ;
+    			Statement st = connection.createStatement() ;
+    			String sqlCmd = CONCEPT_CODE_SQL_SELECT_COMMAND ;
+    			sqlCmd = sqlCmd.replace( "<BASECODE>",  ontCode ) ;
+    			ResultSet rs = st.executeQuery( sqlCmd ) ;
+    			/*
+    			 *    "( C_HLEVEL" +
+			                ", C_FULLNAME" +
+			                ", C_NAME" +
+			                ", C_SYNONYM_CD" +
+			                ", C_VISUALATTRIBUTES" +
+			                ", C_TOTALNUM" +
+			                ", C_BASECODE" +
+			                ", C_METADATAXML" +
+			                ", C_FACTTABLECOLUMN" +
+			                ", C_TABLENAME" +
+			                ", C_COLUMNNAME" +
+			                ", C_COLUMNDATATYPE" +
+			                ", C_OPERATOR" +
+			                ", C_DIMCODE" +
+			                ", C_COMMENT" +
+			                ", C_TOOLTIP" +
+			                ", M_APPLIED_PATH" +
+			                ", UPDATE_DATE" +
+			                ", DOWNLOAD_DATE" +
+			                ", IMPORT_DATE" +
+			                ", SOURCESYSTEM_CD" +
+			                ", VALUETYPE_CD ) " +
+    			 * 
+    			 * 
+    			 */
+    			if( rs.next() ) {
+    				ob.projectId = projectId ;
+    				ob.colName = colName ;
+    				ob.ontCode = ontCode ;
+    				ob.toolTip = rs.getString( "C_TOOLTIP" ) ;
+    				String metadataxml = rs.getString( "C_METADATAXML" ) ;
+    				if( metadataxml != null ) {
+    					ob.type = extractDataTypeFromMetadataXml( metadataxml ) ;
+    					ob.units = extractUnitsFromMetadataXml( metadataxml ) ;
+     				}
+    				else {
+    					HashSet<String> values = new HashSet<String>() ;
+    					String value = rs.getString( "C_BASECODE" ) ;
+    					int indexColon = value.indexOf( ':' ) ;
+    					if( indexColon > 0 ) {
+    						value = value.substring( indexColon+1 ) ;
+    					}
+    					values.add( value ) ;
+    					while( rs.next() ) {
+    						value = rs.getString( "C_BASECODE" ) ;
+    						indexColon = value.indexOf( ':' ) ;
+    						value = value.substring( indexColon+1 ) ;
+    						values.add( value ) ;
+    					}
+    					
+    				}
+    			}			
+    			rs.close() ;
+    			return null ;
+    		}
+    		catch( SQLException sqlx ) {
+    			throw new UploaderException( "Failed to detect whether concept code was in DB or not.", sqlx ) ;
     		}
     		finally {
     			exitTrace( "I2B2ProjOntologyBranchect.Factory.newInstance()" ) ;
