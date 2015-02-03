@@ -1057,6 +1057,7 @@ public class OntologyBranch {
 								    			, String colName
 								    			, String ontCode
 								    			, Map<String,String> lookups
+								    			, HashSet<String> pathsAndCodes
 								    			, ProjectUtils utils ) throws UploaderException {
     		enterTrace( "OntologyBranch.Factory.newInstance()" ) ;
     		OntologyBranch ob = null ;
@@ -1071,6 +1072,8 @@ public class OntologyBranch {
     				ob.projectId = projectId ;
     				ob.colName = colName ;
     				ob.ontCode = ontCode ;
+    				ob.lookups = lookups ;
+    				ob.pathsAndCodes = pathsAndCodes ;
     				ob.toolTip = rs.getString( "C_TOOLTIP" ) ;
     				String metadataxml = rs.getString( "C_METADATAXML" ) ;
     				if( metadataxml != null ) {
