@@ -285,20 +285,31 @@ public class OntologyBranch {
 	public void serializeDifferencesToDatabase( Connection connection
 											  , OntologyBranch that ) throws UploaderException {
 		enterTrace( "OntologyBranch.serializeDifferencesToDatabase()" ) ;
-		try {			
+		try {	
+			//
+			// Deal with the nonsensical first...
 			if( !this.projectId.equals( that.projectId ) ) {
 				String message = "Project ids differ. Project this: [" + this.projectId + 
 						         "] whilst Project that: [" + that.projectId + "]" ;
 				log.error( message ) ;
 				throw new UploaderException( message ) ;
 			}
+				
+			//
+			// If we get this far in the process, all additions must be enumerations...
 			if( units.equalsIgnoreCase( "enum" ) ) {
+				//
+				// Merge previous values into the target first...
+				this.values.addAll( that.values ) ;	
+				//
+				// Insert the differences...
+				boolean ignoreInsertFailures = true ;
 				switch ( this.type ) {
 				case NUMERIC:
-					insertEnumeratedNumeric( connection ) ;
+					insertEnumeratedNumeric( connection, ignoreInsertFailures ) ;
 					break;
 				case STRING:
-					insertEnumeratedString( connection ) ;
+					insertEnumeratedString( connection, ignoreInsertFailures ) ;
 					break;
 				default:
 					String message = "Differences must be either enumerated numerics or enumerated strings. Type was: " + this.type ;
@@ -472,15 +483,21 @@ public class OntologyBranch {
 	
 	
 	private void insertEnumeratedNumeric( Connection connection ) throws UploaderException {
-		enterTrace( "OntologyBranch.insertEnumeratedNumeric()" ) ;
+		enterTrace( "OntologyBranch.insertEnumeratedNumeric(Connection)" ) ;
 		try {
-//			if( colName.equalsIgnoreCase( "CL_STATUS" ) 
-//				||
-//				colName.equalsIgnoreCase( "SMOKED_AGE_STARTED" ) ) {
-//				
-//				log.debug( "About to process " + colName ) ;
-//				
-//			}
+			boolean ignoreInsertFailures = false ;
+			insertEnumeratedNumeric( connection, ignoreInsertFailures ) ;
+		}
+		finally {
+			exitTrace( "OntologyBranch.insertEnumeratedNumeric(Connection)" ) ;
+		}
+	}
+	
+	
+	private void insertEnumeratedNumeric( Connection connection
+			                            , boolean ignoreInsertFailures ) throws UploaderException {
+		enterTrace( "OntologyBranch.insertEnumeratedNumeric(Connection,boolean)" ) ;
+		try {
 			//
 			// Inserts are inserted as enumerations, so on two/three levels:
 			// The base code; eg: Age
@@ -512,13 +529,19 @@ public class OntologyBranch {
 				sqlCmd = sqlCmd.replace( "<TOOLTIP>", utils.enfoldNullableString( toolTip ) ) ;
 				sqlCmd = sqlCmd.replace( "<SOURCESYSTEM_CD>", utils.enfoldNullableString( projectId ) ) ;
 				
-				st.execute( sqlCmd ) ;				
+				try { 
+					st.execute( sqlCmd ) ;				
+				}
+				catch( SQLException sqlex ) {
+					if( !ignoreInsertFailures ) {
+						throw sqlex ;
+					}
+				}
 				//
 				// Record the path name so we don't try and duplicate it next time...
 				pathsAndCodes.add( PATH_PREFIX + fullName ) ;
 			}
-			
-			
+					
 			//
 			// Examine ranges...
 			int lowestValue = Integer.MAX_VALUE ;
@@ -583,7 +606,14 @@ public class OntologyBranch {
 						sqlCmd = sqlCmd.replace( "<TOOLTIP>", utils.enfoldNullableString( toolTip + ":" + paddedValue ) ) ;
 						sqlCmd = sqlCmd.replace( "<SOURCESYSTEM_CD>", utils.enfoldNullableString( projectId ) ) ;
 						
-						st.execute( sqlCmd ) ;
+						try { 
+							st.execute( sqlCmd ) ;				
+						}
+						catch( SQLException sqlex ) {
+							if( !ignoreInsertFailures ) {
+								throw sqlex ;
+							}
+						}
 						
 						//
 						// Insert concept into concept dimension...
@@ -625,7 +655,14 @@ public class OntologyBranch {
 						sqlCmd = sqlCmd.replace( "<TOOLTIP>", utils.enfoldNullableString( toolTip + ": " + rangeShortName ) ) ;
 						sqlCmd = sqlCmd.replace( "<SOURCESYSTEM_CD>", utils.enfoldNullableString( projectId ) ) ;
 						
-						st.execute( sqlCmd ) ;
+						try { 
+							st.execute( sqlCmd ) ;				
+						}
+						catch( SQLException sqlex ) {
+							if( !ignoreInsertFailures ) {
+								throw sqlex ;
+							}
+						}
 						//
 						// Record the path name so we don't try and duplicate it next time...
 						pathsAndCodes.add( PATH_PREFIX + rangeFullName ) ;
@@ -656,7 +693,14 @@ public class OntologyBranch {
 							sqlCmd = sqlCmd.replace( "<TOOLTIP>", utils.enfoldNullableString( toolTip + ":" + paddedValue ) ) ;
 							sqlCmd = sqlCmd.replace( "<SOURCESYSTEM_CD>", utils.enfoldNullableString( projectId ) ) ;
 							
-							st.execute( sqlCmd ) ;
+							try { 
+								st.execute( sqlCmd ) ;				
+							}
+							catch( SQLException sqlex ) {
+								if( !ignoreInsertFailures ) {
+									throw sqlex ;
+								}
+							}
 							
 							//
 							// Insert concept into concept dimension...
@@ -677,7 +721,7 @@ public class OntologyBranch {
 			throw new UploaderException( "Failed to insert integer branches into metadata table.", sqlx ) ;
 		}
 		finally {
-			exitTrace( "OntologyBranch.insertEnumeratedNumeric()" ) ;
+			exitTrace( "OntologyBranch.insertEnumeratedNumeric(Connection,boolean)" ) ;
 		}
 	}
 	
@@ -688,22 +732,40 @@ public class OntologyBranch {
 			                               , String conceptName ) throws UploaderException {
 		enterTrace( "OntologyBranch.insertIntoConceptDimension()" ) ;
 		try {
+			boolean ignoreInsertFailures = false ;
+			insertIntoConceptDimension( statement, conceptPath, conceptCode, conceptName, ignoreInsertFailures ) ;
+		}
+		finally {
+			exitTrace( "OntologyBranch.insertIntoConceptDimension()" ) ;
+		}
+	}
+	
+	
+	private void insertIntoConceptDimension(  Statement statement
+											, String conceptPath
+											, String conceptCode
+											, String conceptName
+											, boolean ignoreInsertFailures ) throws UploaderException {
+		enterTrace( "OntologyBranch.insertIntoConceptDimension(ignoreInsertFailures)" ) ;
+		try {
 			String sqlCmd = CONCEPT_DIM_SQL_INSERT_COMMAND ;
-			
+
 			sqlCmd = sqlCmd.replaceAll( "<DB_SCHEMA_NAME>", projectId ) ;			
-			
+
 			sqlCmd = sqlCmd.replace( "<CONCEPT_PATH>", utils.enfoldString( conceptPath ) ) ;
 			sqlCmd = sqlCmd.replace( "<CONCEPT_CD>", utils.enfoldNullableString( conceptCode ) ) ;
 			sqlCmd = sqlCmd.replace( "<NAME_CHAR>", utils.enfoldNullableString( conceptName ) ) ;
 			sqlCmd = sqlCmd.replace( "<SOURCESYSTEM_CD>", utils.enfoldNullableString( projectId ) ) ;
-				
+
 			statement.execute( sqlCmd ) ;			
 		}
 		catch( SQLException sqlx ) {
-			throw new UploaderException( "Failed to insert concept into concept dimension.", sqlx ) ;
+			if( !ignoreInsertFailures ) {
+				throw new UploaderException( "Failed to insert concept into concept dimension.", sqlx ) ;
+			}
 		}
 		finally {
-			exitTrace( "OntologyBranch.insertIntoConceptDimension()" ) ;
+			exitTrace( "OntologyBranch.insertIntoConceptDimension(ignoreInsertFailures)" ) ;
 		}
 	}
 	
@@ -815,13 +877,26 @@ public class OntologyBranch {
 		finally {
 			exitTrace( "OntologyBranch.insertSearchableText()" ) ;
 		}
-	}	
+	}
+
+	
+	private void insertEnumeratedString( Connection connection ) throws UploaderException {
+		enterTrace( "OntologyBranch.insertEnumeratedString(Connection)" ) ;
+		try {
+			boolean ignoreInsertFailures = false ;
+			insertEnumeratedString( connection, ignoreInsertFailures ) ;
+		}
+		finally {
+			exitTrace( "OntologyBranch.insertEnumeratedString(Connection)" ) ;
+		}
+	}
 	
 	//
 	// Need to cater for lookups for bottom leaves
 	// The subcategory would be replaced
-	private void insertEnumeratedString( Connection connection ) throws UploaderException {
-		enterTrace( "OntologyBranch.insertEnumeratedString()" ) ;
+	private void insertEnumeratedString( Connection connection
+			                           , boolean ignoreInsertFailures ) throws UploaderException {
+		enterTrace( "OntologyBranch.insertEnumeratedString(Connection,boolean)" ) ;
 		try {
 			if( colName.equalsIgnoreCase( "CL_STATUS" ) 
 				||
@@ -860,8 +935,14 @@ public class OntologyBranch {
 				sqlCmd = sqlCmd.replace( "<TOOLTIP>", utils.enfoldNullableString( toolTip ) ) ;
 				sqlCmd = sqlCmd.replace( "<SOURCESYSTEM_CD>", utils.enfoldNullableString( projectId ) ) ;
 				
-				st.execute( sqlCmd ) ;
-				
+				try { 
+					st.execute( sqlCmd ) ;				
+				}
+				catch( SQLException sqlex ) {
+					if( !ignoreInsertFailures ) {
+						throw sqlex ;
+					}
+				}
 				//
 				// Record the path name so we don't try and duplicate it next time...
 				pathsAndCodes.add( PATH_PREFIX + fullName ) ;
@@ -900,7 +981,14 @@ public class OntologyBranch {
 					sqlCmd = sqlCmd.replace( "<TOOLTIP>", utils.enfoldNullableString( toolTip + ":" + lookup ) ) ;
 					sqlCmd = sqlCmd.replace( "<SOURCESYSTEM_CD>", utils.enfoldNullableString( projectId ) ) ;
 					
-					st.execute( sqlCmd ) ;
+					try { 
+						st.execute( sqlCmd ) ;				
+					}
+					catch( SQLException sqlex ) {
+						if( !ignoreInsertFailures ) {
+							throw sqlex ;
+						}
+					}
 					//
 					// Insert concept into concept dimension...
 					insertIntoConceptDimension( st, fullName, ontCode + ":" + subCategory, colName + " " + lookup ) ;
@@ -915,7 +1003,7 @@ public class OntologyBranch {
 			throw new UploaderException( "Failed to insert string branches into metadata table.", sqlx ) ;
 		}
 		finally {
-			exitTrace( "OntologyBranch.insertEnumeratedString()" ) ;
+			exitTrace( "OntologyBranch.insertEnumeratedString(Connection,boolean)" ) ;
 		}
 	}
 	
@@ -1082,7 +1170,7 @@ public class OntologyBranch {
      				}
     				else {
     					ob.units = "enum" ;
-    					HashSet<String> values = new HashSet<String>() ;
+    					ob.values = new HashSet<String>() ;
     					String value = rs.getString( "C_BASECODE" ).trim() ;
     					int indexColon = value.indexOf( ':' ) ;
     					if( indexColon > 0 ) {
@@ -1090,12 +1178,12 @@ public class OntologyBranch {
     					}
     					//
     					// Collect all the "values"...
-    					values.add( value ) ;
+    					ob.values.add( value ) ;
     					while( rs.next() ) {
     						value = rs.getString( "C_BASECODE" ).trim() ;
     						indexColon = value.indexOf( ':' ) ;
     						value = value.substring( indexColon+1 ) ;
-    						values.add( value ) ;
+    						ob.values.add( value ) ;
     					}
     					ob.type = null ;
     					if( lookups.containsKey( colName ) ) {
@@ -1107,7 +1195,7 @@ public class OntologyBranch {
     						//
     						// else we examine all the values
     						// NB: Date types are not applicable here
-    						Iterator<String> it = values.iterator() ;
+    						Iterator<String> it = ob.values.iterator() ;
         					while( it.hasNext() ) {
         						value = it.next() ;
         						if( utils.isNumeric( value ) ) {
