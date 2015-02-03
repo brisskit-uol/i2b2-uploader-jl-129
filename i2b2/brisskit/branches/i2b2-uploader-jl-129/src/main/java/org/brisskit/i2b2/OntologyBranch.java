@@ -283,10 +283,35 @@ public class OntologyBranch {
 	
 	
 	public void serializeDifferencesToDatabase( Connection connection
-											  , OntologyBranch otherBranch ) throws UploaderException {
+											  , OntologyBranch that ) throws UploaderException {
 		enterTrace( "OntologyBranch.serializeDifferencesToDatabase()" ) ;
 		try {			
-			
+			if( !this.projectId.equals( that.projectId ) ) {
+				String message = "Project ids differ. Project this: [" + this.projectId + 
+						         "] whilst Project that: [" + that.projectId + "]" ;
+				log.error( message ) ;
+				throw new UploaderException( message ) ;
+			}
+			if( units.equalsIgnoreCase( "enum" ) ) {
+				switch ( this.type ) {
+				case NUMERIC:
+					insertEnumeratedNumeric( connection ) ;
+					break;
+				case STRING:
+					insertEnumeratedString( connection ) ;
+					break;
+				default:
+					String message = "Differences must be either enumerated numerics or enumerated strings. Type was: " + this.type ;
+					log.error( message ) ;
+					throw new UploaderException( message ) ;
+				}
+			}
+			else {
+				String message = "Differences must be marked as enumerations. Units were: " + units ;
+				log.error( message ) ;
+				throw new UploaderException() ;
+			}
+					
 		}
 		finally {
 			exitTrace( "OntologyBranch.serializeDifferencesToDatabase()" ) ;
@@ -318,7 +343,28 @@ public class OntologyBranch {
 					return false ;
 				}
 			}
-			
+			//
+			// If either is of Type.DATE then the ontCode is the boss
+			// and we have already tested for equality of ontCode...
+			if( this.type == Type.DATE || that.type == Type.DATE ) {
+				return true ;
+			}
+			//
+			// If the values collections differ in size there must be some difference...
+			if( this.values.size() != that.values.size() ) {
+				return false ;
+			}
+			//
+			// But if not, then the values must match exactly...
+			Iterator<String> it = this.values.iterator() ;
+			while( it.hasNext() ) {
+				String value = it.next() ;
+				if( !that.values.contains( value ) ) {
+					return false ;
+				}
+			}
+			//
+			// If we get this far, surely they are equal?
 			return true ;
 		}
 		finally {
