@@ -851,6 +851,7 @@ public class I2B2Project {
 														   , colName
 														   , ontCode
 														   , lookups
+														   , pathsAndCodes
 														   , utils ) ;
 				if( obThat == null ) {				
 					obThis.serializeToDatabase( Base.getSimpleConnectionPG() ) ;
