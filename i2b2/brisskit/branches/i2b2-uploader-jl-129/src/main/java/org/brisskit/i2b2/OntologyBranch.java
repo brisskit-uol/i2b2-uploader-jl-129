@@ -363,19 +363,31 @@ public class OntologyBranch {
 				return true ;
 			}
 			//
-			// If the values collections differ in size there must be some difference...
-			if( this.values.size() != that.values.size() ) {
-				return false ;
-			}
-			//
-			// But if not, then the values must match exactly...
-			Iterator<String> it = this.values.iterator() ;
-			while( it.hasNext() ) {
-				String value = it.next() ;
-				if( !that.values.contains( value ) ) {
+			// We can only use values when the type is numeric and it is an enumeration.
+			// Reason: we only need to test for equality between OntologyBranch(es)
+			// when we are looking across two different spreadsheets.
+			// We don't easily have the previous spreadsheets values.
+			// We could get them from the database but it would serve no purpose here.
+			if( this.type == Type.NUMERIC 
+				&& 
+				this.units.equalsIgnoreCase( "enum" ) ) {
+				//
+				// If the values collections differ in size there must be some difference...
+				if( this.values.size() != that.values.size() ) {
 					return false ;
 				}
+				//
+				// But if not, then the values must match exactly...
+				Iterator<String> it = this.values.iterator() ;
+				while( it.hasNext() ) {
+					String value = it.next() ;
+					if( !that.values.contains( value ) ) {
+						return false ;
+					}
+				}
+
 			}
+			
 			//
 			// If we get this far, surely they are equal?
 			return true ;
@@ -1035,30 +1047,36 @@ public class OntologyBranch {
 	}
 	
 	
-	public boolean existsWithinDataBase( Connection connection ) throws UploaderException {
-		enterTrace( "OntologyBranch.existsWithinDataBase()" ) ;
-		boolean exists = false ;
-		try {
-			//
-			// See whether the base code exists in the db...
-			Statement st = connection.createStatement() ;
-			String sqlCmd = CONCEPT_CODE_SQL_SELECT_COMMAND ;
-			sqlCmd = sqlCmd.replace( "<BASECODE>", ontCode ) ;
-			ResultSet rs = st.executeQuery( sqlCmd ) ;
-			if( rs.next() ) {
-				exists = true ;
-			}			
-			rs.close() ;
-			return exists ;
-		}
-		catch( SQLException sqlx ) {
-			throw new UploaderException( "Failed to detect whether concept code was in DB or not.", sqlx ) ;
-		}
-		finally {
-			exitTrace( "OntologyBranch.existsWithinDataBase()" ) ;
-		}		
-	}
+//	public boolean existsWithinDataBase( Connection connection ) throws UploaderException {
+//		enterTrace( "OntologyBranch.existsWithinDataBase()" ) ;
+//		boolean exists = false ;
+//		try {
+//			//
+//			// See whether the base code exists in the db...
+//			Statement st = connection.createStatement() ;
+//			String sqlCmd = CONCEPT_CODE_SQL_SELECT_COMMAND ;
+//			sqlCmd = sqlCmd.replace( "<DB_SCHEMA_NAME>", projectId ) ;
+//			sqlCmd = sqlCmd.replace( "<PROJECT_METADATA_TABLE>", projectId ) ;
+//			sqlCmd = sqlCmd.replace( "<BASECODE>", ontCode ) ;
+//			ResultSet rs = st.executeQuery( sqlCmd ) ;
+//			if( rs.next() ) {
+//				exists = true ;
+//			}			
+//			rs.close() ;
+//			return exists ;
+//		}
+//		catch( SQLException sqlx ) {
+//			throw new UploaderException( "Failed to detect whether concept code was in DB or not.", sqlx ) ;
+//		}
+//		finally {
+//			exitTrace( "OntologyBranch.existsWithinDataBase()" ) ;
+//		}		
+//	}
 	
+
+	public String getProjectId() {
+		return projectId;
+	}
 
 	public Type getType() {
 		return type;
@@ -1074,7 +1092,7 @@ public class OntologyBranch {
 		return units ;
 	}
 	
-	private String getColName() {
+	public String getColName() {
 		return colName;
 	}
 		
@@ -1180,6 +1198,8 @@ public class OntologyBranch {
     			Connection connection = Base.getSimpleConnectionPG() ;
     			Statement st = connection.createStatement() ;
     			String sqlCmd = CONCEPT_CODE_SQL_SELECT_COMMAND ;
+    			sqlCmd = sqlCmd.replace( "<DB_SCHEMA_NAME>", projectId ) ;
+				sqlCmd = sqlCmd.replace( "<PROJECT_METADATA_TABLE>", projectId ) ;
     			sqlCmd = sqlCmd.replace( "<BASECODE>",  ontCode ) ;
     			ResultSet rs = st.executeQuery( sqlCmd ) ;
     			if( rs.next() ) {
@@ -1190,14 +1210,14 @@ public class OntologyBranch {
     				ob.lookups = lookups ;
     				ob.pathsAndCodes = pathsAndCodes ;
     				ob.toolTip = rs.getString( "C_TOOLTIP" ) ;
+    				ob.values = new HashSet<String>() ;
     				String metadataxml = rs.getString( "C_METADATAXML" ) ;
     				if( metadataxml != null ) {
     					ob.type = extractDataTypeFromMetadataXml( metadataxml ) ;
     					ob.units = extractUnitsFromMetadataXml( metadataxml ) ;
      				}
     				else {
-    					ob.units = "enum" ;
-    					ob.values = new HashSet<String>() ;
+    					ob.units = "enum" ;   					
     					String value = rs.getString( "C_BASECODE" ).trim() ;
     					int indexColon = value.indexOf( ':' ) ;
     					if( indexColon > 0 ) {
@@ -1257,6 +1277,5 @@ public class OntologyBranch {
     	}
     	
     }
-
 
 }
