@@ -311,8 +311,10 @@ public class OntologyBranch {
 				case STRING:
 					insertEnumeratedString( connection, ignoreInsertFailures ) ;
 					break;
+				case DATE:
+					insertDate( connection, ignoreInsertFailures ) ;
 				default:
-					String message = "Differences must be either enumerated numerics or enumerated strings. Type was: " + this.type ;
+					String message = "Differences must be enumerations (numerics or strings) or dates. Type was: " + this.type ;
 					log.error( message ) ;
 					throw new UploaderException( message ) ;
 				}
@@ -617,7 +619,11 @@ public class OntologyBranch {
 						
 						//
 						// Insert concept into concept dimension...
-						insertIntoConceptDimension( st, endPointFullName, ontCode + ":" + j, colName + ":" + j ) ;
+						insertIntoConceptDimension( st
+												  , endPointFullName
+												  , ontCode + ":" + j
+												  , colName + ":" + j
+												  , ignoreInsertFailures ) ;
 						//
 						// Record the path name so we don't try and duplicate it next time...
 						pathsAndCodes.add( PATH_PREFIX + fullName ) ;
@@ -704,7 +710,11 @@ public class OntologyBranch {
 							
 							//
 							// Insert concept into concept dimension...
-							insertIntoConceptDimension( st, endPointFullName, ontCode + ":" + j, colName + ":" + j ) ;
+							insertIntoConceptDimension( st
+													  , endPointFullName
+													  , ontCode + ":" + j
+													  , colName + ":" + j
+													  , ignoreInsertFailures ) ;
 							//
 							// Record the path name so we don't try and duplicate it next time...
 							pathsAndCodes.add( PATH_PREFIX + endPointFullName ) ;
@@ -746,7 +756,7 @@ public class OntologyBranch {
 											, String conceptCode
 											, String conceptName
 											, boolean ignoreInsertFailures ) throws UploaderException {
-		enterTrace( "OntologyBranch.insertIntoConceptDimension(ignoreInsertFailures)" ) ;
+		enterTrace( "OntologyBranch.insertIntoConceptDimension(+ignoreInsertFailures)" ) ;
 		try {
 			String sqlCmd = CONCEPT_DIM_SQL_INSERT_COMMAND ;
 
@@ -765,13 +775,26 @@ public class OntologyBranch {
 			}
 		}
 		finally {
-			exitTrace( "OntologyBranch.insertIntoConceptDimension(ignoreInsertFailures)" ) ;
+			exitTrace( "OntologyBranch.insertIntoConceptDimension(+ignoreInsertFailures)" ) ;
 		}
 	}
 	
 	
 	private void insertDate( Connection connection ) throws UploaderException {
-		enterTrace( "OntologyBranch.insertDate()" ) ;
+		enterTrace( "OntologyBranch.insertDate(Connection)" ) ;
+		try {
+			boolean ignoreInsertFailures = false ;
+			insertDate( connection, ignoreInsertFailures ) ;
+		}
+		finally {
+			exitTrace( "OntologyBranch.insertDate(Connection)" ) ;
+		}
+	}
+	
+	
+	private void insertDate( Connection connection
+			               , boolean ignoreInsertFailures ) throws UploaderException {
+		enterTrace( "OntologyBranch.insertDate(Connection,boolean)" ) ;
 		try {
 			//
 			// A date is really an instance of an ontological code occurring.
@@ -807,7 +830,7 @@ public class OntologyBranch {
 				st.execute( sqlCmd ) ;
 				//
 				// Insert concept into concept dimension...
-				insertIntoConceptDimension( st, fullName, ontCode, colName ) ;
+				insertIntoConceptDimension( st, fullName, ontCode, colName, ignoreInsertFailures ) ;
 				//
 				// Record the path name so we don't try and duplicate it next time...
 				pathsAndCodes.add( PATH_PREFIX + fullName ) ;
@@ -818,7 +841,7 @@ public class OntologyBranch {
 			throw new UploaderException( "Failed to insert date branches into metadata table.", sqlx ) ;
 		}
 		finally {
-			exitTrace( "OntologyBranch.insertDate()" ) ;
+			exitTrace( "OntologyBranch.insertDate(Connection,boolean)" ) ;
 		}
 	}
 	
@@ -991,7 +1014,11 @@ public class OntologyBranch {
 					}
 					//
 					// Insert concept into concept dimension...
-					insertIntoConceptDimension( st, fullName, ontCode + ":" + subCategory, colName + " " + lookup ) ;
+					insertIntoConceptDimension( st
+											  , fullName
+											  , ontCode + ":" + subCategory
+											  , colName + " " + lookup
+											  , ignoreInsertFailures ) ;
 					//
 					// Record the path name so we don't try and duplicate it next time...
 					pathsAndCodes.add( PATH_PREFIX + fullName ) ;

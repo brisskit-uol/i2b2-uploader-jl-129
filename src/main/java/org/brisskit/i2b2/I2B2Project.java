@@ -177,27 +177,12 @@ public class I2B2Project {
     	enterTrace( "I2B2Project.processSpreadsheet(File,Date)" ) ;
     	try {
     		this.spreadsheetFile = spreadSheetFile ;
-    		if( !newProject ) {
-    			log.debug( "=====================================================" ) ;
-    			log.debug( "Processing spreadsheet for an existing project: start" ) ;
-    			log.debug( "=====================================================" ) ;
     			readSpreadsheet() ;
     			produceOntology() ;
     			producePatientMapping() ;
     			producePatientDimension() ;		
     			produceFacts( defaultObservationDate ) ;
-    			log.debug( "===================================================" ) ;
-    			log.debug( "Processing spreadsheet for an existing project: end" ) ;
-    			log.debug( "===================================================" ) ;
-    		}
-    		else {
-    			readSpreadsheet() ;
-    			produceOntology() ;
-    			producePatientMapping() ;
-    			producePatientDimension() ;		
-    			produceFacts( defaultObservationDate ) ;
-    			newProject = false ;
-    		}    		
+    			newProject = false ;    		
     	}
     	finally {
     		exitTrace( "I2B2Project.processSpreadsheet(File,Date)" ) ;
