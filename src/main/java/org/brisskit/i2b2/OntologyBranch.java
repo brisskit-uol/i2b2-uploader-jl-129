@@ -208,16 +208,16 @@ public class OntologyBranch {
 	// Only required if code lookups are provided 
 	private Map<String,String> lookups ;
 	
-	public OntologyBranch( String projectId
-			             , String colName
-			             , String toolTip
-			             , String ontCode
-			             , Type type
-			             , String units
-			             , Map<String,String> lookups
-			             , HashSet<String> values
-			             , HashSet<String> pathsAndCodes
-			             , ProjectUtils utils ) {
+	private OntologyBranch( String projectId
+	  		              , String colName
+			              , String toolTip
+			              , String ontCode
+			              , Type type
+			              , String units
+			              , Map<String,String> lookups
+			              , HashSet<String> values
+			              , HashSet<String> pathsAndCodes
+			              , ProjectUtils utils ) {
 		enterTrace( "OntologyBranch()" ) ;
 		this.projectId = projectId ;
 		this.colName = colName ;
@@ -234,9 +234,9 @@ public class OntologyBranch {
 	
 	
 	public void serializeToDatabase( Connection connection ) throws UploaderException {
-		enterTrace( "OntologyBranch()" ) ;
+		enterTrace( "OntologyBranch.serializeToDatabase()" ) ;
 		try {			
-			insertRoot( connection) ;
+			insertRoot( connection ) ;
 			
 			switch( type ) {
 			case NUMERIC:
@@ -264,6 +264,48 @@ public class OntologyBranch {
 		}
 		finally {
 			exitTrace( "OntologyBranch.serializeToDatabase()" ) ;
+		}
+	}
+	
+	
+	public void serializeDifferencesToDatabase( Connection connection
+											  , OntologyBranch otherBranch ) throws UploaderException {
+		enterTrace( "OntologyBranch.serializeDifferencesToDatabase()" ) ;
+		try {			
+			
+		}
+		finally {
+			exitTrace( "OntologyBranch.serializeDifferencesToDatabase()" ) ;
+		}
+	}
+	
+	
+	public boolean equals( OntologyBranch other ) {
+		enterTrace( "OntologyBranch.equals()" ) ;
+		try {			
+			if( !this.projectId.equals( other.projectId ) ) {
+				return false ;
+			}
+			if( !this.colName.equals( other.colName ) ) {
+				return false ;
+			}
+			if( !this.ontCode.equals( other.ontCode ) ) {
+				return false ;
+			}
+			if( !this.type.equals( other.type ) ) {
+				return false ;
+			}
+			if( !this.units.equals( other.units ) ) {
+				return false ;
+			}
+			//
+			// NB: We are not comparing on:
+			// (1) tooltips - not that significant
+			// (2) values - which are significant for enumerations!!!
+			return true ;
+		}
+		finally {
+			exitTrace( "OntologyBranch.equals()" ) ;
 		}
 	}
 	
@@ -814,6 +856,18 @@ public class OntologyBranch {
 		}
 	}
 	
+	
+	public boolean existsWithinDataBase( Connection connection ) {
+		enterTrace( "OntologyBranch.existsWithinDataBase()" ) ;
+		try {
+			
+			return true ;
+		}
+		finally {
+			exitTrace( "OntologyBranch.existsWithinDataBase()" ) ;
+		}		
+	}
+	
 
 	public Type getType() {
 		return type;
@@ -827,6 +881,10 @@ public class OntologyBranch {
 	
 	public String getUnits() {
 		return units ;
+	}
+	
+	private String getColName() {
+		return colName;
 	}
 		
 	
@@ -850,9 +908,55 @@ public class OntologyBranch {
     	I2B2Project.exitTrace( log, entry ) ;
 	}
 
+    public static class Factory {
+    	
+    	public static OntologyBranch newInstance( String projectId
+								    			, String colName
+									            , String toolTip
+									            , String ontCode
+									            , Type type
+									            , String units
+									            , Map<String,String> lookups
+									            , HashSet<String> values
+									            , HashSet<String> pathsAndCodes
+									            , ProjectUtils utils ) throws UploaderException {
+			enterTrace( "OntologyBranch.Factory.newInstance()" ) ;
+			OntologyBranch ob = null ;
+			try {
+				ob = new OntologyBranch( projectId
+						    		   , colName
+							           , toolTip
+							           , ontCode
+							           , type
+							           , units
+							           , lookups
+							           , values
+							           , pathsAndCodes
+							           , utils ) ;
+				return ob ;
+			}
+			finally {
+				exitTrace( "I2B2ProjOntologyBranchect.Factory.newInstance()" ) ;
+			}
+		}
+    	
+    	
+    	public static OntologyBranch newInstance( String projectId
+								    			, String colName
+								    			, String ontCode
+								    			, ProjectUtils utils ) throws UploaderException {
+    		enterTrace( "OntologyBranch.Factory.newInstance()" ) ;
+    		OntologyBranch ob = null ;
+    		try {
 
-	private String getColName() {
-		return colName;
-	}
+    			return ob ;
+    		}
+    		finally {
+    			exitTrace( "I2B2ProjOntologyBranchect.Factory.newInstance()" ) ;
+    		}
+    	}
+    	
+    }
+
 
 }

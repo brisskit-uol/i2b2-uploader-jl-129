@@ -516,6 +516,11 @@ public class I2B2Project {
 				if( !breakdowns.containsKey( breakdownName ) ) {
 					breakdowns.put( STANDARD_BREAKDOWNS[i][0], STANDARD_BREAKDOWNS[i][0] ) ;
 				}
+				if( !newProject ) {
+					continue ;
+				}
+				//
+				// Only write them to the DB if a new project...
 				headingName = breakdowns.get( breakdownName ) ;
 				path = "\\\\" + projectId + "\\" + projectId + "\\" + headingName + "\\" ;
 				sqlCmd = BREAKDOWNS_SQL_INSERT_COMMAND ;				
@@ -810,16 +815,16 @@ public class I2B2Project {
 				//
 				// We build each branch in memory and save it in a collection 
 				OntologyBranch 
-					branch = new OntologyBranch( projectId
-							                   , colName
-							                   , toolTip
-							                   , ontCode
-							                   , type
-							                   , units
-							                   , lookups
-							                   , values
-							                   , pathsAndCodes
-							                   , utils ) ;
+					branch = OntologyBranch.Factory.newInstance( projectId
+											                   , colName
+											                   , toolTip
+											                   , ontCode
+											                   , type
+											                   , units
+											                   , lookups
+											                   , values
+											                   , pathsAndCodes
+											                   , utils ) ;
 				
 				ontBranches.put( branch.getOntCode(), branch ) ;
 				
@@ -827,21 +832,41 @@ public class I2B2Project {
 			
 			
 			//
-			// Indicates that we are creating the project's ontology
-			// here for the very first time, as derived from the spreadsheet.
-			if( newProject ) {
-				Iterator<OntologyBranch> itOb = ontBranches.values().iterator() ;
-				while( itOb.hasNext() ) {
-					OntologyBranch ob = itOb.next() ;
-					ob.serializeToDatabase( Base.getSimpleConnectionPG() ) ;
+			// Process ontology branches into the database ...
+			OntologyBranch obThis = null ;
+			OntologyBranch obThat = null ;
+			Iterator<OntologyBranch> itOb = ontBranches.values().iterator() ;
+			while( itOb.hasNext() ) {
+				obThis = itOb.next() ;
+				//
+				// Are we creating the project's ontology
+				// here for the very first time, as derived from the spreadsheet?
+				if( !obThis.existsWithinDataBase( Base.getSimpleConnectionPG() ) ) {				
+					obThis.serializeToDatabase( Base.getSimpleConnectionPG() ) ;
 				}
 				//
-		    	// Breakdowns may or may not be there as a separate sheet.
-		    	// In any case, we must create some breakdown metadata
-		    	// in order for breakdowns not to raise errors.
-		    	// So we build all breakdowns here (defaulting if need be)...
-		    	buildBreakdowns() ;
+				// But if this is an existing ontology, 
+				// we need to check new against old metadata...
+				else {
+					obThat = OntologyBranch.Factory.newInstance( projectId
+															   , colName
+							                                   , ontCode
+							                                   , utils ) ;
+					//
+					// If there's a difference, we need to write the differences...
+					if( !obThis.equals( obThat ) ) {
+						obThis.serializeDifferencesToDatabase( Base.getSimpleConnectionPG()
+								                             , obThat ) ;
+					}
+				}
 			}
+			
+			//
+	    	// Breakdowns may or may not be there as a separate sheet.
+	    	// In any case, we must create some breakdown metadata
+	    	// in order for breakdowns not to raise errors.
+	    	// So we build all breakdowns here (defaulting if need be)...
+	    	buildBreakdowns() ;
 			
 		}
 		finally {
