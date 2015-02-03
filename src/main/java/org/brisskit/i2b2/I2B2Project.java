@@ -1045,7 +1045,9 @@ public class I2B2Project {
 															   , colName
 							                                   , ontCode
 							                                   , lookups
+							                                   , pathsAndCodes
 							                                   , utils ) ;
+					
 					//
 					// If there's a difference, we need to write the differences...
 					if( !obThis.equals( obThat ) ) {
