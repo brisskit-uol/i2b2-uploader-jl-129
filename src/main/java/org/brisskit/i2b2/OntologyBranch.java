@@ -294,28 +294,31 @@ public class OntologyBranch {
 	}
 	
 	
-	public boolean equals( OntologyBranch other ) {
+	public boolean equals( OntologyBranch that ) {
 		enterTrace( "OntologyBranch.equals()" ) ;
 		try {			
-			if( !this.projectId.equals( other.projectId ) ) {
+			if( !this.projectId.equals( that.projectId ) ) {
 				return false ;
 			}
-			if( !this.colName.equals( other.colName ) ) {
+			if( !this.colName.equals( that.colName ) ) {
 				return false ;
 			}
-			if( !this.ontCode.equals( other.ontCode ) ) {
+			if( !this.ontCode.equals( that.ontCode ) ) {
 				return false ;
 			}
-			if( !this.type.equals( other.type ) ) {
+			if( !this.units.equals( that.units ) ) {
 				return false ;
 			}
-			if( !this.units.equals( other.units ) ) {
-				return false ;
+			if( this.type != that.type ) {
+				//
+				// What the following is saying is that Type.STRING and Type.DATE
+				// are for our purposes compatible (ie: both represent enumerated strings).
+				// Any other combinations are incompatible!!!
+				if( this.type == Type.NUMERIC || that.type == Type.NUMERIC ) {
+					return false ;
+				}
 			}
-			//
-			// NB: We are not comparing on:
-			// (1) tooltips - not that significant
-			// (2) values - which are significant for enumerations!!!
+			
 			return true ;
 		}
 		finally {
@@ -1007,42 +1010,18 @@ public class OntologyBranch {
     	public static OntologyBranch newInstance( String projectId
 								    			, String colName
 								    			, String ontCode
+								    			, Map<String,String> lookups
 								    			, ProjectUtils utils ) throws UploaderException {
     		enterTrace( "OntologyBranch.Factory.newInstance()" ) ;
-    		OntologyBranch ob = new OntologyBranch() ;
+    		OntologyBranch ob = null ;
     		try {
     			Connection connection = Base.getSimpleConnectionPG() ;
     			Statement st = connection.createStatement() ;
     			String sqlCmd = CONCEPT_CODE_SQL_SELECT_COMMAND ;
     			sqlCmd = sqlCmd.replace( "<BASECODE>",  ontCode ) ;
     			ResultSet rs = st.executeQuery( sqlCmd ) ;
-    			/*
-    			 *    "( C_HLEVEL" +
-			                ", C_FULLNAME" +
-			                ", C_NAME" +
-			                ", C_SYNONYM_CD" +
-			                ", C_VISUALATTRIBUTES" +
-			                ", C_TOTALNUM" +
-			                ", C_BASECODE" +
-			                ", C_METADATAXML" +
-			                ", C_FACTTABLECOLUMN" +
-			                ", C_TABLENAME" +
-			                ", C_COLUMNNAME" +
-			                ", C_COLUMNDATATYPE" +
-			                ", C_OPERATOR" +
-			                ", C_DIMCODE" +
-			                ", C_COMMENT" +
-			                ", C_TOOLTIP" +
-			                ", M_APPLIED_PATH" +
-			                ", UPDATE_DATE" +
-			                ", DOWNLOAD_DATE" +
-			                ", IMPORT_DATE" +
-			                ", SOURCESYSTEM_CD" +
-			                ", VALUETYPE_CD ) " +
-    			 * 
-    			 * 
-    			 */
     			if( rs.next() ) {
+    				ob = new OntologyBranch() ;
     				ob.projectId = projectId ;
     				ob.colName = colName ;
     				ob.ontCode = ontCode ;
@@ -1053,24 +1032,57 @@ public class OntologyBranch {
     					ob.units = extractUnitsFromMetadataXml( metadataxml ) ;
      				}
     				else {
+    					ob.units = "enum" ;
     					HashSet<String> values = new HashSet<String>() ;
-    					String value = rs.getString( "C_BASECODE" ) ;
+    					String value = rs.getString( "C_BASECODE" ).trim() ;
     					int indexColon = value.indexOf( ':' ) ;
     					if( indexColon > 0 ) {
     						value = value.substring( indexColon+1 ) ;
     					}
+    					//
+    					// Collect all the "values"...
     					values.add( value ) ;
     					while( rs.next() ) {
-    						value = rs.getString( "C_BASECODE" ) ;
+    						value = rs.getString( "C_BASECODE" ).trim() ;
     						indexColon = value.indexOf( ':' ) ;
     						value = value.substring( indexColon+1 ) ;
     						values.add( value ) ;
     					}
-    					
+    					ob.type = null ;
+    					if( lookups.containsKey( colName ) ) {
+    						// If there is a code lookup,
+    						// we must treat this as of type STRING.
+    						ob.type = Type.STRING ;
+    					}
+    					else {
+    						//
+    						// else we examine all the values
+    						// NB: Date types are not applicable here
+    						Iterator<String> it = values.iterator() ;
+        					while( it.hasNext() ) {
+        						value = it.next() ;
+        						if( utils.isNumeric( value ) ) {
+        							if( ob.type == null ) {
+        								ob.type = Type.NUMERIC ;
+        							}
+        							else if( ob.type == Type.NUMERIC ){
+        								; // do nothing
+        							}
+        							else {
+        								ob.type = Type.STRING ;
+        							}						
+        						}
+        						else {
+        							ob.type = Type.STRING ;
+        						}
+        					} // end while
+    					}  					
     				}
     			}			
     			rs.close() ;
-    			return null ;
+    			//
+    			// NB: Returning null indicates this code does not exist in the database:
+    			return ob ;
     		}
     		catch( SQLException sqlx ) {
     			throw new UploaderException( "Failed to detect whether concept code was in DB or not.", sqlx ) ;
