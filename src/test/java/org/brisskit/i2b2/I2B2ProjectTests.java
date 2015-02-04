@@ -33,9 +33,9 @@ public class I2B2ProjectTests extends TestCase {
 	}
 
 	
-	public void testCreateNewProject() { 
+	public void _testCreateNewProject() { 
 		enterTrace( "==>>testCreateNewProject()" ) ;
-//		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-02.xls").getFile());
+//		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/EG1-laheart.xlsx").getFile());
 //		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/GP_CUT1.xlsx").getFile());		
 		try {
@@ -56,7 +56,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 	
 	
-	public void testCreateNewProjectWithStartDateColumn() { 
+	public void _testCreateNewProjectWithStartDateColumn() { 
 		enterTrace( "==>>testCreateNewProjectWithStartDateColumn()" ) ;
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-03-startdatecol.xls").getFile() ) ;	
 		try {
@@ -77,7 +77,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 
 	
-	public void testSupplementingExistingProject() { 
+	public void _testSupplementingExistingProject() { 
 		enterTrace( "==>>testSupplementingExistingProject()" ) ;
 		File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());
 		File spreadsheetFile2 = new File(getClass().getClassLoader().getResource("spreadsheets/test-02.xls").getFile());
@@ -111,9 +111,45 @@ public class I2B2ProjectTests extends TestCase {
 		}
 		
 	}
+	
+	
+	public void testSupplementingExistingProject_AddionalMetadata() { 
+		enterTrace( "==>>testSupplementingExistingProject_AddionalMetadata()" ) ;
+		File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());
+		File spreadsheetFile2 = new File(getClass().getClassLoader().getResource("spreadsheets/test-02-additionalmetadata.xls").getFile());
+//		File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/EG1-laheart.xlsx").getFile());
+//		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/GP_CUT1.xlsx").getFile());		
+		try {
+			//
+			// Delete project if it already exists...
+			if( I2B2Project.Factory.projectExists( "testaddnewmeta" ) ) {
+				I2B2Project.Factory.delete( "testaddnewmeta" ) ;				
+			}
+			//
+			// Create new project with all it db artifacts
+			I2B2Project project = I2B2Project.Factory.newInstance( "testaddnewmeta" ) ;
+			//
+			// Process the first spreadsheet...
+			project.processSpreadsheet( spreadsheetFile1 ) ;
+			//
+			// Get a new instance of the project...
+			project = I2B2Project.Factory.newInstance( "testaddnewmeta" ) ;
+			//
+			// And attempt to process subsequent spreadsheet...
+			project.processSpreadsheet( spreadsheetFile2 ) ;
+		}
+		catch( UploaderException cex ) {			
+			cex.printStackTrace( System.out ) ;
+			fail( "UploaderException thrown: " + cex.getLocalizedMessage() ) ;
+		}
+		finally {
+			exitTrace( "==>>testSupplementingExistingProject_AddionalMetadata()" ) ;
+		}
+		
+	}
 		
 		
-		public void testSupplementingExistingProject_SameInstance() { 
+		public void _testSupplementingExistingProject_SameInstance() { 
 			enterTrace( "==>>testSupplementingExistingProject_SameInstance()" ) ;
 			File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());
 			File spreadsheetFile2 = new File(getClass().getClassLoader().getResource("spreadsheets/test-02.xls").getFile());
@@ -146,7 +182,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 	
 	
-	public void testDeletionOfProject() { 
+	public void _testDeletionOfProject() { 
 		enterTrace( "==>>testDeletionOfProject()" ) ;		
 		try {
 			//
