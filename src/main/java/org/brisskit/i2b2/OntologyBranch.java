@@ -624,13 +624,12 @@ public class OntologyBranch {
 							insertIntoConceptDimension( st
 													  , endPointFullName
 													  , ontCode + ":" + j
-													  , colName + ":" + j ) ;
-					
+													  , colName + ":" + j ) ;						
+							//
+							// Record the path name so we don't try and duplicate it next time...
+							pathsAndCodes.add( PATH_PREFIX + fullName ) ;
 						}
-						
-						//
-						// Record the path name so we don't try and duplicate it next time...
-						pathsAndCodes.add( PATH_PREFIX + fullName ) ;
+
 					}
 					
 				} // end inner for
@@ -678,7 +677,8 @@ public class OntologyBranch {
 					String endPointFullName = null ;
 					for( int j=i; j<i+10; j++ ) {
 						String paddedValue = String.format( formatString, j ) ;
-						endPointFullName = rangeFullName + ":" + paddedValue + "\\" ;
+						// inclusion of colon is an error (but still works)
+						endPointFullName = rangeFullName + paddedValue + "\\" ;
 						if( !pathsAndCodes.contains( PATH_PREFIX + endPointFullName ) ) {
 							
 							if( !nodeExists( connection, endPointFullName ) ) {
@@ -739,7 +739,6 @@ public class OntologyBranch {
 			sqlCmd = sqlCmd.replace( "<CONCEPT_CD>", utils.enfoldNullableString( conceptCode ) ) ;
 			sqlCmd = sqlCmd.replace( "<NAME_CHAR>", utils.enfoldNullableString( conceptName ) ) ;
 			sqlCmd = sqlCmd.replace( "<SOURCESYSTEM_CD>", utils.enfoldNullableString( projectId ) ) ;
-
 			statement.execute( sqlCmd ) ;			
 		}
 		catch( SQLException sqlx ) {
@@ -812,43 +811,41 @@ public class OntologyBranch {
 			String fullName = "\\" + projectId + "\\" + colName + "\\" ;
 			if( !pathsAndCodes.contains( PATH_PREFIX + fullName ) ) {
 				
-				sqlCmd = METADATA_SQL_INSERT_COMMAND ;
-				
-				String date = utils.formatDate( new Date() ) ;
-				String metadataxml = METADATAXML ;
-				metadataxml = metadataxml.replace( "<date-time-goes-here>", date + " 00:00:00" ) ;
-				metadataxml = metadataxml.replace( "<code-name-goes-here>", ontCode ) ;
-				metadataxml = metadataxml.replace( "<name-goes-here>", colName ) ;
-				metadataxml = metadataxml.replace( "<data-type-goes-here>", "String" ) ; 
-				metadataxml = metadataxml.replace( "<units-go-here>", "" ) ;
-				
-				log.debug( "For ontCode " + ontCode + " numeric units are: " + units ) ;
-				
-				sqlCmd = sqlCmd.replaceAll( "<DB_SCHEMA_NAME>", projectId ) ;
-				sqlCmd = sqlCmd.replace( "<PROJECT_METADATA_TABLE>", projectId ) ;
-				
-				sqlCmd = sqlCmd.replace( "<HLEVEL>", utils.enfoldInteger( 1 ) ) ;
-				sqlCmd = sqlCmd.replace( "<FULLNAME>", utils.enfoldString( fullName ) ) ;
-				sqlCmd = sqlCmd.replace( "<NAME>", utils.enfoldString( colName ) ) ;
-				sqlCmd = sqlCmd.replace( "<SYNONYM_CD>", utils.enfoldString( "N" ) ) ;
-				sqlCmd = sqlCmd.replace( "<VISUALATTRIBUTES>", utils.enfoldString( "LA" ) ) ;
-				sqlCmd = sqlCmd.replace( "<BASECODE>", utils.enfoldString( ontCode ) ) ;
-				sqlCmd = sqlCmd.replace( "<METADATAXML>", utils.enfoldNullableString( metadataxml ) ) ;
-				sqlCmd = sqlCmd.replace( "<COLUMNDATATYPE>", utils.enfoldString( "T" ) ) ;
-				sqlCmd = sqlCmd.replace( "<OPERATOR>", utils.enfoldString( "LIKE" ) ) ;
-				sqlCmd = sqlCmd.replace( "<DIMCODE>", utils.enfoldString( fullName ) ) ;
-				sqlCmd = sqlCmd.replace( "<TOOLTIP>", utils.enfoldNullableString( fullName ) ) ;
-				sqlCmd = sqlCmd.replace( "<SOURCESYSTEM_CD>", utils.enfoldNullableString( projectId ) ) ;
-				
-				st = connection.createStatement();
-				
-				st.execute( sqlCmd ) ;
-				//
-				// Insert concept into concept dimension...
-				insertIntoConceptDimension( st, fullName, ontCode, colName ) ;
-				//
-				// Record the path name so we don't try and duplicate it next time...
-				pathsAndCodes.add( PATH_PREFIX + fullName ) ;
+				if( !nodeExists( connection, fullName ) ) {
+					sqlCmd = METADATA_SQL_INSERT_COMMAND ;
+					String date = utils.formatDate( new Date() ) ;
+					String metadataxml = METADATAXML ;
+					metadataxml = metadataxml.replace( "<date-time-goes-here>", date + " 00:00:00" ) ;
+					metadataxml = metadataxml.replace( "<code-name-goes-here>", ontCode ) ;
+					metadataxml = metadataxml.replace( "<name-goes-here>", colName ) ;
+					metadataxml = metadataxml.replace( "<data-type-goes-here>", "String" ) ; 
+					metadataxml = metadataxml.replace( "<units-go-here>", "" ) ;
+					
+					log.debug( "For ontCode " + ontCode + " units are: " + units ) ;
+					
+					sqlCmd = sqlCmd.replaceAll( "<DB_SCHEMA_NAME>", projectId ) ;
+					sqlCmd = sqlCmd.replace( "<PROJECT_METADATA_TABLE>", projectId ) ;			
+					sqlCmd = sqlCmd.replace( "<HLEVEL>", utils.enfoldInteger( 1 ) ) ;
+					sqlCmd = sqlCmd.replace( "<FULLNAME>", utils.enfoldString( fullName ) ) ;
+					sqlCmd = sqlCmd.replace( "<NAME>", utils.enfoldString( colName ) ) ;
+					sqlCmd = sqlCmd.replace( "<SYNONYM_CD>", utils.enfoldString( "N" ) ) ;
+					sqlCmd = sqlCmd.replace( "<VISUALATTRIBUTES>", utils.enfoldString( "LA" ) ) ;
+					sqlCmd = sqlCmd.replace( "<BASECODE>", utils.enfoldString( ontCode ) ) ;
+					sqlCmd = sqlCmd.replace( "<METADATAXML>", utils.enfoldNullableString( metadataxml ) ) ;
+					sqlCmd = sqlCmd.replace( "<COLUMNDATATYPE>", utils.enfoldString( "T" ) ) ;
+					sqlCmd = sqlCmd.replace( "<OPERATOR>", utils.enfoldString( "LIKE" ) ) ;
+					sqlCmd = sqlCmd.replace( "<DIMCODE>", utils.enfoldString( fullName ) ) ;
+					sqlCmd = sqlCmd.replace( "<TOOLTIP>", utils.enfoldNullableString( fullName ) ) ;
+					sqlCmd = sqlCmd.replace( "<SOURCESYSTEM_CD>", utils.enfoldNullableString( projectId ) ) ;				
+					st.execute( sqlCmd ) ;
+					//
+					// Insert concept into concept dimension...
+					insertIntoConceptDimension( st, fullName, ontCode, colName ) ;
+					//
+					// Record the path name so we don't try and duplicate it next time...
+					pathsAndCodes.add( PATH_PREFIX + fullName ) ;
+				}
+
 			}
 		}
 		catch( SQLException sqlx ) {
@@ -971,17 +968,26 @@ public class OntologyBranch {
 			// See whether the base code exists in the db...
 			Statement st = connection.createStatement() ;
 			st.executeQuery( "select count(*) from " + projectId + "." + projectId 
-				           + "where C_FULLNAME = '" + fullName +   "' ;") ;				
+				           + " where C_FULLNAME = '" + fullName +   "' ;") ;				
 		    ResultSet rs = st.getResultSet() ;
-		    int count = rs.getInt(1) ;
-		    if( count > 0 ) {
-		    	exists = true ;
+		    if( rs.next() ) {
+		    	int count = rs.getInt(1) ;
+			    if( count > 0 ) {
+			    	exists = true ;
+			    }
+				rs.close() ;
 		    }
-			rs.close() ;
+		    else {
+		    	String message = "Failed to detect whether concept code was in DB or not. Count retrieved no result." ;
+				log.error( message ) ;
+				throw new UploaderException( message ) ;
+		    }
 			return exists ;
 		}
 		catch( SQLException sqlx ) {
-			throw new UploaderException( "Failed to detect whether concept code was in DB or not.", sqlx ) ;
+			String message = "Failed to detect whether concept code was in DB or not." ;
+			log.error( message, sqlx ) ;
+			throw new UploaderException( message, sqlx ) ;
 		}
 		finally {
 			exitTrace( "OntologyBranch.nodeExists()" ) ;
@@ -1101,7 +1107,7 @@ public class OntologyBranch {
 				return ob ;
 			}
 			finally {
-				exitTrace( "I2B2ProjOntologyBranchect.Factory.newInstance()" ) ;
+				exitTrace( "OntologyBranch.Factory.newInstance()" ) ;
 			}
 		}
     	
@@ -1113,7 +1119,7 @@ public class OntologyBranch {
 								    			, Map<String,String> lookups
 								    			, HashSet<String> pathsAndCodes
 								    			, ProjectUtils utils ) throws UploaderException {
-    		enterTrace( "OntologyBranch.Factory.newInstance()" ) ;
+    		enterTrace( "OntologyBranch.Factory.newInstance(using DB)" ) ;
     		OntologyBranch ob = null ;
     		try {
     			Connection connection = Base.getSimpleConnectionPG() ;
@@ -1194,7 +1200,7 @@ public class OntologyBranch {
     			throw new UploaderException( "Failed to detect whether concept code was in DB or not.", sqlx ) ;
     		}
     		finally {
-    			exitTrace( "I2B2ProjOntologyBranchect.Factory.newInstance()" ) ;
+    			exitTrace( "OntologyBranch.Factory.newInstance(using DB)" ) ;
     		}
     	}
     	
