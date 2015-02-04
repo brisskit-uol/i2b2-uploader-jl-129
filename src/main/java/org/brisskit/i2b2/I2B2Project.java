@@ -123,10 +123,6 @@ public class I2B2Project {
     
     private boolean newProject = true ;
     
-    //
-    // Initial encounter number
-//    private int encounterNumber = 1 ;
-    
     private Map<String,Integer> patientMappings = new HashMap<String,Integer>() ;
     
     private Map<String,String> lookups = new HashMap<String,String>() ;
@@ -140,7 +136,6 @@ public class I2B2Project {
     
     private ProjectUtils utils = new ProjectUtils() ;
     
-    @SuppressWarnings("unused")
 	protected I2B2Project() {}
     
     //
@@ -296,7 +291,7 @@ public class I2B2Project {
 			while( it.hasNext() ) {
 				Cell cell = it.next() ;
 				String value = utils.getValueAsString( cell ) ;
-				if( value.equals( columnName ) ) {
+				if( value.equalsIgnoreCase( columnName ) ) {
 					return true ;
 				}
 			}			
@@ -679,14 +674,6 @@ public class I2B2Project {
 		enterTrace( "produceOntology()" ) ;
 		try {
 			Row codesRow = dataSheet.getRow( ONTOLOGY_CODES_ROW_INDEX ) ;
-			//
-			// pathsAndCodes is a collection to help us write out
-			// hierarchical ontology paths in the DB without
-			// attempting to (erroneously) insert duplicated nodes.
-			// For example: path root-node/demographics/age involves
-			// writing three nodes, but the first two will be repeated
-			// for some other path, for example: root-node/demographics/marital-status
-			HashSet<String> pathsAndCodes = new HashSet<String>() ;
 			String colName = null ;
 			String toolTip = null ;
 			String ontCode = null ;
@@ -814,7 +801,6 @@ public class I2B2Project {
 											                   , units
 											                   , lookups
 											                   , values
-											                   , pathsAndCodes
 											                   , utils ) ;
 				
 				ontBranches.put( branch.getOntCode(), branch ) ;
@@ -837,7 +823,6 @@ public class I2B2Project {
 														   , obThis.getOntCode()
 														   , obThis.getToolTip()
 														   , lookups
-														   , pathsAndCodes
 														   , utils ) ;
 				if( obThat == null ) {				
 					obThis.serializeToDatabase( Base.getSimpleConnectionPG() ) ;
