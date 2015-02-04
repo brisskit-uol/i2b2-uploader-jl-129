@@ -25,7 +25,6 @@ public class PatientMapping {
 			"INSERT INTO <DB_SCHEMA_NAME>.PATIENT_MAPPING" +
 			    "( PATIENT_IDE" + 			//  VARCHAR(200)  NOT NULL,
 			    ", PATIENT_IDE_SOURCE" + 	//	VARCHAR(50)  NOT NULL,
-//			    ", PATIENT_NUM" + 			//  INT NOT NULL,
 			    ", PATIENT_IDE_STATUS" + 	//	VARCHAR(50) NULL,
 			    ", PROJECT_ID" + 			//  VARCHAR(50) NOT NULL,
 			    ", UPLOAD_DATE" + 			//  TIMESTAMP NULL,
@@ -37,7 +36,6 @@ public class PatientMapping {
 			"VALUES" +
 			   "( <PATIENT_IDE>" +
 			   ", <PATIENT_IDE_SOURCE>" +
-//			   ", <PATIENT_NUM>" +
 			   ", <PATIENT_IDE_STATUS>" +         
 			   ", <PROJECT_ID>" +   
 			   ", now()" +
@@ -66,23 +64,13 @@ public class PatientMapping {
 	public void serializeToDatabase( Connection connection ) throws UploaderException {
 		enterTrace( "PatientMapping.serializeToDatabase()" ) ;
 		try {
-
-			String sqlCmd = PATIENT_MAP_INSERT_COMMAND ;
-			
-			sqlCmd = sqlCmd.replaceAll( "<DB_SCHEMA_NAME>", schema_name ) ;
-			
+			String sqlCmd = PATIENT_MAP_INSERT_COMMAND ;			
+			sqlCmd = sqlCmd.replaceAll( "<DB_SCHEMA_NAME>", schema_name ) ;			
 			sqlCmd = sqlCmd.replace( "<PATIENT_IDE>", utils.enfoldString( patient_ide ) ) ;
 			sqlCmd = sqlCmd.replace( "<PATIENT_IDE_SOURCE>", utils.enfoldString( patient_ide_source ) ) ;
-//			sqlCmd = sqlCmd.replace( "<PATIENT_NUM>", utils.enfoldInteger( patient_num ) ) ;
 			sqlCmd = sqlCmd.replace( "<PATIENT_IDE_STATUS>", utils.enfoldNullableString( patient_ide_status ) ) ;
 			sqlCmd = sqlCmd.replace( "<PROJECT_ID>", utils.enfoldString( project_id ) ) ;
-			// UPLOAD_DATE		defaults to now()
-		    // UPDATE_DATE 		defaults to now()
-		    // DOWNLOAD_DATE 	defaults to now()
-		    // IMPORT_DATE 		defaults to now()
-			sqlCmd = sqlCmd.replace( "<SOURCESYSTEM_CD>", utils.enfoldNullableString( sourcesystem_id ) ) ;
-			// UPLOAD_ID 		missed out
-			
+			sqlCmd = sqlCmd.replace( "<SOURCESYSTEM_CD>", utils.enfoldNullableString( sourcesystem_id ) ) ;			
 			Statement st = connection.createStatement();			
 			st.execute( sqlCmd ) ;
 			ResultSet rs = st.executeQuery( "select currval( 'PATIENT_MAPPING_PATIENT_NUM_seq');" ) ;
@@ -96,6 +84,45 @@ public class PatientMapping {
 		finally {
 			exitTrace( "PatientMapping.serializeToDatabase()" ) ;
 		}
+	}
+	
+	
+	public boolean mappingExists( Connection connection ) throws UploaderException {
+		enterTrace( "PatientMapping.mappingExists()" ) ;
+		boolean exists = false ;
+		try {
+			//
+			// See whether the appropriate patient mapping already exists in the db...
+			Statement st = connection.createStatement() ;
+			st.executeQuery( "select PATIENT_NUM from " + schema_name + ".PATIENT_MAPPING "  
+				           + " where " 
+				           + " PATIENT_IDE = '" + patient_ide + "' " 
+					       + "  and " 
+				           + " PATIENT_IDE_SOURCE = '" + patient_ide_source + "' " 
+					       + "  and "
+				           + " PROJECT_ID = '" + project_id + "' ;" ) ;			
+		    ResultSet rs = st.getResultSet() ;
+		    if( rs.next() ) {
+		    	patient_num = rs.getInt(1) ;			    
+			    exists = true ;
+				rs.close() ;
+		    }
+		    else {
+		    	String message = "Failed to detect whether the appropriate patient mapping already exists in the db.\n" +
+		    			         " Retrieved no result." ;
+				log.error( message ) ;
+				throw new UploaderException( message ) ;
+		    }
+			return exists ;
+		}
+		catch( SQLException sqlx ) {
+			String message = "Failed to detect whether the appropriate patient mapping already exists in the db." ;
+			log.error( message, sqlx ) ;
+			throw new UploaderException( message, sqlx ) ;
+		}
+		finally {
+			exitTrace( "PatientMapping.mappingExists()" ) ;
+		}		
 	}
 	
 	
