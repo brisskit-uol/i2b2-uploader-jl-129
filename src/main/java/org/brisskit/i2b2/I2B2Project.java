@@ -547,22 +547,25 @@ public class I2B2Project {
 					value = utils.getValueAsString( cellIt.next() ) ;
 					name = utils.getValueAsString( namesIt.next() ) ;
 					if( name.equalsIgnoreCase( "id" ) ) {
-							pMap.setPatient_ide( value ) ;
-							pMap.setPatient_ide_source( projectId ) ;
-							pMap.setProject_id( projectId ) ;
-							pMap.setPatient_ide_status( "?" ) ;
-							break ;
+						pMap.setPatient_ide( value ) ;
+						pMap.setPatient_ide_source( projectId ) ;
+						pMap.setProject_id( projectId ) ;
+						pMap.setPatient_ide_status( "?" ) ;
+						break ;
 					}
 					
 				} // end of inner while - processing cell	
 				
 				//
 				// Write mapping to i2b2
-				pMap.serializeToDatabase( Base.getSimpleConnectionPG() ) ;
+				Connection connection = Base.getSimpleConnectionPG() ;
+				if( !pMap.mappingExists( connection ) ) {
+					pMap.serializeToDatabase( connection ) ;
+				}
 				//
 				// Record the mapping between external id and internal id...
 				this.patientMappings.put( pMap.getPatient_ide(), pMap.getPatient_num() ) ;
-				
+												
 			} // end of outer while - processing row
 			
 		}
@@ -577,7 +580,7 @@ public class I2B2Project {
 		String value = null ;
 		String code = null ;
 		String name = null ;
-
+		String sourceSystemPatientID = null ;
 		try {
 			Iterator<Row> rowIt = dataSheet.rowIterator() ;
 			//
@@ -641,24 +644,28 @@ public class I2B2Project {
 						}
 					}
 					else if( name.equalsIgnoreCase( "id" ) ) {
+						sourceSystemPatientID = value ;
 						//
 						// We do not expect the spreadsheet to contain the i2b2 internal patient number,
 						// but we can use the source-system id to retrieve the internal number generated
 						// at patient mapping time...
-						String sourceSystemPatientID = value ;
 						pDim.setPatient_num( patientMappings.get( sourceSystemPatientID ) ) ;
 						//
 						// Dirty  hack to enable short-term identification of participant in brisskit portal
 						// (PLEASE REMOVE - Jeff)
 						pDim.setZip_cd( sourceSystemPatientID ) ;
+				
 					}
 					
 				} // end of inner while - processing cell	
 				
 				//
 				// Write patient dimension to i2b2...
-				pDim.serializeToDatabase( Base.getSimpleConnectionPG() ) ;
-								
+				Connection connection = Base.getSimpleConnectionPG() ;
+				if( !pDim.patientExists( connection ) ) {
+					pDim.serializeToDatabase( connection ) ;
+				}
+												
 			} // end of outer while - processing row
 		}
 		catch( ParseException pex ) {
