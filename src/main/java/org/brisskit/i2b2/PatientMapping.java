@@ -107,12 +107,6 @@ public class PatientMapping {
 			    exists = true ;
 				rs.close() ;
 		    }
-		    else {
-		    	String message = "Failed to detect whether the appropriate patient mapping already exists in the db.\n" +
-		    			         " Retrieved no result." ;
-				log.error( message ) ;
-				throw new UploaderException( message ) ;
-		    }
 			return exists ;
 		}
 		catch( SQLException sqlx ) {
