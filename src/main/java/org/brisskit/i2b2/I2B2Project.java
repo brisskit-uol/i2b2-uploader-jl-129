@@ -835,6 +835,7 @@ public class I2B2Project {
 				obThat = OntologyBranch.Factory.newInstance( obThis.getProjectId()
 														   , obThis.getColName()
 														   , obThis.getOntCode()
+														   , obThis.getToolTip()
 														   , lookups
 														   , pathsAndCodes
 														   , utils ) ;
