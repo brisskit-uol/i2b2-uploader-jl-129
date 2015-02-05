@@ -117,14 +117,18 @@ public class ProjectUtils {
 	}
 	
 	
-	public  boolean isNull( String value ) {
+	public boolean isEmpty( String value ) {
 		if( value == null ) {
 			return true ;
 		}
+		value = value.trim() ;
 		if( value.equalsIgnoreCase( "null" ) ) {
 			return true ;
 		}
 		if( value.equalsIgnoreCase( "nul" ) ) {
+			return true ;
+		}
+		if( value.length() == 0 ) {
 			return true ;
 		}
 		return false ;
