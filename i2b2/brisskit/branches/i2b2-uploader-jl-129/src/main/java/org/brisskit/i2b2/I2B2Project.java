@@ -1217,7 +1217,7 @@ public class I2B2Project {
 				log.error( "Row possesses no cells!"  ) ;
 			}
 			else {
-				for( int i=0; i<noCols; i++ ) {
+				for( int i=0; i<noCols+1; i++ ) {
 					try {
 						Cell cell = dataRow.getCell(i) ;
 						String value = utils.getValueAsString( cell ) ;
