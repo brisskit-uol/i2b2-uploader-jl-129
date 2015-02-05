@@ -33,7 +33,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 	
 	
-	public void _testCreateNewProject_WithEmptyRow() { 
+	public void testCreateNewProject_WithEmptyRow() { 
 		enterTrace( "==>>testCreateNewProject_WithEmptyRow()" ) ;
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-01-with-empty-row.xls").getFile());		
 		try {
@@ -52,35 +52,32 @@ public class I2B2ProjectTests extends TestCase {
 		}
 		
 	}
-	
-	
-	public void _testCreateNewGPCUTProject() { 
-		enterTrace( "==>>testCreateNewGPCUTProject()" ) ;
-		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/GP_CUT1.xlsx").getFile());		
-		String projectId = "gpcut1" ;
+		
+	public void testSpreadsheetBeyondMaxRows() { 
+		enterTrace( "==>>testSpreadsheetBeyondMaxRows()" ) ;
+		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/GP_CUT1_more_than_maxrows.xlsx").getFile());		
+		String projectId = "maxrowsexceeded" ;
 		try {
 			if( I2B2Project.Factory.projectExists( projectId ) ) {
 				I2B2Project.Factory.delete( projectId ) ;
 			}	
 			I2B2Project project = I2B2Project.Factory.newInstance( projectId ) ;
 			project.processSpreadsheet( spreadsheetFile ) ;
+			fail( "Created project with greater than max rows." ) ;
 		}
 		catch( UploaderException cex ) {			
-			cex.printStackTrace( System.out ) ;
-			fail( "UploaderException thrown: " + cex.getLocalizedMessage() ) ;
+			cex.printStackTrace( System.out ) ;			
 		}
 		finally {
-			exitTrace( "==>>testCreateNewGPCUTProject()" ) ;
+			exitTrace( "==>>testSpreadsheetBeyondMaxRows()" ) ;
 		}	
 	}
 
 	
-	public void testCreateNewProject() { 
-		enterTrace( "==>>testCreateNewProject()" ) ;
-		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());
-//		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/EG1-laheart.xlsx").getFile());
-//		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/GP_CUT1.xlsx").getFile());		
-		String projectId = "test01" ;
+	public void testCreateNewLaHeartProject() { 
+		enterTrace( "==>>testCreateNewLaHeartProject()" ) ;
+		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/EG1-laheart.xlsx").getFile());		
+		String projectId = "laheart" ;
 		try {
 			if( I2B2Project.Factory.projectExists( projectId ) ) {
 				I2B2Project.Factory.delete( projectId ) ;
@@ -93,13 +90,13 @@ public class I2B2ProjectTests extends TestCase {
 			fail( "UploaderException thrown: " + cex.getLocalizedMessage() ) ;
 		}
 		finally {
-			exitTrace( "==>>testCreateNewProject()" ) ;
+			exitTrace( "==>>testCreateNewLaHeartProject()" ) ;
 		}
 		
 	}
 	
 	
-	public void _testCreateNewProjectWithStartDateColumn() { 
+	public void testCreateNewProjectWithStartDateColumn() { 
 		enterTrace( "==>>testCreateNewProjectWithStartDateColumn()" ) ;
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-03-startdatecol.xls").getFile() ) ;	
 		try {
@@ -120,7 +117,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 
 	
-	public void _testSupplementingExistingProject() { 
+	public void testSupplementingExistingProject() { 
 		enterTrace( "==>>testSupplementingExistingProject()" ) ;
 		File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());
 		File spreadsheetFile2 = new File(getClass().getClassLoader().getResource("spreadsheets/test-02.xls").getFile());
@@ -155,7 +152,7 @@ public class I2B2ProjectTests extends TestCase {
 		
 	}
 	
-	public void _testSupplementingExistingProject_AddionalData() { 
+	public void testSupplementingExistingProject_AddionalData() { 
 		enterTrace( "==>>testSupplementingExistingProject_AddionalData()" ) ;
 		File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());
 		File spreadsheetFile2 = new File(getClass().getClassLoader().getResource("spreadsheets/test-01-samepeople.xls").getFile());
@@ -191,7 +188,7 @@ public class I2B2ProjectTests extends TestCase {
 	
 	
 	
-	public void _testSupplementingExistingProject_AddionalMetadata() { 
+	public void testSupplementingExistingProject_AddionalMetadata() { 
 		enterTrace( "==>>testSupplementingExistingProject_AddionalMetadata()" ) ;
 		File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());
 		File spreadsheetFile2 = new File(getClass().getClassLoader().getResource("spreadsheets/test-02-additionalmetadata.xls").getFile());
@@ -227,7 +224,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 		
 		
-		public void _testSupplementingExistingProject_SameInstance() { 
+		public void testSupplementingExistingProject_SameInstance() { 
 			enterTrace( "==>>testSupplementingExistingProject_SameInstance()" ) ;
 			File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());
 			File spreadsheetFile2 = new File(getClass().getClassLoader().getResource("spreadsheets/test-02.xls").getFile());
@@ -260,7 +257,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 	
 	
-	public void _testDeletionOfProject() { 
+	public void testDeletionOfProject() { 
 		enterTrace( "==>>testDeletionOfProject()" ) ;		
 		try {
 			//
@@ -283,7 +280,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 
 	
-	public void _testDeletionOfNonExistentProject() {
+	public void testDeletionOfNonExistentProject() {
 		enterTrace( "==>>testDeletionOfNonExistentProject()" ) ;
 		try {
 			I2B2Project.Factory.delete( "projectX" ) ;
@@ -297,7 +294,7 @@ public class I2B2ProjectTests extends TestCase {
 		}
 	}
 
-	public void _testReadSpreadsheet() {
+	public void testReadSpreadsheet() {
 		enterTrace( "==>>testReadSpreadsheet()" ) ;
 //		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-02.xls").getFile());
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/EG1-laheart.xlsx").getFile());		
