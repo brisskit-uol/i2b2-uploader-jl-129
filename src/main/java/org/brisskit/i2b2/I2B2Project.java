@@ -214,7 +214,7 @@ public class I2B2Project {
 			}		 	    
 		    //
 		    // Check number of columns in the first row of the data sheet...
-		    int numberColumns = dataSheet.getRow( COLUMN_NAME_ROW_INDEX ).getLastCellNum() ;
+		    numberColumns = dataSheet.getRow( COLUMN_NAME_ROW_INDEX ).getLastCellNum() ;
 		    if( numberColumns > 50 ) {
 				throw new UploaderException( "The workbook has more than the maximum of data columns: " + numberColumns ) ;
 			}
@@ -238,8 +238,39 @@ public class I2B2Project {
 		    		}
 		    	}
 		 		       	
-		    }		    
-
+		    }	
+		    
+		    //
+		    // The first three rows contain required metadata...
+			// (Perhaps in future one more row for ontology tree structure? 
+			//  ie: a path statement)
+		    columnNames = dataSheet.getRow( COLUMN_NAME_ROW_INDEX ) ;
+		    toolTips = dataSheet.getRow( TOOLTIPS_ROW_INDEX ) ;
+		    ontologyCodes = dataSheet.getRow( ONTOLOGY_CODES_ROW_INDEX ) ;	
+		    numberColumns = columnNames.getLastCellNum() ;
+		    
+		    //
+		    // Alter spreadsheet if necessary to add dummy data for missing breakdowns
+		    // ( This is in memory only. Changes do not get written back to the file ).
+		    // First, we pack out the breakdowns collection, if need be with a 
+		    // complete set of defaults...
+		    for( int i=0; i<STANDARD_BREAKDOWNS.length; i++ ) {
+				if( !breakdowns.containsKey( STANDARD_BREAKDOWNS[i][0] ) ){
+					breakdowns.put( STANDARD_BREAKDOWNS[i][0], STANDARD_BREAKDOWNS[i][0] ) ;
+				}
+			}
+		    //
+		    // Then we check the spreadsheet. 
+		    // It may not have have the required columns for suitable breakdowns:
+		    // If the latter is the case, we create a column with all its values "unknown"...
+		    String columnName = null ;
+		    for( int i=0; i<STANDARD_BREAKDOWNS.length; i++ ) {
+		    	columnName = breakdowns.get( STANDARD_BREAKDOWNS[i][0] ) ;
+		    	if( !breakdownExists( columnName ) ) {
+		    		addDefaultBreakdown( columnName ) ;
+		    	}
+		    }
+		    
 		    //
 		    // The first three rows contain required metadata...
 			// (Perhaps in future one more row for ontology tree structure? 
@@ -264,28 +295,6 @@ public class I2B2Project {
 		    //
 		    // Could do with some basic checks to see all rows have the same number of columns!
 		    numberColumns = columnNames.getLastCellNum() ;
-		    
-		    //
-		    // Alter spreadsheet if necessary to add dummy data for missing breakdowns
-		    // ( This is in memory only. Changes do not get written back to the file ).
-		    // First, we pack out the breakdowns collection, if need be with a 
-		    // complete set of defaults...
-		    for( int i=0; i<STANDARD_BREAKDOWNS.length; i++ ) {
-				if( !breakdowns.containsKey( STANDARD_BREAKDOWNS[i][0] ) ){
-					breakdowns.put( STANDARD_BREAKDOWNS[i][0], STANDARD_BREAKDOWNS[i][0] ) ;
-				}
-			}
-		    //
-		    // Then we check the spreadsheet. 
-		    // It may not have have the required columns for suitable breakdowns:
-		    // If the latter is the case, we create a column with all its values "unknown"...
-		    String columnName = null ;
-		    for( int i=0; i<STANDARD_BREAKDOWNS.length; i++ ) {
-		    	columnName = breakdowns.get( STANDARD_BREAKDOWNS[i][0] ) ;
-		    	if( !breakdownExists( columnName ) ) {
-		    		addDefaultBreakdown( columnName ) ;
-		    	}
-		    }
 		    		    
 		}
 		catch( Exception ex ) {
@@ -537,7 +546,7 @@ public class I2B2Project {
 		String value = null ;
 		String name = null ;
 		try {
-			Iterator<Row> rowIt = dataSheet.rowIterator() ;
+			Iterator<Row> rowIt = dataSheet.iterator() ;
 			//
 			// Tab past metadata rows...
 			rowIt.next() ;
@@ -552,8 +561,8 @@ public class I2B2Project {
 				pMap.setSchema_name( projectId ) ;
 				pMap.setSourcesystem_id( projectId ) ;
 				
-				Iterator<Cell> cellIt = dataRow.cellIterator() ;
-				Iterator<Cell> namesIt = columnNames.cellIterator() ;
+				Iterator<Cell> cellIt = dataRow.iterator() ;
+				Iterator<Cell> namesIt = columnNames.iterator() ;
 				//
 				// We process each cell according to its code...
 				while( cellIt.hasNext() ) {

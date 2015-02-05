@@ -31,18 +31,61 @@ public class I2B2ProjectTests extends TestCase {
 	protected void tearDown() throws Exception {
 		super.tearDown();
 	}
+	
+	
+	public void _testCreateNewProject_WithEmptyRow() { 
+		enterTrace( "==>>testCreateNewProject_WithEmptyRow()" ) ;
+		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-01-with-empty-row.xls").getFile());		
+		try {
+			if( I2B2Project.Factory.projectExists( "test01_with_empty_row" ) ) {
+				I2B2Project.Factory.delete( "test01_with_empty_row" ) ;
+			}	
+			I2B2Project project = I2B2Project.Factory.newInstance( "test01_with_empty_row" ) ;
+			project.processSpreadsheet( spreadsheetFile ) ;
+		}
+		catch( UploaderException cex ) {			
+			cex.printStackTrace( System.out ) ;
+			fail( "UploaderException thrown: " + cex.getLocalizedMessage() ) ;
+		}
+		finally {
+			exitTrace( "==>>testCreateNewProject_WithEmptyRow()" ) ;
+		}
+		
+	}
+	
+	
+	public void _testCreateNewGPCUTProject() { 
+		enterTrace( "==>>testCreateNewGPCUTProject()" ) ;
+		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/GP_CUT1.xlsx").getFile());		
+		String projectId = "gpcut1" ;
+		try {
+			if( I2B2Project.Factory.projectExists( projectId ) ) {
+				I2B2Project.Factory.delete( projectId ) ;
+			}	
+			I2B2Project project = I2B2Project.Factory.newInstance( projectId ) ;
+			project.processSpreadsheet( spreadsheetFile ) ;
+		}
+		catch( UploaderException cex ) {			
+			cex.printStackTrace( System.out ) ;
+			fail( "UploaderException thrown: " + cex.getLocalizedMessage() ) ;
+		}
+		finally {
+			exitTrace( "==>>testCreateNewGPCUTProject()" ) ;
+		}	
+	}
 
 	
 	public void testCreateNewProject() { 
 		enterTrace( "==>>testCreateNewProject()" ) ;
-//		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());
-		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/EG1-laheart.xlsx").getFile());
+		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());
+//		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/EG1-laheart.xlsx").getFile());
 //		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/GP_CUT1.xlsx").getFile());		
+		String projectId = "test01" ;
 		try {
-			if( I2B2Project.Factory.projectExists( "laheart" ) ) {
-				I2B2Project.Factory.delete( "laheart" ) ;
+			if( I2B2Project.Factory.projectExists( projectId ) ) {
+				I2B2Project.Factory.delete( projectId ) ;
 			}	
-			I2B2Project project = I2B2Project.Factory.newInstance( "laheart" ) ;
+			I2B2Project project = I2B2Project.Factory.newInstance( projectId ) ;
 			project.processSpreadsheet( spreadsheetFile ) ;
 		}
 		catch( UploaderException cex ) {			
@@ -56,7 +99,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 	
 	
-	public void testCreateNewProjectWithStartDateColumn() { 
+	public void _testCreateNewProjectWithStartDateColumn() { 
 		enterTrace( "==>>testCreateNewProjectWithStartDateColumn()" ) ;
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-03-startdatecol.xls").getFile() ) ;	
 		try {
@@ -77,7 +120,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 
 	
-	public void testSupplementingExistingProject() { 
+	public void _testSupplementingExistingProject() { 
 		enterTrace( "==>>testSupplementingExistingProject()" ) ;
 		File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());
 		File spreadsheetFile2 = new File(getClass().getClassLoader().getResource("spreadsheets/test-02.xls").getFile());
@@ -112,7 +155,7 @@ public class I2B2ProjectTests extends TestCase {
 		
 	}
 	
-	public void testSupplementingExistingProject_AddionalData() { 
+	public void _testSupplementingExistingProject_AddionalData() { 
 		enterTrace( "==>>testSupplementingExistingProject_AddionalData()" ) ;
 		File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());
 		File spreadsheetFile2 = new File(getClass().getClassLoader().getResource("spreadsheets/test-01-samepeople.xls").getFile());
@@ -148,7 +191,7 @@ public class I2B2ProjectTests extends TestCase {
 	
 	
 	
-	public void testSupplementingExistingProject_AddionalMetadata() { 
+	public void _testSupplementingExistingProject_AddionalMetadata() { 
 		enterTrace( "==>>testSupplementingExistingProject_AddionalMetadata()" ) ;
 		File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());
 		File spreadsheetFile2 = new File(getClass().getClassLoader().getResource("spreadsheets/test-02-additionalmetadata.xls").getFile());
@@ -184,7 +227,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 		
 		
-		public void testSupplementingExistingProject_SameInstance() { 
+		public void _testSupplementingExistingProject_SameInstance() { 
 			enterTrace( "==>>testSupplementingExistingProject_SameInstance()" ) ;
 			File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());
 			File spreadsheetFile2 = new File(getClass().getClassLoader().getResource("spreadsheets/test-02.xls").getFile());
@@ -217,7 +260,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 	
 	
-	public void testDeletionOfProject() { 
+	public void _testDeletionOfProject() { 
 		enterTrace( "==>>testDeletionOfProject()" ) ;		
 		try {
 			//
@@ -240,7 +283,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 
 	
-	public void testDeletionOfNonExistentProject() {
+	public void _testDeletionOfNonExistentProject() {
 		enterTrace( "==>>testDeletionOfNonExistentProject()" ) ;
 		try {
 			I2B2Project.Factory.delete( "projectX" ) ;
@@ -254,7 +297,7 @@ public class I2B2ProjectTests extends TestCase {
 		}
 	}
 
-	public void testReadSpreadsheet() {
+	public void _testReadSpreadsheet() {
 		enterTrace( "==>>testReadSpreadsheet()" ) ;
 //		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-02.xls").getFile());
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/EG1-laheart.xlsx").getFile());		
