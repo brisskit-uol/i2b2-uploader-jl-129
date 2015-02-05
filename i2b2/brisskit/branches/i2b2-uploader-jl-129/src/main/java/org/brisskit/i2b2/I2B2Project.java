@@ -201,6 +201,24 @@ public class I2B2Project {
 		    //
 	    	// Get the data sheet, which must be the first sheet... 
 	    	dataSheet = workbook.getSheetAt( DATA_SHEET_INDEX ) ;
+		    //
+		    // Check we have sufficient data rows...
+		    int numberDataRows = dataSheet.getLastRowNum() - FIRST_DATA_ROW_INDEX + 1;
+			if( numberDataRows < 1 ) {
+				throw new UploaderException( "The workbook has insufficient data rows: " + numberDataRows ) ;
+			}
+			//
+			// Check we do not have too many data rows...
+			if( numberDataRows > 5000 ) {
+				throw new UploaderException( "The workbook has more than the maximum of data rows: " + numberDataRows ) ;
+			}		 	    
+		    //
+		    // Check number of columns in the first row of the data sheet...
+		    int numberColumns = dataSheet.getRow( COLUMN_NAME_ROW_INDEX ).getLastCellNum() ;
+		    if( numberColumns > 50 ) {
+				throw new UploaderException( "The workbook has more than the maximum of data columns: " + numberColumns ) ;
+			}
+		    
 	    	//
 	    	// Injest any lookups and breakdowns described in additional sheets...
 		    if( noSheets > 1 ) {
@@ -221,12 +239,7 @@ public class I2B2Project {
 		    	}
 		 		       	
 		    }		    
-		    //
-		    // Check we have sufficient data rows...
-		    int numberDataRows = dataSheet.getLastRowNum() - FIRST_DATA_ROW_INDEX + 1;
-			if( numberDataRows < 1 ) {
-				throw new UploaderException( "The workbook has insufficient data rows: " + numberDataRows ) ;
-			}
+
 		    //
 		    // The first three rows contain required metadata...
 			// (Perhaps in future one more row for ontology tree structure? 
@@ -1074,7 +1087,11 @@ public class I2B2Project {
 						continue ;
 					}
 					else {
-						throw new UploaderException( "Encountered a row with no external id value: " + dataRow.getRowNum()+1 ) ;
+						int OneBasedArrayNumber = dataRow.getRowNum()+1 ;
+						String message = 
+							"Encountered a non-empty row with no external id value. Row number: [" + OneBasedArrayNumber + "]" ;
+						printDuffRowToLog( dataRow ) ;					
+						throw new UploaderException( message ) ;
 					}
 				}
 				if( spreadsheetHasStartDateColumn ) {
@@ -1090,7 +1107,7 @@ public class I2B2Project {
 				}
 				//
 				// Process the cells for each row...
-				Iterator<Cell> cellIt = dataRow.cellIterator() ;
+				Iterator<Cell> cellIt = dataRow.iterator() ;
 				while( cellIt.hasNext() ) {
 					Cell cell = cellIt.next() ;		
 					if( utils.isEmpty( utils.getValueAsString( cell ) ) ) {
@@ -1150,17 +1167,38 @@ public class I2B2Project {
 	}
 	
 	
+	private void printDuffRowToLog( Row dataRow ) {
+		enterTrace( "I2B2Project.printDuffRowToLog()" ) ;
+		try {
+			int oneBasedArrayNumber = dataRow.getRowNum() + 1 ;
+			log.error( "Printing contents of duff Row: [" + oneBasedArrayNumber + "] ..."  ) ;
+			//
+			// Process the cells for the row...
+			int noCols = dataRow.getLastCellNum() ;
+			for( int i=0; i<noCols; i++ ) {
+				Cell cell = dataRow.getCell(i) ;
+				String value = utils.getValueAsString( cell ) ;
+				oneBasedArrayNumber = cell.getColumnIndex() + 1 ;
+				log.error( "  Cell: [" + oneBasedArrayNumber + "] has contents: [" + value + "]"  ) ;
+			}
+		}
+		finally {
+			exitTrace( "I2B2Project.printDuffRowToLog()" ) ;
+		}		
+	}
+	
+	
 	private boolean isDataRowEmpty( Row dataRow ) {
 		enterTrace( "I2B2Project.isDataRowEmpty()" ) ;
 		try {
 			//
 			// Process the cells for each row...
-			Iterator<Cell> cellIt = dataRow.cellIterator() ;
-			while( cellIt.hasNext() ) {
-				Cell cell = cellIt.next() ;		
+			int noCols = dataRow.getLastCellNum() ;
+			for( int i=0; i<noCols; i++ ) {
+				Cell cell = dataRow.getCell(i) ;
 				if( !utils.isEmpty( utils.getValueAsString( cell ) ) ) {
 					return false ;
-				}				
+				}
 			}
 			return true ;
 		}
@@ -1298,7 +1336,7 @@ public class I2B2Project {
 	
 	
 	public int getPatientNumber( Row dataRow ) {
-		Iterator<Cell> cellIt = dataRow.getSheet().getRow( I2B2Project.COLUMN_NAME_ROW_INDEX ).cellIterator() ;
+		Iterator<Cell> cellIt = dataRow.getSheet().getRow( I2B2Project.COLUMN_NAME_ROW_INDEX ).iterator() ;
 		int patientNumberIndex = -1 ;
 		while( cellIt.hasNext() ) {
 			Cell cell = cellIt.next() ;
@@ -1315,9 +1353,10 @@ public class I2B2Project {
 		// Given the source system patient identifier (as a string), 
 		// we use the mappings to get the i2b2 internal id...	
 		int internalPatientNo = -999 ;
+		int oneBasedArrayNumber = dataRow.getRowNum() + 1 ;
 		try {			
 			if( log.isDebugEnabled() ) {
-				log.debug( "dataRow number: [" + dataRow.getRowNum() + "] aligns with sourcePatientNo: [" + sourcePatientNoAsString + "]" ) ;
+				log.debug( "dataRow number: [" + oneBasedArrayNumber + "] aligns with sourcePatientNo: [" + sourcePatientNoAsString + "]" ) ;
 			}
 			//
 			// NB: If the source column is empty, we return -999
@@ -1327,7 +1366,7 @@ public class I2B2Project {
 		}
 		catch( Exception ex ) {		
 			log.error( "getPatientNumber(Row dataRow) failed", ex ) ;
-			log.error( "dataRow number: [" + dataRow.getRowNum() + "]" ) ;
+			log.error( "dataRow number: [" + oneBasedArrayNumber + "]" ) ;
 			log.error( "patientNumberIndex: [" + patientNumberIndex + "]" ) ;
 			log.error( "sourcePatientNoAsString: [" + sourcePatientNoAsString + "]" ) ;
 			log.error( "internalPatientNo: [" + internalPatientNo + "]" ) ;
@@ -1342,7 +1381,7 @@ public class I2B2Project {
 		Date obsStartDate = null ;
 		String dateAsString = null ;
 		try {
-			Iterator<Cell> cellIt = dataRow.getSheet().getRow( I2B2Project.COLUMN_NAME_ROW_INDEX ).cellIterator() ;			
+			Iterator<Cell> cellIt = dataRow.getSheet().getRow( I2B2Project.COLUMN_NAME_ROW_INDEX ).iterator() ;			
 			int startDateIndex = -1 ;
 			while( cellIt.hasNext() ) {
 				Cell cell = cellIt.next() ;
