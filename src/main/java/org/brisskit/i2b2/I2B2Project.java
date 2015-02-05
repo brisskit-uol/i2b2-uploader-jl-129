@@ -210,7 +210,9 @@ public class I2B2Project {
 			//
 			// Check we do not have too many data rows...
 			if( numberDataRows > 5000 ) {
-				throw new UploaderException( "The workbook has more than the maximum of data rows: " + numberDataRows ) ;
+				if( nonEmptyRowsExceedMax( dataSheet ) ) {
+					throw new UploaderException( "The workbook has more than the maximum of data rows: " + numberDataRows ) ;
+				}			
 			}		 	    
 		    //
 		    // Check number of columns in the first row of the data sheet...
@@ -302,6 +304,30 @@ public class I2B2Project {
 		}
 		finally {
 			exitTrace( "readSpreadsheet()" ) ;
+		}
+	}
+	
+	
+	private boolean nonEmptyRowsExceedMax( Sheet dataSheet ) {
+		enterTrace( "i2b2Project.nonEmptyRowsExceedMax()" ) ;
+		try {
+			int numberOfRows = dataSheet.getLastRowNum() ;			
+			log.debug( "numberOfRows: [" + numberOfRows + "]" ) ;
+			for( int i=numberOfRows; i>0; i-- ) {
+				if( i == 5000 ) {
+					log.debug( "5000 reached" ) ;
+				}
+				Row row = dataSheet.getRow( i ) ;
+				if( !isDataRowEmpty( row ) ) {
+					if( i < 5000 ) {
+						return false ;
+					}
+				}
+			}
+			return true ;
+		}
+		finally {
+			exitTrace( "i2b2Project.nonEmptyRowsExceedMax()" ) ;
 		}
 	}
 	
@@ -1085,6 +1111,9 @@ public class I2B2Project {
 			// Process data rows...
 			while( rowIt.hasNext() ) {
 				Row dataRow = rowIt.next() ;
+				if( isDataRowEmpty( dataRow ) ) {
+					continue ;
+				}
 				int patientNumber = getPatientNumber( dataRow ) ;
 				//
 				// If the patient number column is empty, we check the whole row for emptiness.
@@ -1184,12 +1213,23 @@ public class I2B2Project {
 			//
 			// Process the cells for the row...
 			int noCols = dataRow.getLastCellNum() ;
-			for( int i=0; i<noCols; i++ ) {
-				Cell cell = dataRow.getCell(i) ;
-				String value = utils.getValueAsString( cell ) ;
-				oneBasedArrayNumber = cell.getColumnIndex() + 1 ;
-				log.error( "  Cell: [" + oneBasedArrayNumber + "] has contents: [" + value + "]"  ) ;
+			if( noCols < 0 ) {
+				log.error( "Row possesses no cells!"  ) ;
 			}
+			else {
+				for( int i=0; i<noCols; i++ ) {
+					try {
+						Cell cell = dataRow.getCell(i) ;
+						String value = utils.getValueAsString( cell ) ;
+						oneBasedArrayNumber = cell.getColumnIndex() + 1 ;
+						log.error( "  Cell: [" + oneBasedArrayNumber + "] has contents: [" + value + "]"  ) ;
+					}
+					catch( Exception ex ) {
+						log.error( "Unexpected exception thrown in diagnostics. Will continue!", ex ) ;
+					}
+					
+				}
+			}			
 		}
 		finally {
 			exitTrace( "I2B2Project.printDuffRowToLog()" ) ;
@@ -1203,12 +1243,17 @@ public class I2B2Project {
 			//
 			// Process the cells for each row...
 			int noCols = dataRow.getLastCellNum() ;
-			for( int i=0; i<noCols; i++ ) {
-				Cell cell = dataRow.getCell(i) ;
-				if( !utils.isEmpty( utils.getValueAsString( cell ) ) ) {
-					return false ;
-				}
+			if( noCols <= 0 ) {
+				return true ; 
 			}
+			else {
+				for( int i=0; i<noCols; i++ ) {
+					Cell cell = dataRow.getCell(i) ;
+					if( !utils.isEmpty( utils.getValueAsString( cell ) ) ) {
+						return false ;
+					}
+				}
+			}			
 			return true ;
 		}
 		finally {
@@ -1344,7 +1389,7 @@ public class I2B2Project {
 	}
 	
 	
-	public int getPatientNumber( Row dataRow ) {
+	public int getPatientNumber( Row dataRow ) throws UploaderException {
 		Iterator<Cell> cellIt = dataRow.getSheet().getRow( I2B2Project.COLUMN_NAME_ROW_INDEX ).iterator() ;
 		int patientNumberIndex = -1 ;
 		while( cellIt.hasNext() ) {
@@ -1374,12 +1419,14 @@ public class I2B2Project {
 			}		
 		}
 		catch( Exception ex ) {		
+			String message = "Failure in getting patient number" ;
+			log.error( message ) ;
 			log.error( "getPatientNumber(Row dataRow) failed", ex ) ;
 			log.error( "dataRow number: [" + oneBasedArrayNumber + "]" ) ;
 			log.error( "patientNumberIndex: [" + patientNumberIndex + "]" ) ;
 			log.error( "sourcePatientNoAsString: [" + sourcePatientNoAsString + "]" ) ;
 			log.error( "internalPatientNo: [" + internalPatientNo + "]" ) ;
-			throw ex ;
+			throw new UploaderException( message, ex ) ;
 		}
 		return internalPatientNo ;
 	}
