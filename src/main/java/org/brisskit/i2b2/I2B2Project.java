@@ -241,7 +241,7 @@ public class I2B2Project {
 		    while( it.hasNext() ) {
 		    	Cell cell = it.next() ;
 		    	String value = utils.getValueAsString( cell ) ;
-		    	if( !utils.isNull( value ) ) {
+		    	if( !utils.isEmpty( value ) ) {
 		    		if( value.equalsIgnoreCase( "OBS_START_DATE" ) ) {
 		    			spreadsheetHasStartDateColumn = true ;
 		    			break ;
@@ -745,8 +745,8 @@ public class I2B2Project {
 					Row row = rowIt.next() ;
 					Cell dataCell = row.getCell( colIndex ) ;
 					String value = utils.getValueAsString( dataCell ) ;
-					if( utils.isNull( value ) ) {
-						log.debug( "Encountered a cell with null value" ) ;
+					if( utils.isEmpty( value ) ) {
+						log.debug( "Encountered a cell with no value" ) ;
 						continue ;
 					}
 					//
@@ -1064,6 +1064,19 @@ public class I2B2Project {
 			while( rowIt.hasNext() ) {
 				Row dataRow = rowIt.next() ;
 				int patientNumber = getPatientNumber( dataRow ) ;
+				//
+				// If the patient number column is empty, we check the whole row for emptiness.
+				// (An empty patient number column gets a value of -999)
+				// If row is completely empty, we ignore it.
+				// If row is non-empty, we throw an exception...
+				if( patientNumber < 0 ) {
+					if( isDataRowEmpty( dataRow ) ) {
+						continue ;
+					}
+					else {
+						throw new UploaderException( "Encountered a row with no external id value: " + dataRow.getRowNum()+1 ) ;
+					}
+				}
 				if( spreadsheetHasStartDateColumn ) {
 					observationStartDate = getObservationStartDate( dataRow ) ;
 					//
@@ -1080,13 +1093,13 @@ public class I2B2Project {
 				Iterator<Cell> cellIt = dataRow.cellIterator() ;
 				while( cellIt.hasNext() ) {
 					Cell cell = cellIt.next() ;		
-					if( utils.isNull( utils.getValueAsString( cell ) ) ) {
+					if( utils.isEmpty( utils.getValueAsString( cell ) ) ) {
 						continue ;
 					}
 					String ontCode = getOntCode( cell ) ;
 					//
 					// We bypass any columns which are not connected to ontological facts
-					if( utils.isNull( ontCode ) ) {
+					if( utils.isEmpty( ontCode ) ) {
 						continue ;
 					}
 					else if( ontCode.startsWith( "p_map:" ) || ontCode.startsWith( "p_dim:" ) ) {
@@ -1133,6 +1146,26 @@ public class I2B2Project {
 		}
 		finally {
 			exitTrace( "I2B2Project.produceFacts()" ) ;
+		}		
+	}
+	
+	
+	private boolean isDataRowEmpty( Row dataRow ) {
+		enterTrace( "I2B2Project.isDataRowEmpty()" ) ;
+		try {
+			//
+			// Process the cells for each row...
+			Iterator<Cell> cellIt = dataRow.cellIterator() ;
+			while( cellIt.hasNext() ) {
+				Cell cell = cellIt.next() ;		
+				if( !utils.isEmpty( utils.getValueAsString( cell ) ) ) {
+					return false ;
+				}				
+			}
+			return true ;
+		}
+		finally {
+			exitTrace( "I2B2Project.isDataRowEmpty()" ) ;
 		}		
 	}
 	
@@ -1280,8 +1313,27 @@ public class I2B2Project {
 		String sourcePatientNoAsString = utils.getValueAsString( dataRow.getCell( patientNumberIndex ) )  ;		
 		//
 		// Given the source system patient identifier (as a string), 
-		// we use the mappings to get the i2b2 internal id...		
-		return this.patientMappings.get( sourcePatientNoAsString ) ;
+		// we use the mappings to get the i2b2 internal id...	
+		int internalPatientNo = -999 ;
+		try {			
+			if( log.isDebugEnabled() ) {
+				log.debug( "dataRow number: [" + dataRow.getRowNum() + "] aligns with sourcePatientNo: [" + sourcePatientNoAsString + "]" ) ;
+			}
+			//
+			// NB: If the source column is empty, we return -999
+			if( !utils.isEmpty( sourcePatientNoAsString ) ) {
+				internalPatientNo = this.patientMappings.get( sourcePatientNoAsString ) ;
+			}		
+		}
+		catch( Exception ex ) {		
+			log.error( "getPatientNumber(Row dataRow) failed", ex ) ;
+			log.error( "dataRow number: [" + dataRow.getRowNum() + "]" ) ;
+			log.error( "patientNumberIndex: [" + patientNumberIndex + "]" ) ;
+			log.error( "sourcePatientNoAsString: [" + sourcePatientNoAsString + "]" ) ;
+			log.error( "internalPatientNo: [" + internalPatientNo + "]" ) ;
+			throw ex ;
+		}
+		return internalPatientNo ;
 	}
 	
 	
@@ -1304,7 +1356,7 @@ public class I2B2Project {
 			}
 			if( startDateIndex != -1 ) {
 				dateAsString = utils.getValueAsString( dataRow.getCell( startDateIndex ) ) ;
-				if( utils.isNull( dateAsString ) ) {
+				if( utils.isEmpty( dateAsString ) ) {
 					dateAsString = null ;
 				}
 				else {
