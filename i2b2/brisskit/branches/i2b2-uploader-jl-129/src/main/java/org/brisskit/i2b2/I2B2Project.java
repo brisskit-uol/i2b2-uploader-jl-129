@@ -179,6 +179,12 @@ public class I2B2Project {
     			produceFacts( defaultObservationDate ) ;
     			newProject = false ;    		
     	}
+    	catch( Exception ex ) {
+    		if( ex instanceof UploaderException ) {
+    			throw ex ;
+    		}
+    		throw new UploaderException( "Internal Error.", ex ) ;
+    	}
     	finally {
     		exitTrace( "I2B2Project.processSpreadsheet(File,Date)" ) ;
     	}
@@ -210,12 +216,13 @@ public class I2B2Project {
 			//
 			// Check we do not have too many data rows...
 			if( numberDataRows > 5000 ) {
-				if( nonEmptyRowsExceedMax( dataSheet ) ) {
-					throw new UploaderException( "The workbook has more than the maximum of data rows: " + numberDataRows ) ;
+				if( maxDataRowsExceeded( dataSheet ) ) {
+					throw new UploaderException( "The workbook exceeds the maximum of 5000 rows containing data." ) ;
 				}			
 			}		 	    
 		    //
 		    // Check number of columns in the first row of the data sheet...
+			// (This really needs the same treatment as given to rows (see above)
 		    numberColumns = dataSheet.getRow( COLUMN_NAME_ROW_INDEX ).getLastCellNum() ;
 		    if( numberColumns > 50 ) {
 				throw new UploaderException( "The workbook has more than the maximum of data columns: " + numberColumns ) ;
@@ -308,26 +315,50 @@ public class I2B2Project {
 	}
 	
 	
-	private boolean nonEmptyRowsExceedMax( Sheet dataSheet ) {
-		enterTrace( "i2b2Project.nonEmptyRowsExceedMax()" ) ;
+	private boolean maxDataRowsExceeded( Sheet dataSheet ) {
+		enterTrace( "i2b2Project.maxDataRowsExceeded()" ) ;
 		try {
 			int numberOfRows = dataSheet.getLastRowNum() ;			
 			log.debug( "numberOfRows: [" + numberOfRows + "]" ) ;
-			for( int i=numberOfRows; i>0; i-- ) {
-				if( i == 5000 ) {
-					log.debug( "5000 reached" ) ;
-				}
-				Row row = dataSheet.getRow( i ) ;
-				if( !isDataRowEmpty( row ) ) {
-					if( i < 5000 ) {
-						return false ;
+			Iterator<Row> it = dataSheet.iterator() ;
+			int iRowsWithDataPresent = 0 ;
+			while( it.hasNext() ) {
+				Row row = it.next() ;
+				if( !dataRowEmpty( row ) ) {
+					iRowsWithDataPresent++ ;
+					if( iRowsWithDataPresent > 5000 ) {
+						log.debug( "max data rows exceeded" ) ;
+						return true ;
 					}
 				}
 			}
-			return true ;
+			log.debug( "max data rows not exceeded" ) ;
+			return false ;
+//			for( int i=numberOfRows; i>0; i-- ) {
+//				if( i == 5000 ) {
+//					log.debug( "5000 reached" ) ;
+//				}
+//				Row row = dataSheet.getRow( i ) ;
+//				log.debug( "row number: " + row.getRowNum() ) ;
+//				if( i > 5000 && i < 5011 ) {
+//					log.debug( "between 5000 and 5010" ) ;
+//				}
+//				if( !isDataRowEmpty( row ) ) {
+//					log.debug( "found non empty row: " + i ) ;
+//					if( i > 5003 ) {
+//						log.debug( "returning true" ) ;
+//						return true ;
+//					}
+//				}
+//				else {
+//					log.debug( "found empty row: " + i ) ;
+//				}
+//			}
+//			log.debug( "returning false" ) ;
+//			return false ;
 		}
 		finally {
-			exitTrace( "i2b2Project.nonEmptyRowsExceedMax()" ) ;
+			exitTrace( "i2b2Project.maxDataRowsExceeded()" ) ;
 		}
 	}
 	
@@ -365,7 +396,7 @@ public class I2B2Project {
 				Row row = it.next() ;
 				//
 				// Safety first...
-				if( !isDataRowEmpty( row ) ) {
+				if( !dataRowEmpty( row ) ) {
 					row.createCell( numberColumns, Cell.CELL_TYPE_STRING ).setCellValue( "unknown" ) ;
 				}				
 			}
@@ -587,7 +618,7 @@ public class I2B2Project {
 			// Process data rows...
 			while( rowIt.hasNext() ) {
 				Row dataRow = rowIt.next() ;	
-				if( isDataRowEmpty( dataRow ) ) {
+				if( dataRowEmpty( dataRow ) ) {
 					continue ;
 				}
 				
@@ -656,7 +687,7 @@ public class I2B2Project {
 			while( rowIt.hasNext() ) {
 				
 				Row dataRow = rowIt.next() ;
-				if( isDataRowEmpty( dataRow ) ) {
+				if( dataRowEmpty( dataRow ) ) {
 					continue ;
 				}
 				
@@ -798,8 +829,8 @@ public class I2B2Project {
 					log.debug( "concept column value: " + ontCode ) ;
 					int firstBracket = ontCode.indexOf( "[" ) ;
 					int secondBracket = ontCode.indexOf( "]" ) ;
-					units = ontCode.substring( firstBracket+1, secondBracket ) ;
-					ontCode = ontCode.substring( 0, firstBracket ) ;
+					units = ontCode.substring( firstBracket+1, secondBracket ).trim() ;
+					ontCode = ontCode.substring( 0, firstBracket ).trim() ;
 					log.debug( "which yields concept: " + ontCode + " with units: " + units ) ;
 				}
 								
@@ -815,7 +846,7 @@ public class I2B2Project {
 
 				while( rowIt.hasNext() ) {
 					Row row = rowIt.next() ;
-					if( !isDataRowEmpty( row ) ) {
+					if( !dataRowEmpty( row ) ) {
 						Cell dataCell = row.getCell( colIndex ) ;
 						String value = utils.getValueAsString( dataCell ) ;
 						if( utils.isEmpty( value ) ) {
@@ -948,7 +979,7 @@ public class I2B2Project {
 			// Process data rows...
 			while( rowIt.hasNext() ) {
 				Row dataRow = rowIt.next() ;
-				if( isDataRowEmpty( dataRow ) ) {
+				if( dataRowEmpty( dataRow ) ) {
 					continue ;
 				}
 				int patientNumber = getPatientNumber( dataRow ) ;
@@ -958,7 +989,7 @@ public class I2B2Project {
 				// If row is completely empty, we ignore it.
 				// If row is non-empty, we throw an exception...
 				if( patientNumber < 0 ) {
-					if( isDataRowEmpty( dataRow ) ) {
+					if( dataRowEmpty( dataRow ) ) {
 						continue ;
 					}
 					else {
@@ -1074,8 +1105,8 @@ public class I2B2Project {
 	}
 	
 	
-	private boolean isDataRowEmpty( Row dataRow ) {
-//		enterTrace( "I2B2Project.isDataRowEmpty()" ) ;
+	private boolean dataRowEmpty( Row dataRow ) {
+//		enterTrace( "I2B2Project.dataRowEmpty()" ) ;
 		try {
 			//
 			// Process the cells for each row...
@@ -1094,7 +1125,7 @@ public class I2B2Project {
 			return true ;
 		}
 		finally {
-//			exitTrace( "I2B2Project.isDataRowEmpty()" ) ;
+//			exitTrace( "I2B2Project.dataRowEmpty()" ) ;
 		}		
 	}
 	
@@ -1220,7 +1251,7 @@ public class I2B2Project {
 				utils.getValueAsString( dataSheet.getRow( I2B2Project.ONTOLOGY_CODES_ROW_INDEX ).getCell( dataCell.getColumnIndex() ) ) ;
 		int indexFirstUnitsBracket = ontCodeCellValue.indexOf( '[' ) ;
 		if( indexFirstUnitsBracket != -1 ) {
-			ontCodeCellValue = ontCodeCellValue.substring( 0, indexFirstUnitsBracket ) ;			
+			ontCodeCellValue = ontCodeCellValue.substring( 0, indexFirstUnitsBracket ).trim() ;			
 		}
 		return ontCodeCellValue ;
 	}
@@ -1477,7 +1508,16 @@ public class I2B2Project {
 				}
 			}
 			catch( SQLException sqlex ) {
-				if( connection != null ) try { connection.rollback() ; } catch( SQLException ex ) { ; }
+				if( connection != null ) {
+					try { 
+						connection.rollback() ; 
+						connection.setTransactionIsolation( Connection.TRANSACTION_SERIALIZABLE ) ;
+						connection.setAutoCommit( true ) ;
+					} 
+					catch( SQLException ex ) { 
+						; 
+					}
+				}
 				throw new UploaderException( "Failed to delete project: " + project.getProjectId(), sqlex ) ;
 			}	
 			finally {
@@ -1523,7 +1563,14 @@ public class I2B2Project {
 			catch( SQLException sqlx ) {
 				String message =  "Could not confirm project existed or not. Project id: " + project.getProjectId() ;
 				log.error( message, sqlx ) ;
-				if( connection != null ) try { connection.rollback() ; } catch( SQLException ex ) { ; }
+				if( connection != null ) {
+					try { 
+						connection.rollback() ; 
+					} catch( SQLException ex ) 
+					{ 
+						; 
+					}
+				}
 				throw new UploaderException( message, sqlx ) ;
 			}
 			finally {
