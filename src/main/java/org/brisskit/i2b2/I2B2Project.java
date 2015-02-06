@@ -363,7 +363,11 @@ public class I2B2Project {
 			it.next() ;
 			while( it.hasNext() ) {
 				Row row = it.next() ;
-				row.createCell( numberColumns, Cell.CELL_TYPE_STRING ).setCellValue( "unknown" ) ;
+				//
+				// Safety first...
+				if( !isDataRowEmpty( row ) ) {
+					row.createCell( numberColumns, Cell.CELL_TYPE_STRING ).setCellValue( "unknown" ) ;
+				}				
 			}
 			numberColumns++ ;
 		}
@@ -571,6 +575,7 @@ public class I2B2Project {
 		enterTrace( "producePatientMapping()" ) ;
 		String value = null ;
 		String name = null ;
+		int countPatientIdsNull = 0 ;
 		try {
 			Iterator<Row> rowIt = dataSheet.iterator() ;
 			//
@@ -582,6 +587,9 @@ public class I2B2Project {
 			// Process data rows...
 			while( rowIt.hasNext() ) {
 				Row dataRow = rowIt.next() ;	
+				if( isDataRowEmpty( dataRow ) ) {
+					continue ;
+				}
 				
 				PatientMapping	pMap = new PatientMapping( utils ) ;
 				pMap.setSchema_name( projectId ) ;
@@ -606,14 +614,20 @@ public class I2B2Project {
 				
 				//
 				// Write mapping to i2b2
-				Connection connection = Base.getSimpleConnectionPG() ;
-				if( !pMap.mappingExists( connection ) ) {
-					pMap.serializeToDatabase( connection ) ;
+				if( pMap.getPatient_ide() != null ) {
+					Connection connection = Base.getSimpleConnectionPG() ;
+					if( !pMap.mappingExists( connection ) ) {
+						pMap.serializeToDatabase( connection ) ;
+					}
+					//
+					// Record the mapping between external id and internal id...
+					this.patientMappings.put( pMap.getPatient_ide(), pMap.getPatient_num() ) ;
 				}
-				//
-				// Record the mapping between external id and internal id...
-				this.patientMappings.put( pMap.getPatient_ide(), pMap.getPatient_num() ) ;
-												
+				else {
+					countPatientIdsNull++ ;
+					log.debug( "Row with no id: " + countPatientIdsNull ) ;
+				}
+																
 			} // end of outer while - processing row
 			
 		}
@@ -629,6 +643,7 @@ public class I2B2Project {
 		String code = null ;
 		String name = null ;
 		String sourceSystemPatientID = null ;
+		int countPatientIdsNull = 0 ;
 		try {
 			Iterator<Row> rowIt = dataSheet.rowIterator() ;
 			//
@@ -641,6 +656,9 @@ public class I2B2Project {
 			while( rowIt.hasNext() ) {
 				
 				Row dataRow = rowIt.next() ;
+				if( isDataRowEmpty( dataRow ) ) {
+					continue ;
+				}
 				
 				PatientDimension pDim = new PatientDimension( utils ) ;
 				pDim.setSchema_name( projectId ) ;
@@ -709,11 +727,17 @@ public class I2B2Project {
 				
 				//
 				// Write patient dimension to i2b2...
-				Connection connection = Base.getSimpleConnectionPG() ;
-				if( !pDim.patientExists( connection ) ) {
-					pDim.serializeToDatabase( connection ) ;
+				if( pDim.getPatient_num() != null ) {
+					Connection connection = Base.getSimpleConnectionPG() ;
+					if( !pDim.patientExists( connection ) ) {
+						pDim.serializeToDatabase( connection ) ;
+					}
 				}
-												
+				else {
+					countPatientIdsNull++ ;
+					log.debug( "Row with no id: " + countPatientIdsNull ) ;
+				}
+													
 			} // end of outer while - processing row
 		}
 		catch( ParseException pex ) {
@@ -791,16 +815,17 @@ public class I2B2Project {
 
 				while( rowIt.hasNext() ) {
 					Row row = rowIt.next() ;
-					Cell dataCell = row.getCell( colIndex ) ;
-					String value = utils.getValueAsString( dataCell ) ;
-					if( utils.isEmpty( value ) ) {
-						log.debug( "Encountered a cell with no value" ) ;
-						continue ;
+					if( !isDataRowEmpty( row ) ) {
+						Cell dataCell = row.getCell( colIndex ) ;
+						String value = utils.getValueAsString( dataCell ) ;
+						if( utils.isEmpty( value ) ) {
+							log.debug( "Encountered a cell with no value" ) ;
+							continue ;
+						}
+						//
+						// Add to the range of values encountered...
+						values.add( value ) ;
 					}
-					//
-					// Add to the range of values encountered...
-					values.add( value ) ;
-
 				} // end inner while
 
 				//
@@ -907,194 +932,6 @@ public class I2B2Project {
 			exitTrace( "produceOntology()" ) ;
 		}		
 	}
-	
-	
-//	protected void _produceOntology() throws UploaderException {
-//		enterTrace( "produceOntology()" ) ;
-//		try {
-//			Row codesRow = dataSheet.getRow( ONTOLOGY_CODES_ROW_INDEX ) ;
-//			//
-//			// pathsAndCodes is a collection to help us write out
-//			// hierarchical ontology paths in the DB without
-//			// attempting to (erroneously) insert duplicated nodes.
-//			// For example: path root-node/demographics/age involves
-//			// writing three nodes, but the first two will be repeated
-//			// for some other path, for example: root-node/demographics/marital-status
-//			HashSet<String> pathsAndCodes = new HashSet<String>() ;
-//			String colName = null ;
-//			String toolTip = null ;
-//			String ontCode = null ;
-//
-//			//
-//			// Values is for the range of values contained in a column.
-//			HashSet<String> values = null ;
-//			//
-//			// We process each cell in the code row.
-//			//
-//			// But (!) we need to know the type of the column value(s)
-//			// eg: whether these represent a numeric, date or string.
-//			// In order to do this we examine each data value in a given column,
-//			// so we end up iterating over rows to gather the values of a given column.
-//			Iterator<Cell> cellIt = codesRow.cellIterator() ;
-//			while( cellIt.hasNext() ) {
-//				Cell codeCell = cellIt.next() ;
-//				int colIndex = codeCell.getColumnIndex() ;
-//				colName = utils.getValueAsString( dataSheet.getRow( I2B2Project.COLUMN_NAME_ROW_INDEX ).getCell( colIndex ) ) ;
-//				toolTip = utils.getValueAsString( dataSheet.getRow( I2B2Project.TOOLTIPS_ROW_INDEX ).getCell( colIndex ) ) ;
-//				//
-//				// The source patient id should not be processed as a fact (and therefore no ontological data)...
-//				if( colName.equalsIgnoreCase( "ID" ) ) {
-//					continue ;
-//				}
-//				//
-//				// The default value is String
-//				OntologyBranch.Type type = Type.STRING ;
-//				//
-//				// Units are derived from the ontCode value in the spreadsheet.
-//				// Square brackets, eg: [cms] will contain the unit measure.
-//				// If the brackets are empty, the units are an implied value (eg: age[] would imply years)
-//				// An implied value can be whatever the user wishes to interpret it as.
-//				// 
-//				// NB: The special value "enum" is used internally to indicate enumerated values.
-//				//     Currently for numerics or strings, enums are auto-generated
-//				//     dependent upon the range of values encountered in the columns.
-//				//
-//				// Thus, age[] would be a numeric field searched on by value.
-//				// Whereas, age without the square bracket, would be an enumeration of ages
-//				String units = "enum" ;
-//				//
-//				// Get the ontology code and make adjustments for units
-//				ontCode = utils.getValueAsString( codeCell ) ;
-//				if( ontCode.contains( "[" ) ) {
-//					log.debug( "concept column value: " + ontCode ) ;
-//					int firstBracket = ontCode.indexOf( "[" ) ;
-//					int secondBracket = ontCode.indexOf( "]" ) ;
-//					units = ontCode.substring( firstBracket+1, secondBracket ) ;
-//					ontCode = ontCode.substring( 0, firstBracket ) ;
-//					log.debug( "which yields concept: " + ontCode + " with units: " + units ) ;
-//				}
-//								
-//				//
-//				// We gather values and attempt to diagnose type...
-//				values = new HashSet<String>() ;
-//				log.debug( "Processing column with colName: [" + colName + "] toolTip: [" + toolTip + "] ontCode: [" + ontCode + "]" ) ;
-//
-//				Iterator<Row> rowIt = dataSheet.rowIterator() ;
-//				rowIt.next() ; // tab past column names
-//				rowIt.next() ; // tab past tool tips
-//				rowIt.next() ; // tab past codes
-//
-//				while( rowIt.hasNext() ) {
-//					Row row = rowIt.next() ;
-//					Cell dataCell = row.getCell( colIndex ) ;
-//					String value = utils.getValueAsString( dataCell ) ;
-//					if( utils.isNull( value ) ) {
-//						log.debug( "Encountered a cell with null value" ) ;
-//						continue ;
-//					}
-//					//
-//					// Add to the range of values encountered...
-//					values.add( value ) ;
-//					//
-//					// Decide whether numeric, date or string...
-//					if( utils.isNumeric( value ) ) {
-//						log.debug( "Cell with numeric value: " + value ) ;
-//						if( type == Type.STRING ) {
-//							type = Type.NUMERIC ;
-//						}
-//						else if( type == Type.NUMERIC ) {
-//							// If type has already been established as a decimal, do nothing
-//						}
-//					}
-//					else if( utils.isDate( value ) ) {
-//						log.debug( "Cell with date value: " + value ) ;
-//						if( type == Type.STRING ) {
-//							type = Type.DATE ;
-//						}
-//						else if( type != Type.DATE ) {
-//							log.error( "Cells with incompatible values; current value: " + value ) ;
-//						}
-//					}
-//					else {
-//						// We assume a string
-//						log.debug( "Cell with string value: " + value ) ;
-//					}
-//
-//				} // end inner while
-//
-//				
-//				//
-//				// If there is a code lookup, however,
-//				// we must treat this as of type STRING.
-//				if( lookups.containsKey( colName ) ) {
-//					type = Type.STRING ;
-//					units = "enum" ;
-//				}
-//													
-//				//
-//				// We build each branch in memory and save it in a collection 
-//				OntologyBranch 
-//					branch = OntologyBranch.Factory.newInstance( projectId
-//											                   , colName
-//											                   , toolTip
-//											                   , ontCode
-//											                   , type
-//											                   , units
-//											                   , lookups
-//											                   , values
-//											                   , pathsAndCodes
-//											                   , utils ) ;
-//				
-//				ontBranches.put( branch.getOntCode(), branch ) ;
-//				
-//			} // end outer while 
-//			
-//			
-//			//
-//			// Process ontology branches into the database ...
-//			OntologyBranch obThis = null ;
-//			OntologyBranch obThat = null ;
-//			Iterator<OntologyBranch> itOb = ontBranches.values().iterator() ;
-//			while( itOb.hasNext() ) {
-//				obThis = itOb.next() ;
-//				//
-//				// Are we creating the project's ontology
-//				// here for the very first time, as derived from the spreadsheet?
-//				if( !obThis.existsWithinDataBase( Base.getSimpleConnectionPG() ) ) {				
-//					obThis.serializeToDatabase( Base.getSimpleConnectionPG() ) ;
-//				}
-//				//
-//				// But if this is an existing ontology, 
-//				// we need to check new against old metadata...
-//				else {
-//					obThat = OntologyBranch.Factory.newInstance( projectId
-//															   , colName
-//							                                   , ontCode
-//							                                   , lookups
-//							                                   , pathsAndCodes
-//							                                   , utils ) ;
-//					
-//					//
-//					// If there's a difference, we need to write the differences...
-//					if( !obThis.equals( obThat ) ) {
-//						obThis.serializeDifferencesToDatabase( Base.getSimpleConnectionPG()
-//								                             , obThat ) ;
-//					}
-//				}
-//			}
-//			
-//			//
-//	    	// Breakdowns may or may not be there as a separate sheet.
-//	    	// In any case, we must create some breakdown metadata
-//	    	// in order for breakdowns not to raise errors.
-//	    	// So we build all breakdowns here (defaulting if need be)...
-//	    	buildBreakdowns() ;
-//			
-//		}
-//		finally {
-//			exitTrace( "produceOntology()" ) ;
-//		}		
-//	}
 	
 	
 	protected void produceFacts( Date defaultObservationStartDate ) throws UploaderException {
@@ -1238,7 +1075,7 @@ public class I2B2Project {
 	
 	
 	private boolean isDataRowEmpty( Row dataRow ) {
-		enterTrace( "I2B2Project.isDataRowEmpty()" ) ;
+//		enterTrace( "I2B2Project.isDataRowEmpty()" ) ;
 		try {
 			//
 			// Process the cells for each row...
@@ -1257,7 +1094,7 @@ public class I2B2Project {
 			return true ;
 		}
 		finally {
-			exitTrace( "I2B2Project.isDataRowEmpty()" ) ;
+//			exitTrace( "I2B2Project.isDataRowEmpty()" ) ;
 		}		
 	}
 	

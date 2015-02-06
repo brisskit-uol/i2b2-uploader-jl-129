@@ -681,7 +681,7 @@ public class OntologyBranch {
 			throw new UploaderException( "Failed to insert concept into concept dimension.", sqlx ) ;
 		}
 		finally {
-			exitTrace( "OntologyBranch.insertIntoConceptDimension(+ignoreInsertFailures)" ) ;
+			exitTrace( "OntologyBranch.insertIntoConceptDimension()" ) ;
 		}
 	}
 	
