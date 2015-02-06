@@ -33,8 +33,8 @@ public class I2B2ProjectTests extends TestCase {
 	}
 	
 	
-	public void _testCreateNewProject_WithEmptyRow() { 
-		enterTrace( "==>>testCreateNewProject_WithEmptyRow()" ) ;
+	public void _test01_CreateNewProject_WithEmptyRow() { 
+		enterTrace( "==>>test01_CreateNewProject_WithEmptyRow()" ) ;
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-01-with-empty-row.xls").getFile());		
 		try {
 			if( I2B2Project.Factory.projectExists( "test01_with_empty_row" ) ) {
@@ -48,35 +48,13 @@ public class I2B2ProjectTests extends TestCase {
 			fail( "UploaderException thrown: " + cex.getLocalizedMessage() ) ;
 		}
 		finally {
-			exitTrace( "==>>testCreateNewProject_WithEmptyRow()" ) ;
+			exitTrace( "==>>test01_CreateNewProject_WithEmptyRow()" ) ;
 		}
 		
 	}
-		
-	public void _testSpreadsheetWithLotsEmptyRows() { 
-		enterTrace( "==>>testSpreadsheetWithLotsEmptyRows()" ) ;
-		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/GP_CUT1_more_than_maxrows.xlsx").getFile());		
-		String projectId = "GP_CUT1" ;
-		try {
-			if( I2B2Project.Factory.projectExists( projectId ) ) {
-				I2B2Project.Factory.delete( projectId ) ;
-			}	
-			I2B2Project project = I2B2Project.Factory.newInstance( projectId ) ;
-			project.processSpreadsheet( spreadsheetFile ) ;
-		}
-		catch( UploaderException cex ) {
-			log.error( "Failed to process spreadsheet with lots of empty rows.", cex ) ;
-			fail( "Failed to process spreadsheet with lots of empty rows." ) ;
-						
-		}
-		finally {
-			exitTrace( "==>>testSpreadsheetWithLotsEmptyRows()" ) ;
-		}	
-	}
 	
-	
-	public void _testSpreadsheetBeyondMaxRows() { 
-		enterTrace( "==>>testSpreadsheetBeyondMaxRows()" ) ;
+	public void test02_SpreadsheetBeyondMaxRows() { 
+		enterTrace( "==>>test02_SpreadsheetBeyondMaxRows()" ) ;
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/GP_CUT1_more_than_maxrows.xlsx").getFile());		
 		String projectId = "maxrowsexceeded" ;
 		try {
@@ -91,13 +69,13 @@ public class I2B2ProjectTests extends TestCase {
 			log.debug( cex.getLocalizedMessage() ) ;			
 		}
 		finally {
-			exitTrace( "==>>testSpreadsheetBeyondMaxRows()" ) ;
+			exitTrace( "==>>test02_SpreadsheetBeyondMaxRows()" ) ;
 		}	
 	}
 
 	
-	public void _testCreateNewLaHeartProject() { 
-		enterTrace( "==>>testCreateNewLaHeartProject()" ) ;
+	public void _test03_CreateNewLaHeartProject() { 
+		enterTrace( "==>>test03_CreateNewLaHeartProject()" ) ;
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/EG1-laheart.xlsx").getFile());		
 		String projectId = "laheart" ;
 		try {
@@ -112,13 +90,13 @@ public class I2B2ProjectTests extends TestCase {
 			fail( "UploaderException thrown: " + cex.getLocalizedMessage() ) ;
 		}
 		finally {
-			exitTrace( "==>>testCreateNewLaHeartProject()" ) ;
+			exitTrace( "==>>test03_CreateNewLaHeartProject()" ) ;
 		}		
 	}
 	
 	
-	public void testCreateNewTest01Project() { 
-		enterTrace( "==>>_testCreateNewTest01Project()" ) ;
+	public void _test04_CreateNewTest01Project() { 
+		enterTrace( "==>>test04_CreateNewTest01Project()" ) ;
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());		
 		String projectId = "test01" ;
 		try {
@@ -133,13 +111,13 @@ public class I2B2ProjectTests extends TestCase {
 			fail( "UploaderException thrown: " + cex.getLocalizedMessage() ) ;
 		}
 		finally {
-			exitTrace( "==>>_testCreateNewTest01Project()" ) ;
+			exitTrace( "==>>test04_CreateNewTest01Project()" ) ;
 		}		
 	}
 	
 	
-	public void _testCreateNewProjectWithStartDateColumn() { 
-		enterTrace( "==>>testCreateNewProjectWithStartDateColumn()" ) ;
+	public void _test05_CreateNewProjectWithStartDateColumn() { 
+		enterTrace( "==>>test05_CreateNewProjectWithStartDateColumn()" ) ;
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-03-startdatecol.xls").getFile() ) ;	
 		try {
 			if( I2B2Project.Factory.projectExists( "test03_startdatecols" ) ) {
@@ -153,14 +131,14 @@ public class I2B2ProjectTests extends TestCase {
 			fail( "UploaderException thrown: " + cex.getLocalizedMessage() ) ;
 		}
 		finally {
-			exitTrace( "==>>testCreateNewProjectWithStartDateColumn()" ) ;
+			exitTrace( "==>>test05_CreateNewProjectWithStartDateColumn()" ) ;
 		}
 		
 	}
 
 	
-	public void _testSupplementingExistingProject() { 
-		enterTrace( "==>>testSupplementingExistingProject()" ) ;
+	public void _test06_SupplementingExistingProject() { 
+		enterTrace( "==>>test06_SupplementingExistingProject()" ) ;
 		File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());
 		File spreadsheetFile2 = new File(getClass().getClassLoader().getResource("spreadsheets/test-02.xls").getFile());		
 		try {
@@ -187,13 +165,13 @@ public class I2B2ProjectTests extends TestCase {
 			fail( "UploaderException thrown: " + cex.getLocalizedMessage() ) ;
 		}
 		finally {
-			exitTrace( "==>>testSupplementingExistingProject()" ) ;
+			exitTrace( "==>>test06_SupplementingExistingProject()" ) ;
 		}
 		
 	}
 	
-	public void _testSupplementingExistingProject_AdditionalData() { 
-		enterTrace( "==>>testSupplementingExistingProject_AdditionalData()" ) ;
+	public void _test07_SupplementingExistingProject_AdditionalData() { 
+		enterTrace( "==>>test07_SupplementingExistingProject_AdditionalData()" ) ;
 		File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());
 		File spreadsheetFile2 = new File(getClass().getClassLoader().getResource("spreadsheets/test-01-samepeople.xls").getFile());	
 		try {
@@ -220,14 +198,14 @@ public class I2B2ProjectTests extends TestCase {
 			fail( "UploaderException thrown: " + cex.getLocalizedMessage() ) ;
 		}
 		finally {
-			exitTrace( "==>>testSupplementingExistingProject_AdditionalData()" ) ;
+			exitTrace( "==>>test07_SupplementingExistingProject_AdditionalData()" ) ;
 		}
 	}
 	
 	
 	
-	public void _testSupplementingExistingProject_AddionalMetadata() { 
-		enterTrace( "==>>testSupplementingExistingProject_AddionalMetadata()" ) ;
+	public void _test08_SupplementingExistingProject_AddionalMetadata() { 
+		enterTrace( "==>>test08_SupplementingExistingProject_AddionalMetadata()" ) ;
 		File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());
 		File spreadsheetFile2 = new File(getClass().getClassLoader().getResource("spreadsheets/test-02-additionalmetadata.xls").getFile());		
 		try {
@@ -254,25 +232,26 @@ public class I2B2ProjectTests extends TestCase {
 			fail( "UploaderException thrown: " + cex.getLocalizedMessage() ) ;
 		}
 		finally {
-			exitTrace( "==>>testSupplementingExistingProject_AddionalMetadata()" ) ;
+			exitTrace( "==>>test08_SupplementingExistingProject_AddionalMetadata()" ) ;
 		}
 		
 	}
 		
 		
-		public void _testSupplementingExistingProject_SameInstance() { 
-			enterTrace( "==>>testSupplementingExistingProject_SameInstance()" ) ;
+		public void _test09_SupplementingExistingProject_SameInstance() { 
+			enterTrace( "==>>test09_SupplementingExistingProject_SameInstance()" ) ;
 			File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());
 			File spreadsheetFile2 = new File(getClass().getClassLoader().getResource("spreadsheets/test-02.xls").getFile());	
+			String projectId = "testnnsi" ;
 			try {
 				//
 				// Delete project if it already exists...
-				if( I2B2Project.Factory.projectExists( "testnn" ) ) {
-					I2B2Project.Factory.delete( "testnn" ) ;				
+				if( I2B2Project.Factory.projectExists( projectId ) ) {
+					I2B2Project.Factory.delete( projectId ) ;				
 				}
 				//
 				// Create new project with all it db artifacts
-				I2B2Project project = I2B2Project.Factory.newInstance( "testnn" ) ;
+				I2B2Project project = I2B2Project.Factory.newInstance( projectId ) ;
 				//
 				// Process the first spreadsheet...
 				project.processSpreadsheet( spreadsheetFile1 ) ;
@@ -285,14 +264,14 @@ public class I2B2ProjectTests extends TestCase {
 				fail( "UploaderException thrown: " + cex.getLocalizedMessage() ) ;
 			}
 			finally {
-				exitTrace( "==>>testSupplementingExistingProject_SameInstance()" ) ;
+				exitTrace( "==>>test09_SupplementingExistingProject_SameInstance()" ) ;
 			}
 		
 	}
 	
 	
-	public void _testDeletionOfProject() { 
-		enterTrace( "==>>testDeletionOfProject()" ) ;		
+	public void _test10_DeletionOfProject() { 
+		enterTrace( "==>>test10_DeletionOfProject()" ) ;		
 		try {
 			//
 			// First - if need be - create the project and deploy to JBoss...			
@@ -309,13 +288,13 @@ public class I2B2ProjectTests extends TestCase {
 			fail( "CreationException thrown: " + cex.getLocalizedMessage() ) ;
 		}
 		finally {
-			exitTrace( "==>>testDeletionOfProject()" ) ;
+			exitTrace( "==>>test10_DeletionOfProject()" ) ;
 		}
 	}
 
 	
-	public void _testDeletionOfNonExistentProject() {
-		enterTrace( "==>>testDeletionOfNonExistentProject()" ) ;
+	public void _test11_DeletionOfNonExistentProject() {
+		enterTrace( "==>>test11_DeletionOfNonExistentProject()" ) ;
 		try {
 			I2B2Project.Factory.delete( "projectX" ) ;
 			fail( "Should not be able to delete a non-existent project: projectX" ) ;
@@ -324,12 +303,12 @@ public class I2B2ProjectTests extends TestCase {
 			
 		}
 		finally {
-			exitTrace( "==>>testDeletionOfNonExistentProject()" ) ;
+			exitTrace( "==>>test11_DeletionOfNonExistentProject()" ) ;
 		}
 	}
 
-	public void _testReadSpreadsheet() {
-		enterTrace( "==>>testReadSpreadsheet()" ) ;
+	public void _test12_ReadSpreadsheet() {
+		enterTrace( "==>>test12_ReadSpreadsheet()" ) ;
 //		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-02.xls").getFile());
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/EG1-laheart.xlsx").getFile());		
 		try {
@@ -387,9 +366,31 @@ public class I2B2ProjectTests extends TestCase {
 			fail( "CreationException thrown: " + cex.getLocalizedMessage() ) ;
 		}
 		finally {
-			exitTrace( "==>>testReadSpreadsheet()" ) ;
+			exitTrace( "==>>test12_ReadSpreadsheet()" ) ;
 		}
 						
+	}
+	
+	
+	public void test13_SpreadsheetWithLotsEmptyRows() { 
+		enterTrace( "==>>test13_SpreadsheetWithLotsEmptyRows()" ) ;
+		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/GP_CUT1.xlsx").getFile());		
+		String projectId = "gpcut1" ;
+		try {
+			if( I2B2Project.Factory.projectExists( projectId ) ) {
+				I2B2Project.Factory.delete( projectId ) ;
+			}	
+			I2B2Project project = I2B2Project.Factory.newInstance( projectId ) ;
+			project.processSpreadsheet( spreadsheetFile ) ;
+		}
+		catch( UploaderException cex ) {
+			log.error( "Failed to process spreadsheet with lots of empty rows.", cex ) ;
+			fail( "Failed to process spreadsheet with lots of empty rows." ) ;
+						
+		}
+		finally {
+			exitTrace( "==>>test13_SpreadsheetWithLotsEmptyRows()" ) ;
+		}	
 	}
 	
 	/**
