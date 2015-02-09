@@ -53,7 +53,7 @@ public class I2B2ProjectTests extends TestCase {
 		
 	}
 	
-	public void test02_SpreadsheetBeyondMaxRows() { 
+	public void _test02_SpreadsheetBeyondMaxRows() { 
 		enterTrace( "==>>test02_SpreadsheetBeyondMaxRows()" ) ;
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/GP_CUT1_more_than_maxrows.xlsx").getFile());		
 		String projectId = "maxrowsexceeded" ;

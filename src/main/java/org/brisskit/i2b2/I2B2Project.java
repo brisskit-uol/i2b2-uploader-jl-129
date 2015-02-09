@@ -1223,12 +1223,14 @@ public class I2B2Project {
 		
 			of.setValtype_cd( "T" ) ;					
 			String value = utils.getValueAsString( cell ) ;	
-			of.setTval_char( value ) ;
+			
 			
 			if( units.equalsIgnoreCase( "enum" ) ) {
-				of.setConcept_cd( ontCode + ":" + value ) ;
+				of.setTval_char( OntologyBranch.formEnumeratedValue( value ) );
+				of.setConcept_cd( OntologyBranch.formEnumeratedBaseCode( ontCode, value ) ) ;
 			}
 			else {
+				of.setTval_char( value ) ;
 				of.setConcept_cd( ontCode ) ;
 			}
 			
