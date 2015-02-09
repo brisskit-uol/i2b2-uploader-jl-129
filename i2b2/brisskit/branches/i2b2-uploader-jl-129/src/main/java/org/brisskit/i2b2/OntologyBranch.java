@@ -824,39 +824,55 @@ public class OntologyBranch {
 					
 			//
 			// Now insert the range of values in the enumeration ...
+			
 			Iterator<String> it = values.iterator() ;
 			while( it.hasNext() ) {
-				String subCategory = it.next() ;
-				String lookup = subCategory ; // default to what is there
-				
+				String subCategory = null ;
+				String lookup = null ; 
+				String baseCode = null ;
+				String toolTip = null ;
+				String name = null ;
+				String conceptName = null ;
+				subCategory = it.next() ;
+				lookup = subCategory ; // default to what is there				
 				if( lookups.containsKey( colName ) ) {
 					lookup = lookups.get( colName + ":" + subCategory ) ;
 				}
-				
-				fullName = "\\" + projectId + "\\" + colName + "\\" + lookup + "\\" ;			
+				baseCode = formEnumeratedBaseCode( ontCode, subCategory ) ;
+				if( baseCode.length() > 200 ) {
+					throw new UploaderException( "Ontology code exceeds 200 characters in length: " + baseCode ) ;
+				}
+				toolTip = formEnumeratedTooltip( this.toolTip, lookup ) ;
+				//
+				// NB: the backslashes are important. They must be there.
+				//     They cannot be removed as per the above replaceAll()'s
+				fullName = formEnumeratedFullName ( projectId, colName, lookup ) ;
+				name = formEnumeratedName( lookup ) ;
+
 				if( !nodeExists( connection, fullName ) ) {
 					sqlCmd = METADATA_SQL_INSERT_COMMAND ;
 					sqlCmd = sqlCmd.replaceAll( "<DB_SCHEMA_NAME>", projectId ) ;
 					sqlCmd = sqlCmd.replace( "<PROJECT_METADATA_TABLE>", projectId ) ;	
 					sqlCmd = sqlCmd.replace( "<HLEVEL>", utils.enfoldInteger( 2 ) ) ;
 					sqlCmd = sqlCmd.replace( "<FULLNAME>", utils.enfoldString( fullName ) ) ;
-					sqlCmd = sqlCmd.replace( "<NAME>", utils.enfoldString( lookup ) ) ;
+					sqlCmd = sqlCmd.replace( "<NAME>", utils.enfoldString( name ) ) ;
 					sqlCmd = sqlCmd.replace( "<SYNONYM_CD>", utils.enfoldString( "N" ) ) ;
 					sqlCmd = sqlCmd.replace( "<VISUALATTRIBUTES>", utils.enfoldString( "LA" ) ) ;
-					sqlCmd = sqlCmd.replace( "<BASECODE>", utils.enfoldString( ontCode + ":" + subCategory ) ) ;
+					sqlCmd = sqlCmd.replace( "<BASECODE>", utils.enfoldString( baseCode ) ) ;
 					sqlCmd = sqlCmd.replace( "<METADATAXML>", "NULL" ) ;
 					sqlCmd = sqlCmd.replace( "<COLUMNDATATYPE>", utils.enfoldString( "T" ) ) ;
 					sqlCmd = sqlCmd.replace( "<OPERATOR>", utils.enfoldString( "LIKE" ) ) ;
 					sqlCmd = sqlCmd.replace( "<DIMCODE>", utils.enfoldString( fullName ) ) ;
-					sqlCmd = sqlCmd.replace( "<TOOLTIP>", utils.enfoldNullableString( toolTip + ":" + lookup ) ) ;
+					sqlCmd = sqlCmd.replace( "<TOOLTIP>", utils.enfoldNullableString( toolTip ) ) ;
 					sqlCmd = sqlCmd.replace( "<SOURCESYSTEM_CD>", utils.enfoldNullableString( projectId ) ) ;						
 					st.execute( sqlCmd ) ;				
 					//
 					// Insert concept into concept dimension...
+					conceptName = formEnumeratedConceptName( colName, lookup) ;
 					insertIntoConceptDimension( st
-							, fullName
-							, ontCode + ":" + subCategory
-							, colName + " " + lookup ) ;		
+											  , fullName
+											  , baseCode
+											  , conceptName ) ;		
 				}
 				
 			} // end while
@@ -867,6 +883,36 @@ public class OntologyBranch {
 		finally {
 			exitTrace( "OntologyBranch.insertEnumeratedString(Connection)" ) ;
 		}
+	}
+	
+	
+	public static String formEnumeratedBaseCode( String ontCode, String enumValue ) {
+		return ontCode + ':' + translateSpecialCharacters( enumValue ) ;
+	}
+	
+	public static String formEnumeratedTooltip( String tooltip, String lookup ) {
+		return tooltip + ':' + translateSpecialCharacters( lookup ) ;
+	}
+	
+	public static String formEnumeratedFullName( String projectId, String colName, String lookup ) {
+		return "\\" + projectId + "\\" + colName + "\\" + translateSpecialCharacters( lookup ) + "\\" ;
+	}
+	
+	public static String formEnumeratedConceptName( String colName, String lookup ) {
+		return colName + ' ' + translateSpecialCharacters( lookup ) ;
+	}
+	
+	public static String formEnumeratedValue( String value ) {
+		return translateSpecialCharacters( value ) ;	
+	}
+	
+	public static String formEnumeratedName( String lookup ) {
+		return translateSpecialCharacters( lookup ) ;
+	}
+	
+	private static String translateSpecialCharacters( String fromString ) {
+		String toString = fromString.replaceAll( "[^\\dA-Za-z ]", "" ) ;
+		return toString ;
 	}
 	
 	
