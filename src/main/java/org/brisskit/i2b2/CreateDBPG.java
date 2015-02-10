@@ -94,8 +94,8 @@ public class CreateDBPG extends Base {
 			
 			Statement st = connection.createStatement();
 			
-			connection.setTransactionIsolation( Connection.TRANSACTION_SERIALIZABLE ) ;
-			connection.setAutoCommit( false ) ;
+//			connection.setTransactionIsolation( Connection.TRANSACTION_SERIALIZABLE ) ;
+//			connection.setAutoCommit( false ) ;
 
 			for (int i = 0; i < inst.length; i++) {
 				if (!inst[i].trim().equals("")) {
@@ -118,13 +118,13 @@ public class CreateDBPG extends Base {
 				}
 			}
 			
-			connection.commit() ;
-			connection.setTransactionIsolation( Connection.TRANSACTION_SERIALIZABLE ) ;
-			connection.setAutoCommit( true ) ;
+//			connection.commit() ;
+//			connection.setTransactionIsolation( Connection.TRANSACTION_SERIALIZABLE ) ;
+//			connection.setAutoCommit( true ) ;
 
 		}
 		catch( Exception ex ) {
-			if( connection != null ) try { connection.rollback() ; } catch( SQLException sqlx ) { ; }
+//			if( connection != null ) try { connection.rollback() ; } catch( SQLException sqlx ) { ; }
 			log.error( "CreateDBPG.runScript(): ", ex ) ;
 			throw new UploaderException( "Error whilst executing SQL commands in file " + fileName, ex ) ;
 		}
@@ -141,8 +141,8 @@ public class CreateDBPG extends Base {
 			//
 			// Create project specific database procedures...
 			connection = getSimpleConnectionPG();
-			connection.setTransactionIsolation( Connection.TRANSACTION_SERIALIZABLE ) ;
-			connection.setAutoCommit( false ) ;
+//			connection.setTransactionIsolation( Connection.TRANSACTION_SERIALIZABLE ) ;
+//			connection.setAutoCommit( false ) ;
 			Statement st = connection.createStatement();
 			st.setEscapeProcessing(false);
 						
@@ -199,12 +199,12 @@ public class CreateDBPG extends Base {
 			log.debug("Procedure 26");
 			st.execute("CREATE OR REPLACE FUNCTION istableexists (tableName IN text)  RETURNS varchar AS $body$ DECLARE  flag varchar(10); countTableCur REFCURSOR; countTable varchar(1);   BEGIN      open countTableCur for EXECUTE 'SELECT count(1) FROM pg_catalog.pg_class WHERE relname = '''||tableName||''' ' ;     LOOP         FETCH countTableCur INTO countTable;         IF countTable = '0'             THEN              flag := 'FALSE';             EXIT;         ELSE             flag := 'TRUE';             EXIT;     END IF;          END LOOP;     close countTableCur ;     return flag;      EXCEPTION WHEN OTHERS THEN     RAISE EXCEPTION 'An error was encountered - % -ERROR- %',SQLSTATE,SQLERRM;                     END;     $body$     LANGUAGE PLPGSQL; ");
 			log.debug("Procedure 27");
-			connection.commit() ;
-			connection.setTransactionIsolation( Connection.TRANSACTION_SERIALIZABLE ) ;
-			connection.setAutoCommit( true ) ;
+//			connection.commit() ;
+//			connection.setTransactionIsolation( Connection.TRANSACTION_SERIALIZABLE ) ;
+//			connection.setAutoCommit( true ) ;
 		}
 		catch( Exception ex ) {
-			if( connection != null ) try { connection.rollback() ; } catch( SQLException sqlx ) { ; }
+//			if( connection != null ) try { connection.rollback() ; } catch( SQLException sqlx ) { ; }
 			log.error( "CreateDBPG.insertProcedures(): ", ex ) ;
 			throw new UploaderException( "Error whilst inserting DB procedure ", ex ) ;
 		}

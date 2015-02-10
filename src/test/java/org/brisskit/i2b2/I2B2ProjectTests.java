@@ -95,7 +95,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 	
 	
-	public void _test04_CreateNewTest01Project() { 
+	public void test04_CreateNewTest01Project() { 
 		enterTrace( "==>>test04_CreateNewTest01Project()" ) ;
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());		
 		String projectId = "test01" ;
@@ -372,7 +372,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 	
 	
-	public void test13_SpreadsheetWithLotsEmptyRows() { 
+	public void _test13_SpreadsheetWithLotsEmptyRows() { 
 		enterTrace( "==>>test13_SpreadsheetWithLotsEmptyRows()" ) ;
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/GP_CUT1.xlsx").getFile());		
 		String projectId = "gpcut1" ;
