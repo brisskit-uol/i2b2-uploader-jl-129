@@ -1492,17 +1492,17 @@ public class I2B2Project {
 			try {
 				if( projectExists( project.getProjectId() ) ) {
 					connection = Base.getSimpleConnectionPG() ;
-					connection.setTransactionIsolation( Connection.TRANSACTION_SERIALIZABLE ) ;
-					connection.setAutoCommit( false ) ;
+//					connection.setTransactionIsolation( Connection.TRANSACTION_SERIALIZABLE ) ;
+//					connection.setAutoCommit( false ) ;
 					String sqlCmd = COMPLETELY_DELETE_PROJECT_SQL_COMMAND ;							
 					sqlCmd = sqlCmd.replaceAll( "<DB_SCHEMA_NAME>", project.getProjectId() ) ;
 					sqlCmd = sqlCmd.replace( "<DB_USER_NAME>", project.getProjectId() ) ;
 					sqlCmd = sqlCmd.replace( "<PROJECT_ID>", project.getProjectId() ) ;
 					Statement st = connection.createStatement() ;
 					st.execute( sqlCmd ) ;
-					connection.commit() ;
-					connection.setTransactionIsolation( Connection.TRANSACTION_SERIALIZABLE ) ;
-					connection.setAutoCommit( true ) ;
+//					connection.commit() ;
+//					connection.setTransactionIsolation( Connection.TRANSACTION_SERIALIZABLE ) ;
+//					connection.setAutoCommit( true ) ;
 					CreateDBPG.undeployFromJBoss( project.getProjectId() ) ;
 				}	
 				else {
@@ -1510,16 +1510,6 @@ public class I2B2Project {
 				}
 			}
 			catch( SQLException sqlex ) {
-				if( connection != null ) {
-					try { 
-						connection.rollback() ; 
-						connection.setTransactionIsolation( Connection.TRANSACTION_SERIALIZABLE ) ;
-						connection.setAutoCommit( true ) ;
-					} 
-					catch( SQLException ex ) { 
-						; 
-					}
-				}
 				throw new UploaderException( "Failed to delete project: " + project.getProjectId(), sqlex ) ;
 			}	
 			finally {
