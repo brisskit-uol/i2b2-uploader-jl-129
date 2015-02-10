@@ -181,7 +181,7 @@ public class I2B2Project {
     	}
     	catch( Exception ex ) {
     		if( ex instanceof UploaderException ) {
-    			throw ex ;
+    			throw (UploaderException)ex ;
     		}
     		throw new UploaderException( "Internal Error.", ex ) ;
     	}
