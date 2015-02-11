@@ -172,6 +172,40 @@ public class OntologyBranch {
 	               ", now()" +
 	               ", <SOURCESYSTEM_CD>" +
 	               ", NULL ) ;" ;		// upload id
+	
+	
+	public static final String[][] SPECIAL_CHARS_TRANSLATION_TABLE  = {		
+		{ "&", "and" } ,
+		{ "'", "apostrophe" } ,
+		{ "*", "asterisk" } ,
+		{ "@", "at" } ,
+		{ "`", "back quote" } ,
+		{ "\\", "back slash" } ,
+		{ "^", "carat" } ,
+		{ "}", "close brace" } ,
+		{ "]", "close bracket" } ,
+		{ ")", "close parenthesis" } ,
+		{ ":", "colon" } ,
+		{ ",", "comma" } ,
+		{ "$", "dollar" } ,
+		{ "=", "equals" } ,
+		{ "!", "exclamation mark" } ,
+		{ ">", "greater than" } ,
+		{ "<", "less than" } ,
+		{ "-", "hyphen" } ,
+		{ "{", "open brace" } ,
+		{ "[", "open bracket" } ,
+		{ "(", "open parenthesis" } ,
+		{ "%", "percent" } ,
+		{ "|", "pipe" } ,
+		{ "+", "plus" } ,
+		{ "#", "hash" } ,
+		{ "\"", "quote" } , 
+		{ ";", "semicolon" } ,
+		{ "/", "forward slash" } ,
+		{ "~", "tilde" } ,
+		{ "_", "underscore" }			
+	} ;
 
 	//
 	// Project id (required for schema and some column values )
@@ -911,7 +945,17 @@ public class OntologyBranch {
 	}
 	
 	private static String translateSpecialCharacters( String fromString ) {
-		String toString = fromString.replaceAll( "[^\\dA-Za-z ]", "" ) ;
+		// This version just removes all special characters...
+		//String toString = fromString.replaceAll( "[^\\dA-Za-z ]", "" ) ;
+		
+		//
+		// This version translates them to English words or phrases
+		// (not terribly friendly, but consistent)...
+		String toString = fromString ;
+		for( int i=0; i<SPECIAL_CHARS_TRANSLATION_TABLE.length; i++ ) {
+			toString = toString.replace( SPECIAL_CHARS_TRANSLATION_TABLE[i][0]
+					                   , SPECIAL_CHARS_TRANSLATION_TABLE[i][1] ) ;
+		}
 		return toString ;
 	}
 	
