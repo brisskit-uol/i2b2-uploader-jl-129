@@ -95,7 +95,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 	
 	
-	public void test04_CreateNewTest01Project() { 
+	public void _test04_CreateNewTest01Project() { 
 		enterTrace( "==>>test04_CreateNewTest01Project()" ) ;
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());		
 		String projectId = "test01" ;
@@ -372,7 +372,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 	
 	
-	public void _test13_SpreadsheetWithLotsEmptyRows() { 
+	public void test13_SpreadsheetWithLotsEmptyRows() { 
 		enterTrace( "==>>test13_SpreadsheetWithLotsEmptyRows()" ) ;
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/GP_CUT1.xlsx").getFile());		
 		String projectId = "gpcut1" ;
@@ -392,6 +392,81 @@ public class I2B2ProjectTests extends TestCase {
 			exitTrace( "==>>test13_SpreadsheetWithLotsEmptyRows()" ) ;
 		}	
 	}
+
+	
+	public void _test14_SupplementingExistingProject_MalcsProblem() { 
+		enterTrace( "==>>_test14_SupplementingExistingProject_MalcsProblem()" ) ;
+		File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/Pharma1-shortened.xls").getFile());
+		File spreadsheetFile2 = new File(getClass().getClassLoader().getResource("spreadsheets/pharma2-shortened.xlsx").getFile());
+		String projectId = "pharma" ;
+		try {
+			//
+			// Delete project if it already exists...
+			if( I2B2Project.Factory.projectExists( projectId ) ) {
+				I2B2Project.Factory.delete( projectId ) ;				
+			}
+			//
+			// Create new project with all it db artifacts
+			I2B2Project project = I2B2Project.Factory.newInstance( projectId ) ;
+			//
+			// Process the first spreadsheet...
+			project.processSpreadsheet( spreadsheetFile1 ) ;
+			//
+			// Get a new instance of the project...
+			project = I2B2Project.Factory.newInstance( projectId ) ;
+			//
+			// And attempt to process subsequent spreadsheet...
+			project.processSpreadsheet( spreadsheetFile2 ) ;
+		}
+		catch( UploaderException cex ) {			
+			cex.printStackTrace( System.out ) ;
+			fail( "UploaderException thrown: " + cex.getLocalizedMessage() ) ;
+		}
+		finally {
+			exitTrace( "==>>_test14_SupplementingExistingProject_MalcsProblem()" ) ;
+		}
+		
+	}
+	
+	
+	public void test15_TranslateSpecialCharacters() { 
+		enterTrace( "==>>TranslateSpecialCharacters()" ) ;
+
+		String awkwardString = 
+				"The & opponents ' of * the @ Copenhagen ` interpretation \\ are ^ " +
+				"still } in ] a ) small : minority, and $ may = well ! remain > so. " +
+				"They < do - not { agree [ among ( themselves. % But | quite + a # " +
+				"lot \" of ; disagreement / is ~ also _ discernible within the Copenhagen orthodoxy." ;
+		String ordinaryString = 
+				"The opponents of the Copenhagen interpretation are " +
+				"still in a small minority and may well remain so. " +
+				"They do not agree among themselves. But quite a " +
+				"lot of disagreement is also discernible within the Copenhagen orthodoxy." ;
+		String expectedString =
+				"The and opponents apostrophe of asterisk the at Copenhagen back quote interpretation " +
+				"back slash are carat still close brace in close bracket a close parenthesis small colon " +
+				"minoritycomma and dollar may equals well exclamation mark remain greater than so. " +
+				"They less than do hyphen not open brace agree open bracket among open parenthesis " +
+				"themselves. percent But pipe quite plus a hash lot quote of semicolon disagreement " +
+				"forward slash is tilde also underscore discernible within the Copenhagen orthodoxy." ;
+		String translatedString = null ;
+		try {
+			translatedString = OntologyBranch.formEnumeratedValue( awkwardString ) ;
+			if( !translatedString.equals( expectedString ) ) {
+				log.debug( "translatedString: " + translatedString ) ;
+				fail( "Could not translate special characters. Before and after strings did not match." ) ;
+			}
+		}
+		catch( Exception cex ) {			
+			cex.printStackTrace( System.out ) ;
+			fail( "Could not translate special characters: " + cex.getLocalizedMessage() ) ;
+		}
+		finally {
+			exitTrace( "==>>TranslateSpecialCharacters()" ) ;
+		}
+		
+	}
+	
 	
 	/**
 	 * Utility routine to enter a structured message in the trace log that the given method 
