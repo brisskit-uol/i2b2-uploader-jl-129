@@ -175,36 +175,36 @@ public class OntologyBranch {
 	
 	
 	public static final String[][] SPECIAL_CHARS_TRANSLATION_TABLE  = {		
-		{ "&", "and" } ,
-		{ "'", "apostrophe" } ,
-		{ "*", "asterisk" } ,
-		{ "@", "at" } ,
-		{ "`", "back quote" } ,
-		{ "\\", "back slash" } ,
-		{ "^", "carat" } ,
-		{ "}", "close brace" } ,
-		{ "]", "close bracket" } ,
-		{ ")", "close parenthesis" } ,
-		{ ":", "colon" } ,
-		{ ",", "comma" } ,
-		{ "$", "dollar" } ,
-		{ "=", "equals" } ,
-		{ "!", "exclamation mark" } ,
-		{ ">", "greater than" } ,
-		{ "<", "less than" } ,
-		{ "-", "hyphen" } ,
-		{ "{", "open brace" } ,
-		{ "[", "open bracket" } ,
-		{ "(", "open parenthesis" } ,
-		{ "%", "percent" } ,
-		{ "|", "pipe" } ,
-		{ "+", "plus" } ,
-		{ "#", "hash" } ,
-		{ "\"", "quote" } , 
-		{ ";", "semicolon" } ,
-		{ "/", "forward slash" } ,
-		{ "~", "tilde" } ,
-		{ "_", "underscore" }			
+		{ "&", " and " } ,
+		{ "'", " apostrophe " } ,
+		{ "*", " asterisk " } ,
+		{ "@", " at " } ,
+		{ "`", " back quote " } ,
+		{ "\\", " back slash " } ,
+		{ "^", " carat " } ,
+		{ "}", " close brace " } ,
+		{ "]", " close bracket " } ,
+		{ ")", " close parenthesis " } ,
+		{ ":", " colon " } ,
+		{ ",", " comma " } ,
+		{ "$", " dollar " } ,
+		{ "=", " equals " } ,
+		{ "!", " exclamation mark " } ,
+		{ ">", " greater than " } ,
+		{ "<", " less than " } ,
+		{ "-", " hyphen " } ,
+		{ "{", " open brace " } ,
+		{ "[", " open bracket " } ,
+		{ "(", " open parenthesis " } ,
+		{ "%", " percent " } ,
+		{ "|", " pipe " } ,
+		{ "+", " plus " } ,
+		{ "#", " hash " } ,
+		{ "\"", " quote " } , 
+		{ ";", " semicolon " } ,
+		{ "/", " forward slash " } ,
+		{ "~", " tilde " } ,
+		{ "_", " underscore " }			
 	} ;
 
 	//
@@ -956,6 +956,7 @@ public class OntologyBranch {
 			toString = toString.replace( SPECIAL_CHARS_TRANSLATION_TABLE[i][0]
 					                   , SPECIAL_CHARS_TRANSLATION_TABLE[i][1] ) ;
 		}
+		toString = toString.replaceAll( "  ", " " ) ;
 		return toString ;
 	}
 	
