@@ -33,14 +33,16 @@ public class I2B2ProjectTests extends TestCase {
 	}
 	
 	
-	public void _test01_CreateNewProject_WithEmptyRow() { 
+	public void test01_CreateNewProject_WithEmptyRow() { 
 		enterTrace( "==>>test01_CreateNewProject_WithEmptyRow()" ) ;
-		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-01-with-empty-row.xls").getFile());		
+		File spreadsheetFile = 
+				new File( getClass().getClassLoader().getResource( "spreadsheets/test-01-with-empty-row.xls").getFile() ) ;		
+		String projectId = "test01_with_empty_row" ;
 		try {
-			if( I2B2Project.Factory.projectExists( "test01_with_empty_row" ) ) {
-				I2B2Project.Factory.delete( "test01_with_empty_row" ) ;
+			if( I2B2Project.Factory.projectExists( projectId ) ) {
+				I2B2Project.Factory.delete( projectId ) ;
 			}	
-			I2B2Project project = I2B2Project.Factory.newInstance( "test01_with_empty_row" ) ;
+			I2B2Project project = I2B2Project.Factory.newInstance( projectId ) ;
 			project.processSpreadsheet( spreadsheetFile ) ;
 		}
 		catch( UploaderException cex ) {			
@@ -53,7 +55,7 @@ public class I2B2ProjectTests extends TestCase {
 		
 	}
 	
-	public void _test02_SpreadsheetBeyondMaxRows() { 
+	public void test02_SpreadsheetBeyondMaxRows() { 
 		enterTrace( "==>>test02_SpreadsheetBeyondMaxRows()" ) ;
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/GP_CUT1_more_than_maxrows.xlsx").getFile());		
 		String projectId = "maxrowsexceeded" ;
@@ -74,7 +76,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 
 	
-	public void _test03_CreateNewLaHeartProject() { 
+	public void test03_CreateNewLaHeartProject() { 
 		enterTrace( "==>>test03_CreateNewLaHeartProject()" ) ;
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/EG1-laheart.xlsx").getFile());		
 		String projectId = "laheart" ;
@@ -95,7 +97,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 	
 	
-	public void _test04_CreateNewTest01Project() { 
+	public void test04_CreateNewTest01Project() { 
 		enterTrace( "==>>test04_CreateNewTest01Project()" ) ;
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());		
 		String projectId = "test01" ;
@@ -116,14 +118,15 @@ public class I2B2ProjectTests extends TestCase {
 	}
 	
 	
-	public void _test05_CreateNewProjectWithStartDateColumn() { 
+	public void test05_CreateNewProjectWithStartDateColumn() { 
 		enterTrace( "==>>test05_CreateNewProjectWithStartDateColumn()" ) ;
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-03-startdatecol.xls").getFile() ) ;	
+		String projectId = "startdatecol" ;
 		try {
-			if( I2B2Project.Factory.projectExists( "test03_startdatecols" ) ) {
-				I2B2Project.Factory.delete( "test03_startdatecols" ) ;
+			if( I2B2Project.Factory.projectExists( projectId ) ) {
+				I2B2Project.Factory.delete( projectId ) ;
 			}	
-			I2B2Project project = I2B2Project.Factory.newInstance( "test03_startdatecols" ) ;
+			I2B2Project project = I2B2Project.Factory.newInstance( projectId ) ;
 			project.processSpreadsheet( spreadsheetFile ) ;
 		}
 		catch( UploaderException cex ) {			
@@ -137,25 +140,26 @@ public class I2B2ProjectTests extends TestCase {
 	}
 
 	
-	public void _test06_SupplementingExistingProject() { 
+	public void test06_SupplementingExistingProject() { 
 		enterTrace( "==>>test06_SupplementingExistingProject()" ) ;
 		File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());
-		File spreadsheetFile2 = new File(getClass().getClassLoader().getResource("spreadsheets/test-02.xls").getFile());		
+		File spreadsheetFile2 = new File(getClass().getClassLoader().getResource("spreadsheets/test-02.xls").getFile());
+		String projectId = "testnn" ;
 		try {
 			//
 			// Delete project if it already exists...
-			if( I2B2Project.Factory.projectExists( "testnn" ) ) {
-				I2B2Project.Factory.delete( "testnn" ) ;				
+			if( I2B2Project.Factory.projectExists( projectId ) ) {
+				I2B2Project.Factory.delete( projectId ) ;				
 			}
 			//
 			// Create new project with all it db artifacts
-			I2B2Project project = I2B2Project.Factory.newInstance( "testnn" ) ;
+			I2B2Project project = I2B2Project.Factory.newInstance( projectId ) ;
 			//
 			// Process the first spreadsheet...
 			project.processSpreadsheet( spreadsheetFile1 ) ;
 			//
 			// Get a new instance of the project...
-			project = I2B2Project.Factory.newInstance( "testnn" ) ;
+			project = I2B2Project.Factory.newInstance( projectId ) ;
 			//
 			// And attempt to process subsequent spreadsheet...
 			project.processSpreadsheet( spreadsheetFile2 ) ;
@@ -170,25 +174,26 @@ public class I2B2ProjectTests extends TestCase {
 		
 	}
 	
-	public void _test07_SupplementingExistingProject_AdditionalData() { 
+	public void test07_SupplementingExistingProject_AdditionalData() { 
 		enterTrace( "==>>test07_SupplementingExistingProject_AdditionalData()" ) ;
 		File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());
-		File spreadsheetFile2 = new File(getClass().getClassLoader().getResource("spreadsheets/test-01-samepeople.xls").getFile());	
+		File spreadsheetFile2 = new File(getClass().getClassLoader().getResource("spreadsheets/test-01-samepeople.xls").getFile());
+		String projectId = "testaddmoredata" ;
 		try {
 			//
 			// Delete project if it already exists...
-			if( I2B2Project.Factory.projectExists( "testaddmoredata" ) ) {
-				I2B2Project.Factory.delete( "testaddmoredata" ) ;				
+			if( I2B2Project.Factory.projectExists( projectId ) ) {
+				I2B2Project.Factory.delete( projectId ) ;				
 			}
 			//
 			// Create new project with all it db artifacts
-			I2B2Project project = I2B2Project.Factory.newInstance( "testaddmoredata" ) ;
+			I2B2Project project = I2B2Project.Factory.newInstance( projectId ) ;
 			//
 			// Process the first spreadsheet...
 			project.processSpreadsheet( spreadsheetFile1 ) ;
 			//
 			// Get a new instance of the project...
-			project = I2B2Project.Factory.newInstance( "testaddmoredata" ) ;
+			project = I2B2Project.Factory.newInstance( projectId ) ;
 			//
 			// And attempt to process subsequent spreadsheet...
 			project.processSpreadsheet( spreadsheetFile2 ) ;
@@ -204,25 +209,26 @@ public class I2B2ProjectTests extends TestCase {
 	
 	
 	
-	public void _test08_SupplementingExistingProject_AddionalMetadata() { 
+	public void test08_SupplementingExistingProject_AddionalMetadata() { 
 		enterTrace( "==>>test08_SupplementingExistingProject_AddionalMetadata()" ) ;
 		File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());
 		File spreadsheetFile2 = new File(getClass().getClassLoader().getResource("spreadsheets/test-02-additionalmetadata.xls").getFile());		
+		String projectId = "testaddnewmeta" ;
 		try {
 			//
 			// Delete project if it already exists...
-			if( I2B2Project.Factory.projectExists( "testaddnewmeta" ) ) {
-				I2B2Project.Factory.delete( "testaddnewmeta" ) ;				
+			if( I2B2Project.Factory.projectExists( projectId ) ) {
+				I2B2Project.Factory.delete( projectId ) ;				
 			}
 			//
 			// Create new project with all it db artifacts
-			I2B2Project project = I2B2Project.Factory.newInstance( "testaddnewmeta" ) ;
+			I2B2Project project = I2B2Project.Factory.newInstance( projectId ) ;
 			//
 			// Process the first spreadsheet...
 			project.processSpreadsheet( spreadsheetFile1 ) ;
 			//
 			// Get a new instance of the project...
-			project = I2B2Project.Factory.newInstance( "testaddnewmeta" ) ;
+			project = I2B2Project.Factory.newInstance( projectId ) ;
 			//
 			// And attempt to process subsequent spreadsheet...
 			project.processSpreadsheet( spreadsheetFile2 ) ;
@@ -238,7 +244,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 		
 		
-		public void _test09_SupplementingExistingProject_SameInstance() { 
+		public void test09_SupplementingExistingProject_SameInstance() { 
 			enterTrace( "==>>test09_SupplementingExistingProject_SameInstance()" ) ;
 			File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());
 			File spreadsheetFile2 = new File(getClass().getClassLoader().getResource("spreadsheets/test-02.xls").getFile());	
@@ -270,17 +276,18 @@ public class I2B2ProjectTests extends TestCase {
 	}
 	
 	
-	public void _test10_DeletionOfProject() { 
-		enterTrace( "==>>test10_DeletionOfProject()" ) ;		
+	public void test10_DeletionOfProject() { 
+		enterTrace( "==>>test10_DeletionOfProject()" ) ;
+		String projectId = "test02dele" ;
 		try {
 			//
 			// First - if need be - create the project and deploy to JBoss...			
-			if( !I2B2Project.Factory.projectExists( "test02dele" ) ) {
-				I2B2Project.Factory.newInstance( "test02dele" ) ;
+			if( !I2B2Project.Factory.projectExists( projectId ) ) {
+				I2B2Project.Factory.newInstance( projectId ) ;
 			}
 			//
 			// Now delete it...
-			I2B2Project.Factory.delete( "test02dele" ) ;
+			I2B2Project.Factory.delete( projectId ) ;
 			
 		}
 		catch( UploaderException cex ) {			
@@ -293,7 +300,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 
 	
-	public void _test11_DeletionOfNonExistentProject() {
+	public void test11_DeletionOfNonExistentProject() {
 		enterTrace( "==>>test11_DeletionOfNonExistentProject()" ) ;
 		try {
 			I2B2Project.Factory.delete( "projectX" ) ;
@@ -307,7 +314,7 @@ public class I2B2ProjectTests extends TestCase {
 		}
 	}
 
-	public void _test12_ReadSpreadsheet() {
+	public void test12_ReadSpreadsheet() {
 		enterTrace( "==>>test12_ReadSpreadsheet()" ) ;
 //		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-02.xls").getFile());
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/EG1-laheart.xlsx").getFile());		
@@ -394,7 +401,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 
 	
-	public void _test14_SupplementingExistingProject_MalcsProblem() { 
+	public void test14_SupplementingExistingProject_MalcsProblem() { 
 		enterTrace( "==>>_test14_SupplementingExistingProject_MalcsProblem()" ) ;
 		File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/Pharma1-shortened.xls").getFile());
 		File spreadsheetFile2 = new File(getClass().getClassLoader().getResource("spreadsheets/pharma2-shortened.xlsx").getFile());
@@ -436,19 +443,15 @@ public class I2B2ProjectTests extends TestCase {
 				"The & opponents ' of * the @ Copenhagen ` interpretation \\ are ^ " +
 				"still } in ] a ) small : minority, and $ may = well ! remain > so. " +
 				"They < do - not { agree [ among ( themselves. % But | quite + a # " +
-				"lot \" of ; disagreement / is ~ also _ discernible within the Copenhagen orthodoxy." ;
-		String ordinaryString = 
-				"The opponents of the Copenhagen interpretation are " +
-				"still in a small minority and may well remain so. " +
-				"They do not agree among themselves. But quite a " +
-				"lot of disagreement is also discernible within the Copenhagen orthodoxy." ;
+				"lot \" of ; disagreement /is ~ also _ discernible within the Copenhagen orthodoxy." ;
 		String expectedString =
-				"The and opponents apostrophe of asterisk the at Copenhagen back quote interpretation " +
-				"back slash are carat still close brace in close bracket a close parenthesis small colon " +
-				"minoritycomma and dollar may equals well exclamation mark remain greater than so. " +
-				"They less than do hyphen not open brace agree open bracket among open parenthesis " +
-				"themselves. percent But pipe quite plus a hash lot quote of semicolon disagreement " +
-				"forward slash is tilde also underscore discernible within the Copenhagen orthodoxy." ;
+				"The and opponents apostrophe of asterisk the at Copenhagen back quote " +
+				"interpretation back slash are carat still close brace in close bracket " +
+				"a close parenthesis small colon minority comma and dollar may equals well " +
+				"exclamation mark remain greater than so. They less than do hyphen not open " +
+				"brace agree open bracket among open parenthesis themselves. percent " +
+				"But pipe quite plus a hash lot quote of semicolon disagreement forward " +
+				"slash is tilde also underscore discernible within the Copenhagen orthodoxy." ;
 		String translatedString = null ;
 		try {
 			translatedString = OntologyBranch.formEnumeratedValue( awkwardString ) ;
@@ -463,6 +466,35 @@ public class I2B2ProjectTests extends TestCase {
 		}
 		finally {
 			exitTrace( "==>>TranslateSpecialCharacters()" ) ;
+		}
+		
+	}
+	
+	
+	public void test16_CreateLaHearts() { 
+		enterTrace( "==>>test16_CreateLaHearts()" ) ;
+		File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/EG1-laheart.xlsx").getFile());
+
+		String projectId = "lahearts" ;
+		try {
+			//
+			// Delete project if it already exists...
+			if( I2B2Project.Factory.projectExists( projectId ) ) {
+				I2B2Project.Factory.delete( projectId ) ;				
+			}
+			//
+			// Create new project with all it db artifacts
+			I2B2Project project = I2B2Project.Factory.newInstance( projectId ) ;
+			//
+			// Process the first spreadsheet...
+			project.processSpreadsheet( spreadsheetFile1 ) ;
+		}
+		catch( UploaderException cex ) {			
+			cex.printStackTrace( System.out ) ;
+			fail( "UploaderException thrown: " + cex.getLocalizedMessage() ) ;
+		}
+		finally {
+			exitTrace( "==>>test16_CreateLaHearts()" ) ;
 		}
 		
 	}

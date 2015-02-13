@@ -7,6 +7,7 @@ import java.util.Date;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.ss.usermodel.FormulaEvaluator;
 
 public class ProjectUtils {
 	
@@ -30,6 +31,8 @@ public class ProjectUtils {
 		} ;
 	private SimpleDateFormat cellDateFormat = new SimpleDateFormat( "yyyy-MM-dd" ) ;	
 	private SimpleDateFormat cellDateTimeFormat = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss" ) ;
+	
+	private FormulaEvaluator formulaeEvaluator = null ;
 	
 	
 	public String enfoldNullableString( String value ) {	
@@ -114,6 +117,34 @@ public class ProjectUtils {
 			value = value.trim() ;
 		}
 		return value ;
+	}
+	
+	
+	public String _getValueAsString( Cell cell ) {
+		if( cell == null ) {
+			return "" ;
+		}
+		if( this.formulaeEvaluator == null ) {
+			formulaeEvaluator = cell.getRow()
+									.getSheet()
+									.getWorkbook()
+									.getCreationHelper()
+									.createFormulaEvaluator() ;
+		}
+		formulaeEvaluator.evaluateInCell( cell ) ;
+		switch ( cell.getCellType() ) {
+        case Cell.CELL_TYPE_BOOLEAN:
+        case Cell.CELL_TYPE_NUMERIC:
+        case Cell.CELL_TYPE_STRING:
+        	String value = stringFormat.formatCellValue( cell ) ;
+			if( value != null ) {
+				value = value.trim() ;
+				return value ;
+			}
+			return "" ;
+        default:
+            return "" ;
+		}
 	}
 	
 	
