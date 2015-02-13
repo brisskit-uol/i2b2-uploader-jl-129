@@ -120,6 +120,7 @@ public class I2B2Project {
     private Row toolTips ;
     private Row ontologyCodes ;
     private int numberColumns ;
+    private int numberRows ;
     
     private boolean newProject = true ;
     
@@ -175,7 +176,8 @@ public class I2B2Project {
     			readSpreadsheet() ;
     			produceOntology() ;
     			producePatientMapping() ;
-    			producePatientDimension() ;		
+    			producePatientDimension() ;
+//    			produceEncounters() ;
     			produceFacts( defaultObservationDate ) ;
     			newProject = false ;    		
     	}
@@ -207,26 +209,24 @@ public class I2B2Project {
 		    //
 	    	// Get the data sheet, which must be the first sheet... 
 	    	dataSheet = workbook.getSheetAt( DATA_SHEET_INDEX ) ;
+	    	//
+	    	// Get basic row and column info...
+		    numberRows = dataSheet.getLastRowNum() - FIRST_DATA_ROW_INDEX + 1;
+		    numberColumns = dataSheet.getRow( COLUMN_NAME_ROW_INDEX ).getLastCellNum() ;
 		    //
 		    // Check we have sufficient data rows...
-		    int numberDataRows = dataSheet.getLastRowNum() - FIRST_DATA_ROW_INDEX + 1;
-			if( numberDataRows < 1 ) {
-				throw new UploaderException( "The workbook has insufficient data rows: " + numberDataRows ) ;
+			if( numberRows < 1 ) {
+				throw new UploaderException( "The workbook has insufficient data rows: " + numberRows ) ;
 			}
 			//
-			// Check we do not have too many data rows...
-			if( numberDataRows > 5000 ) {
-				if( maxDataRowsExceeded( dataSheet ) ) {
+			// Check we do not have too many data rows and columns...
+			if( numberRows > 5000 || numberColumns > 50 ) {
+				if( limitsExceeded( dataSheet ) ) {
+					//
+					// The exception for columns exceeded is thrown lower in the code.
 					throw new UploaderException( "The workbook exceeds the maximum of 5000 rows containing data." ) ;
 				}			
 			}		 	    
-		    //
-		    // Check number of columns in the first row of the data sheet...
-			// (This really needs the same treatment as given to rows (see above)
-		    numberColumns = dataSheet.getRow( COLUMN_NAME_ROW_INDEX ).getLastCellNum() ;
-		    if( numberColumns > 50 ) {
-				throw new UploaderException( "The workbook has more than the maximum of data columns: " + numberColumns ) ;
-			}
 		    
 	    	//
 	    	// Injest any lookups and breakdowns described in additional sheets...
@@ -315,7 +315,7 @@ public class I2B2Project {
 	}
 	
 	
-	private boolean maxDataRowsExceeded( Sheet dataSheet ) {
+	private boolean _maxDataRowsExceeded( Sheet dataSheet ) throws UploaderException {
 		enterTrace( "i2b2Project.maxDataRowsExceeded()" ) ;
 		try {
 			int numberOfRows = dataSheet.getLastRowNum() ;			
@@ -334,31 +334,35 @@ public class I2B2Project {
 			}
 			log.debug( "max data rows not exceeded" ) ;
 			return false ;
-//			for( int i=numberOfRows; i>0; i-- ) {
-//				if( i == 5000 ) {
-//					log.debug( "5000 reached" ) ;
-//				}
-//				Row row = dataSheet.getRow( i ) ;
-//				log.debug( "row number: " + row.getRowNum() ) ;
-//				if( i > 5000 && i < 5011 ) {
-//					log.debug( "between 5000 and 5010" ) ;
-//				}
-//				if( !isDataRowEmpty( row ) ) {
-//					log.debug( "found non empty row: " + i ) ;
-//					if( i > 5003 ) {
-//						log.debug( "returning true" ) ;
-//						return true ;
-//					}
-//				}
-//				else {
-//					log.debug( "found empty row: " + i ) ;
-//				}
-//			}
-//			log.debug( "returning false" ) ;
-//			return false ;
 		}
 		finally {
 			exitTrace( "i2b2Project.maxDataRowsExceeded()" ) ;
+		}
+	}
+	
+	
+	private boolean limitsExceeded( Sheet dataSheet ) throws UploaderException{
+		enterTrace( "i2b2Project.limitsExceeded()" ) ;
+		try {
+			int numberOfRows = dataSheet.getLastRowNum() ;			
+			log.debug( "numberOfRows: [" + numberOfRows + "]" ) ;
+			Iterator<Row> it = dataSheet.iterator() ;
+			int iRowsWithDataPresent = 0 ;
+			while( it.hasNext() ) {
+				Row row = it.next() ;
+				if( !dataRowEmpty( row ) ) {
+					iRowsWithDataPresent++ ;
+					if( iRowsWithDataPresent > 5000 ) {
+						log.debug( "maximum number of data rows exceeded" ) ;
+						return true ;
+					}
+				}
+			}
+			log.debug( "max data rows not exceeded" ) ;
+			return false ;
+		}
+		finally {
+			exitTrace( "i2b2Project.limitsExceeded()" ) ;
 		}
 	}
 	
@@ -382,7 +386,7 @@ public class I2B2Project {
 	}
 	
 	
-	private void addDefaultBreakdown( String columnName ) {
+	private void addDefaultBreakdown( String columnName ) throws UploaderException {
 		enterTrace( "i2b2Project.addDefaultBreakdown()" ) ;
 		try {
 			columnNames.createCell( numberColumns, Cell.CELL_TYPE_STRING ).setCellValue( columnName ) ;
@@ -1105,7 +1109,7 @@ public class I2B2Project {
 	}
 	
 	
-	private boolean dataRowEmpty( Row dataRow ) {
+	private boolean dataRowEmpty( Row dataRow ) throws UploaderException {
 //		enterTrace( "I2B2Project.dataRowEmpty()" ) ;
 		try {
 			//
@@ -1118,6 +1122,11 @@ public class I2B2Project {
 				for( int i=0; i<noCols; i++ ) {
 					Cell cell = dataRow.getCell(i) ;
 					if( !utils.isEmpty( utils.getValueAsString( cell ) ) ) {
+						//
+						// I'm using 55 rather than 50 because I can add transient columns during processing...
+						if( i > 55 ) {
+							throw new UploaderException( "Maximum number of data columns exceeded." ) ;
+						}
 						return false ;
 					}
 				}
