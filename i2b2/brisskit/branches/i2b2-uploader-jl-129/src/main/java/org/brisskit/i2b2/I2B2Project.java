@@ -124,7 +124,15 @@ public class I2B2Project {
     
     private boolean newProject = true ;
     
+    /*
+     * This maps patient_ide to internal i2b2 patient_num
+     */
     private Map<String,Integer> patientMappings = new HashMap<String,Integer>() ;
+    
+    /*
+     * 	This maps encounter_ide to internal i2b2 encounter_num
+     */
+    private Map<String,Integer> encounterMappings = new HashMap<String,Integer>() ;
     
     private Map<String,String> lookups = new HashMap<String,String>() ;
     
@@ -780,6 +788,80 @@ public class I2B2Project {
 		}
 		finally {
 			exitTrace( "producePatientDimension()" ) ;
+		}		
+	}
+	
+	
+	
+    //  encounter_ide =  row number
+	//	Encounter_ide_source =  filename + : + sheet name
+	protected void produceEncounters() throws UploaderException {
+		enterTrace( "produceEncounters()" ) ;
+		String value = null ;
+		String name = null ;
+		int countPatientIdsNull = 0 ;
+		try {
+			Iterator<Row> rowIt = dataSheet.iterator() ;
+			//
+			// Tab past metadata rows...
+			rowIt.next() ;
+			rowIt.next() ;
+			rowIt.next() ;
+			//
+			// Process data rows...
+			while( rowIt.hasNext() ) {
+				Row dataRow = rowIt.next() ;	
+				if( dataRowEmpty( dataRow ) ) {
+					continue ;
+				}
+				
+				Encounter encounter = new Encounter( utils ) ;
+				encounter.setSchema_name( projectId ) ;
+				encounter.setProject_id( projectId ) ;
+				encounter.setSourcesystem_id( projectId ) ;
+				encounter.setEncounter_ide_status( "?" ) ;				
+				encounter.setEncounter_ide_source( spreadsheetFile.getName()
+												 + ":"
+												 + dataRow.getSheet().getSheetName() ) ;
+				encounter.setEncounter_ide( Integer.toString( dataRow.getRowNum() ) ) ;
+				
+				Iterator<Cell> cellIt = dataRow.iterator() ;
+				Iterator<Cell> namesIt = columnNames.iterator() ;
+				//
+				// We process each cell according to its code...
+				while( cellIt.hasNext() ) {
+					value = utils.getValueAsString( cellIt.next() ) ;
+					name = utils.getValueAsString( namesIt.next() ) ;
+					if( name.equalsIgnoreCase( "id" ) ) {
+						encounter.setPatient_ide( value ) ;
+						encounter.setPatient_ide_source( projectId ) ;
+						encounter.setPatient_ide_status( "?" ) ;
+						break ;
+					}
+					
+				} // end of inner while - processing cell	
+				
+				//
+				// Write mapping to i2b2
+				if( pMap.getPatient_ide() != null ) {
+					Connection connection = Base.getSimpleConnectionPG() ;
+					if( !pMap.mappingExists( connection ) ) {
+						pMap.serializeToDatabase( connection ) ;
+					}
+					//
+					// Record the mapping between external id and internal id...
+					this.patientMappings.put( pMap.getPatient_ide(), pMap.getPatient_num() ) ;
+				}
+				else {
+					countPatientIdsNull++ ;
+					log.debug( "Row with no id: " + countPatientIdsNull ) ;
+				}
+																
+			} // end of outer while - processing row
+			
+		}
+		finally {
+			exitTrace( "produceEncounters()" ) ;
 		}		
 	}
 	
@@ -1467,7 +1549,7 @@ public class I2B2Project {
 		
 		public static I2B2Project newInstance( String projectId ) throws UploaderException {
 			enterTrace( "I2B2Project.Factory.newInstance()" ) ;
-			I2B2Project project = new I2B2Project( projectId ) ;
+			I2B2Project project = new I2B2Project( projectId.toLowerCase() ) ;
 			try {
 				if( projectExists( project ) ) {
 					project.newProject = false ;
@@ -1486,6 +1568,7 @@ public class I2B2Project {
 		public static void delete( String projectId ) throws UploaderException {
 			enterTrace( "I2B2Project.Factory.delete(String)" ) ;
 			try {
+				projectId = projectId.toLowerCase() ;
 				I2B2Project project = new I2B2Project( projectId ) ;
 				delete( project ) ;
 			}	
