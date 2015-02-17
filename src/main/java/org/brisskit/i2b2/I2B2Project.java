@@ -865,6 +865,10 @@ public class I2B2Project {
 				//
 				// Write encounter mapping and visit dimension to i2b2
 				encounter.serializeToDatabase( Base.getSimpleConnectionPG() ) ;
+				
+				//
+				// Record the mapping between external id and internal id...
+				this.encounterMappings.put( encounter.getEncounter_ide(), encounter.getEncounter_num() ) ;
 																				
 			} // end of outer while - processing row
 			
@@ -1078,6 +1082,7 @@ public class I2B2Project {
 					continue ;
 				}
 				int patientNumber = getPatientNumber( dataRow ) ;
+				int encounterNumber = dataRow.getRowNum() ;
 				//
 				// If the patient number column is empty, we check the whole row for emptiness.
 				// (An empty patient number column gets a value of -999)
@@ -1133,10 +1138,14 @@ public class I2B2Project {
 						ObservationFact of = null ;						
 						switch ( type ) {
 						case DATE:
-							of = produceDateFact( patientNumber, ontCode, cell ) ;
+							of = produceDateFact( encounterNumber
+											    , patientNumber
+											    , ontCode
+											    , cell ) ;
 							break ;
 						case NUMERIC:
-							of = produceNumericFact( patientNumber
+							of = produceNumericFact( encounterNumber
+								    			   , patientNumber
 									               , ontCode
 									               , units
 									               , cell 
@@ -1144,7 +1153,8 @@ public class I2B2Project {
 							break ;
 						case STRING:
 						default:
-							of = produceStringFact( patientNumber
+							of = produceStringFact( encounterNumber
+								    			  , patientNumber
 									              , ontCode
 									              , units
 									              , cell 
@@ -1230,13 +1240,14 @@ public class I2B2Project {
 	}
 	
 	
-	private ObservationFact produceDateFact( int patientNumber
+	private ObservationFact produceDateFact( int encounterNumber
+										   , int patientNumber
 			                               , String ontCode
 			                               , Cell cell ) throws UploaderException {
 		enterTrace( "I2B2Project.produceDateFact()" ) ;
 		try {
 			ObservationFact of = new ObservationFact( utils ) ;				
-//			of.setEncounter_num( encounterNumber++ ) ;
+			of.setEncounter_num( encounterNumber ) ;
 			of.setPatient_num( patientNumber ) ;
 			
 			of.setConcept_cd( ontCode ) ;
@@ -1265,7 +1276,8 @@ public class I2B2Project {
 	}
 	
 	
-	private ObservationFact produceNumericFact( int patientNumber
+	private ObservationFact produceNumericFact( int encounterNumber
+			   								  , int patientNumber
                                               , String ontCode
                                               , String units
                                               , Cell cell
@@ -1273,7 +1285,7 @@ public class I2B2Project {
 		enterTrace( "I2B2Project.produceNumericFact()" ) ;
 		try {
 			ObservationFact of = new ObservationFact( utils ) ;				
-//			of.setEncounter_num( encounterNumber++ ) ;
+			of.setEncounter_num( encounterNumber ) ;
 			of.setPatient_num( patientNumber ) ;
 				
 			of.setProvider_id( "@" ) ;
@@ -1306,7 +1318,8 @@ public class I2B2Project {
 	}
 	
 	
-	private ObservationFact produceStringFact( int patientNumber
+	private ObservationFact produceStringFact( int encounterNumber
+											 , int patientNumber
                                              , String ontCode
                                              , String units
                                              , Cell cell
@@ -1314,7 +1327,7 @@ public class I2B2Project {
 		enterTrace( "I2B2Project.produceStringFact()" ) ;
 		try {
 			ObservationFact of = new ObservationFact( utils ) ;				
-//			of.setEncounter_num( encounterNumber++ ) ;
+			of.setEncounter_num( encounterNumber ) ;
 			of.setPatient_num( patientNumber ) ;
 			
 			
