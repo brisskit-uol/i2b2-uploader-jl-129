@@ -34,7 +34,7 @@ public static final String OBSERVATION_FACT_INSERT_COMMAND =
 		"INSERT INTO <DB_SCHEMA_NAME>.OBSERVATION_FACT" +
                "( " +
                "  ENCOUNTER_NUM" +    		// INT NOT NULL,
-               "  PATIENT_NUM   " +  		// INT NOT NULL,
+               ", PATIENT_NUM   " +  		// INT NOT NULL,
                ", CONCEPT_CD    " +  		// VARCHAR(50) NOT NULL,
                ", PROVIDER_ID   " +  		// VARCHAR(50) NOT NULL,
                ", START_DATE    " +  		// TIMESTAMP NOT NULL,
@@ -56,7 +56,7 @@ public static final String OBSERVATION_FACT_INSERT_COMMAND =
 			   ") " +
 		 "VALUES( " +
 		       "  <ENCOUNTER_NUM>" +
-			   "  <PATIENT_NUM>" +
+			   ", <PATIENT_NUM>" +
 			   ", <CONCEPT_CD>" +
 			   ", <PROVIDER_ID>" +         
 			   ", <START_DATE>" +   
