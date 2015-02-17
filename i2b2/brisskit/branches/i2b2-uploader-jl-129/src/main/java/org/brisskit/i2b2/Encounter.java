@@ -126,7 +126,7 @@ public class Encounter {
 			sqlCmd = sqlCmd.replace( "<SOURCESYSTEM_CD>", utils.enfoldNullableString( sourcesystem_id ) ) ;			
 			Statement st = connection.createStatement();			
 			st.execute( sqlCmd ) ;
-			ResultSet rs = st.executeQuery( "select currval( 'ENCOUNTER_MAPPING_ENCOUNTER_NUM_seq');" ) ;
+			ResultSet rs = st.executeQuery( "select currval( 'ENCOUNTER_MAPPING_ENCOUNTER_NUM_seq' );" ) ;
 			rs.next();
 			encounter_num = rs.getInt(1) ;		
 			rs.close() ;
