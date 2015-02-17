@@ -42,7 +42,7 @@ public class Encounter {
 			   ", <PROJECT_ID>" + 
 			   ", <PATIENT_IDE>" +
 			   ", <PATIENT_IDE_SOURCE>" +
-			   ", <ENCOUNTER_IDE_STATUS>" +         
+			   ", NULL" +  						// patient_ide_status       
 			   ", now()" +
 			   ", now()" +
 			   ", now()" +
@@ -72,7 +72,7 @@ public class Encounter {
 				   ", UPLOAD_ID ) " +      		// INT NULL, 
 			"VALUES ( <ENCOUNTER_NUM>" +
 	               ", <PATIENT_NUM>" +
-	               ", <ACTIVE_STATUS_CD>" +		
+	               ", NULL" +		  			// active_status_cd	
 	               ", <START_DATE>" +
 	               ", NULL" +    				// end_date 
 	               ", NULL" +					// inout_cd
@@ -121,8 +121,7 @@ public class Encounter {
 			sqlCmd = sqlCmd.replace( "<ENCOUNTER_IDE_SOURCE>", utils.enfoldString( encounter_ide_source ) ) ;
 			sqlCmd = sqlCmd.replace( "<PROJECT_ID>", utils.enfoldString( project_id ) ) ;
 			sqlCmd = sqlCmd.replace( "<PATIENT_IDE>", utils.enfoldString( patient_ide ) ) ;
-			sqlCmd = sqlCmd.replace( "<PATIENT_IDE_SOURCE>", utils.enfoldString( patient_ide_source ) ) ;
-			sqlCmd = sqlCmd.replace( "<ENCOUNTER_IDE_STATUS>", utils.enfoldNullableString( encounter_ide_status ) ) ;			
+			sqlCmd = sqlCmd.replace( "<PATIENT_IDE_SOURCE>", utils.enfoldString( patient_ide_source ) ) ;			
 			sqlCmd = sqlCmd.replace( "<SOURCESYSTEM_CD>", utils.enfoldNullableString( sourcesystem_id ) ) ;			
 			Statement st = connection.createStatement();			
 			st.execute( sqlCmd ) ;
@@ -136,7 +135,6 @@ public class Encounter {
 			sqlCmd = sqlCmd.replaceAll( "<DB_SCHEMA_NAME>", schema_name ) ;	
 			sqlCmd = sqlCmd.replace( "<ENCOUNTER_NUM>", utils.enfoldInteger( encounter_num ) ) ;
 			sqlCmd = sqlCmd.replace( "<PATIENT_NUM>", utils.enfoldInteger( patient_num ) ) ;
-			sqlCmd = sqlCmd.replace( "<ACTIVE_STATUS_CD>", utils.enfoldString( project_id ) ) ;
 			sqlCmd = sqlCmd.replace( "<START_DATE>", utils.enfoldDate( this.startDate ) ) ;			
 			sqlCmd = sqlCmd.replace( "<SOURCESYSTEM_CD>", utils.enfoldNullableString( sourcesystem_id ) ) ;			
 //			st = connection.createStatement();			
@@ -148,39 +146,6 @@ public class Encounter {
 		finally {
 			exitTrace( "Encounter.serializeToDatabase()" ) ;
 		}
-	}
-	
-	
-	public boolean mappingExists( Connection connection ) throws UploaderException {
-		enterTrace( "Encounter.mappingExists()" ) ;
-		boolean exists = false ;
-		try {
-			//
-			// See whether the appropriate patient mapping already exists in the db...
-			Statement st = connection.createStatement() ;
-			st.executeQuery( "select PATIENT_NUM from " + schema_name + ".PATIENT_MAPPING "  
-				           + " where " 
-				           + " PATIENT_IDE = '" + patient_ide + "' " 
-					       + "  and " 
-				           + " PATIENT_IDE_SOURCE = '" + patient_ide_source + "' " 
-					       + "  and "
-				           + " PROJECT_ID = '" + project_id + "' ;" ) ;			
-		    ResultSet rs = st.getResultSet() ;
-		    if( rs.next() ) {
-		    	patient_num = rs.getInt(1) ;			    
-			    exists = true ;
-				rs.close() ;
-		    }
-			return exists ;
-		}
-		catch( SQLException sqlx ) {
-			String message = "Failed to detect whether the appropriate patient mapping already exists in the db." ;
-			log.error( message, sqlx ) ;
-			throw new UploaderException( message, sqlx ) ;
-		}
-		finally {
-			exitTrace( "Encounter.mappingExists()" ) ;
-		}		
 	}
 	
 	
