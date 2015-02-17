@@ -7,6 +7,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Date;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -71,7 +72,7 @@ public class Encounter {
 				   ", UPLOAD_ID ) " +      		// INT NULL, 
 			"VALUES ( <ENCOUNTER_NUM>" +
 	               ", <PATIENT_NUM>" +
-	               ", NULL" +					// active_status_cd
+	               ", <ACTIVE_STATUS_CD>" +		
 	               ", <START_DATE>" +
 	               ", NULL" +    				// end_date 
 	               ", NULL" +					// inout_cd
@@ -98,10 +99,11 @@ public class Encounter {
 	private String patient_ide = null ;
 	private String patient_ide_source = null ;
 	private Integer patient_num = null ;
-	private String patient_ide_status = null ;
 	
 	private String project_id = null ;
 	private String sourcesystem_id = null ;
+	
+	private Date startDate = null ;
 	
 	public Encounter( ProjectUtils utils ) {
 		this.utils = utils ;
@@ -109,33 +111,81 @@ public class Encounter {
 	
 	
 	public void serializeToDatabase( Connection connection ) throws UploaderException {
-		enterTrace( "PatientMapping.serializeToDatabase()" ) ;
+		enterTrace( "Encounter.serializeToDatabase()" ) ;
 		try {
+			//
+			// Do the encounter mapping first...
 			String sqlCmd = ENCOUNTER_MAP_INSERT_COMMAND ;			
-			sqlCmd = sqlCmd.replaceAll( "<DB_SCHEMA_NAME>", schema_name ) ;			
+			sqlCmd = sqlCmd.replaceAll( "<DB_SCHEMA_NAME>", schema_name ) ;	
+			sqlCmd = sqlCmd.replace( "<ENCOUNTER_IDE>", utils.enfoldString( encounter_ide ) ) ;
+			sqlCmd = sqlCmd.replace( "<ENCOUNTER_IDE_SOURCE>", utils.enfoldString( encounter_ide_source ) ) ;
+			sqlCmd = sqlCmd.replace( "<PROJECT_ID>", utils.enfoldString( project_id ) ) ;
 			sqlCmd = sqlCmd.replace( "<PATIENT_IDE>", utils.enfoldString( patient_ide ) ) ;
 			sqlCmd = sqlCmd.replace( "<PATIENT_IDE_SOURCE>", utils.enfoldString( patient_ide_source ) ) ;
-			sqlCmd = sqlCmd.replace( "<PATIENT_IDE_STATUS>", utils.enfoldNullableString( patient_ide_status ) ) ;
-			sqlCmd = sqlCmd.replace( "<PROJECT_ID>", utils.enfoldString( project_id ) ) ;
+			sqlCmd = sqlCmd.replace( "<ENCOUNTER_IDE_STATUS>", utils.enfoldNullableString( encounter_ide_status ) ) ;			
 			sqlCmd = sqlCmd.replace( "<SOURCESYSTEM_CD>", utils.enfoldNullableString( sourcesystem_id ) ) ;			
 			Statement st = connection.createStatement();			
 			st.execute( sqlCmd ) ;
-			ResultSet rs = st.executeQuery( "select currval( 'PATIENT_MAPPING_PATIENT_NUM_seq');" ) ;
+			ResultSet rs = st.executeQuery( "select currval( 'ENCOUNTER_MAPPING_ENCOUNTER_NUM_seq');" ) ;
 			rs.next();
-			patient_num = rs.getInt(1) ;		
+			encounter_num = rs.getInt(1) ;		
 			rs.close() ;
+			//
+			// Do the visit dimension second...
+			/*
+			 * "INSERT INTO <DB_SCHEMA_NAME>.VISIT_DIMENSION" +
+			       "( ENCOUNTER_NUM" + 			// INT NOT NULL,
+				   ", PATIENT_NUM" + 			// INT NOT NULL,
+				   ", ACTIVE_STATUS_CD" + 		// VARCHAR(50) NULL,
+				   ", START_DATE" + 			// TIMESTAMP NULL,
+				   ", END_DATE" + 				// TIMESTAMP NULL,
+				   ", INOUT_CD" + 				// VARCHAR(50) NULL,
+				   ", LOCATION_CD" + 			// VARCHAR(50) NULL,
+				   ", LOCATION_PATH" + 			// VARCHAR(900) NULL,
+				   ", LENGTH_OF_STAY" + 		// INT NULL,
+				   ", VISIT_BLOB" + 			// TEXT NULL,
+				   ", UPDATE_DATE" + 			// TIMESTAMP NULL,
+				   ", DOWNLOAD_DATE" + 			// TIMESTAMP NULL,
+				   ", IMPORT_DATE" + 			// TIMESTAMP NULL,
+				   ", SOURCESYSTEM_CD" + 		// VARCHAR(50) NULL ,
+				   ", UPLOAD_ID ) " +      		// INT NULL, 
+			"VALUES ( <ENCOUNTER_NUM>" +
+	               ", <PATIENT_NUM>" +
+	               ", <ACTIVE_STATUS_CD>" +		
+	               ", <START_DATE>" +
+	               ", NULL" +    				// end_date 
+	               ", NULL" +					// inout_cd
+	               ", NULL" +					// location_cd
+	               ", NULL" + 					// location_path
+	               ", NULL" +					// length_of_stay
+	               ", NULL" +					// visit_blob
+	               ", now()" +
+	               ", now()" +
+	               ", now()" +
+	               ", <SOURCESYSTEM_CD>" +
+	               ", NULL ) ;" ;				// upload id
+			 */
+			sqlCmd = VISIT_DIM_INSERT_COMMAND ;			
+			sqlCmd = sqlCmd.replaceAll( "<DB_SCHEMA_NAME>", schema_name ) ;	
+			sqlCmd = sqlCmd.replace( "<ENCOUNTER_NUM>", utils.enfoldInteger( encounter_num ) ) ;
+			sqlCmd = sqlCmd.replace( "<PATIENT_NUM>", utils.enfoldInteger( patient_num ) ) ;
+			sqlCmd = sqlCmd.replace( "<ACTIVE_STATUS_CD>", utils.enfoldString( project_id ) ) ;
+			sqlCmd = sqlCmd.replace( "<START_DATE>", utils.enfoldDate( this.startDate ) ) ;			
+			sqlCmd = sqlCmd.replace( "<SOURCESYSTEM_CD>", utils.enfoldNullableString( sourcesystem_id ) ) ;			
+//			st = connection.createStatement();			
+			st.execute( sqlCmd ) ;
 		}
 		catch( SQLException sqlx ) {
 			throw new UploaderException( "Failed to insert into patient mapping.", sqlx ) ;
 		}
 		finally {
-			exitTrace( "PatientMapping.serializeToDatabase()" ) ;
+			exitTrace( "Encounter.serializeToDatabase()" ) ;
 		}
 	}
 	
 	
 	public boolean mappingExists( Connection connection ) throws UploaderException {
-		enterTrace( "PatientMapping.mappingExists()" ) ;
+		enterTrace( "Encounter.mappingExists()" ) ;
 		boolean exists = false ;
 		try {
 			//
@@ -162,7 +212,7 @@ public class Encounter {
 			throw new UploaderException( message, sqlx ) ;
 		}
 		finally {
-			exitTrace( "PatientMapping.mappingExists()" ) ;
+			exitTrace( "Encounter.mappingExists()" ) ;
 		}		
 	}
 	
@@ -216,11 +266,6 @@ public class Encounter {
 	}
 
 
-	public void setPatient_ide_status(String patient_ide_status) {
-		this.patient_ide_status = patient_ide_status;
-	}
-
-
 	public void setProject_id(String project_id) {
 		this.project_id = project_id;
 	}
@@ -268,5 +313,15 @@ public class Encounter {
 
 	public void setEncounter_ide_status(String encounter_ide_status) {
 		this.encounter_ide_status = encounter_ide_status;
+	}
+
+
+	public Date getStartDate() {
+		return startDate;
+	}
+
+
+	public void setStartDate( Date encounterStartDate ) {
+		this.startDate = encounterStartDate;
 	}
 }
