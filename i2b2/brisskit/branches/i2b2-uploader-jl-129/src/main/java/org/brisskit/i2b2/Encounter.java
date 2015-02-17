@@ -132,39 +132,6 @@ public class Encounter {
 			rs.close() ;
 			//
 			// Do the visit dimension second...
-			/*
-			 * "INSERT INTO <DB_SCHEMA_NAME>.VISIT_DIMENSION" +
-			       "( ENCOUNTER_NUM" + 			// INT NOT NULL,
-				   ", PATIENT_NUM" + 			// INT NOT NULL,
-				   ", ACTIVE_STATUS_CD" + 		// VARCHAR(50) NULL,
-				   ", START_DATE" + 			// TIMESTAMP NULL,
-				   ", END_DATE" + 				// TIMESTAMP NULL,
-				   ", INOUT_CD" + 				// VARCHAR(50) NULL,
-				   ", LOCATION_CD" + 			// VARCHAR(50) NULL,
-				   ", LOCATION_PATH" + 			// VARCHAR(900) NULL,
-				   ", LENGTH_OF_STAY" + 		// INT NULL,
-				   ", VISIT_BLOB" + 			// TEXT NULL,
-				   ", UPDATE_DATE" + 			// TIMESTAMP NULL,
-				   ", DOWNLOAD_DATE" + 			// TIMESTAMP NULL,
-				   ", IMPORT_DATE" + 			// TIMESTAMP NULL,
-				   ", SOURCESYSTEM_CD" + 		// VARCHAR(50) NULL ,
-				   ", UPLOAD_ID ) " +      		// INT NULL, 
-			"VALUES ( <ENCOUNTER_NUM>" +
-	               ", <PATIENT_NUM>" +
-	               ", <ACTIVE_STATUS_CD>" +		
-	               ", <START_DATE>" +
-	               ", NULL" +    				// end_date 
-	               ", NULL" +					// inout_cd
-	               ", NULL" +					// location_cd
-	               ", NULL" + 					// location_path
-	               ", NULL" +					// length_of_stay
-	               ", NULL" +					// visit_blob
-	               ", now()" +
-	               ", now()" +
-	               ", now()" +
-	               ", <SOURCESYSTEM_CD>" +
-	               ", NULL ) ;" ;				// upload id
-			 */
 			sqlCmd = VISIT_DIM_INSERT_COMMAND ;			
 			sqlCmd = sqlCmd.replaceAll( "<DB_SCHEMA_NAME>", schema_name ) ;	
 			sqlCmd = sqlCmd.replace( "<ENCOUNTER_NUM>", utils.enfoldInteger( encounter_num ) ) ;
@@ -257,9 +224,9 @@ public class Encounter {
 	}
 
 
-//	public void setPatient_num(Integer patient_num) {
-//		this.patient_num = patient_num;
-//	}
+	public void setPatient_num(Integer patient_num) {
+		this.patient_num = patient_num;
+	}
 	
 	public Integer getPatient_num() {
 		return this.patient_num ;

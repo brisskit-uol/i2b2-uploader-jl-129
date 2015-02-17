@@ -852,7 +852,11 @@ public class I2B2Project {
 					name = utils.getValueAsString( namesIt.next() ) ;
 					if( name.equalsIgnoreCase( "id" ) ) {
 						encounter.setPatient_ide( value ) ;
-						encounter.setPatient_ide_source( projectId ) ;
+						//
+						// May be obvious, but patient mappings are only valid after
+						// patient mappings have been written to the database...
+						encounter.setPatient_num( patientMappings.get( value ) ) ;
+						encounter.setPatient_ide_source( projectId ) ;					
 						break ;
 					}
 					
