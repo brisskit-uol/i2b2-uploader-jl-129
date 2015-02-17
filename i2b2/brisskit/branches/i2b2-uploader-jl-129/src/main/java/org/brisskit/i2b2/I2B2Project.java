@@ -185,7 +185,7 @@ public class I2B2Project {
     			produceOntology() ;
     			producePatientMapping() ;
     			producePatientDimension() ;
-//    			produceEncounters() ;
+    			produceEncounters( defaultObservationDate ) ;
     			produceFacts( defaultObservationDate ) ;
     			newProject = false ;    		
     	}
@@ -795,11 +795,11 @@ public class I2B2Project {
 	
     //  encounter_ide =  row number
 	//	Encounter_ide_source =  filename + : + sheet name
-	protected void produceEncounters() throws UploaderException {
+	protected void produceEncounters( Date defaultEncounterStartDate ) throws UploaderException {
 		enterTrace( "produceEncounters()" ) ;
 		String value = null ;
 		String name = null ;
-		int countPatientIdsNull = 0 ;
+		Date encounterStartDate = null ;
 		try {
 			Iterator<Row> rowIt = dataSheet.iterator() ;
 			//
@@ -819,11 +819,29 @@ public class I2B2Project {
 				encounter.setSchema_name( projectId ) ;
 				encounter.setProject_id( projectId ) ;
 				encounter.setSourcesystem_id( projectId ) ;
-				encounter.setEncounter_ide_status( "?" ) ;				
+				encounter.setEncounter_ide_status( "?" ) ;
+
+				//
+				// The encounter source is simply set to spreadsheet name + sheet name...
 				encounter.setEncounter_ide_source( spreadsheetFile.getName()
 												 + ":"
 												 + dataRow.getSheet().getSheetName() ) ;
+				//
+				// The source encounter id is just the row number...
 				encounter.setEncounter_ide( Integer.toString( dataRow.getRowNum() ) ) ;
+				
+				if( spreadsheetHasStartDateColumn ) {
+					encounterStartDate = getObservationStartDate( dataRow ) ;
+					//
+					// It might still return null if the column is empty...
+					if( encounterStartDate == null ) {
+						encounterStartDate = defaultEncounterStartDate ;
+					}
+				}
+				else {
+					encounterStartDate = defaultEncounterStartDate ;
+				}
+				encounter.setStartDate( encounterStartDate ) ;
 				
 				Iterator<Cell> cellIt = dataRow.iterator() ;
 				Iterator<Cell> namesIt = columnNames.iterator() ;
@@ -835,28 +853,15 @@ public class I2B2Project {
 					if( name.equalsIgnoreCase( "id" ) ) {
 						encounter.setPatient_ide( value ) ;
 						encounter.setPatient_ide_source( projectId ) ;
-						encounter.setPatient_ide_status( "?" ) ;
 						break ;
 					}
 					
 				} // end of inner while - processing cell	
-				
+		
 				//
-				// Write mapping to i2b2
-				if( pMap.getPatient_ide() != null ) {
-					Connection connection = Base.getSimpleConnectionPG() ;
-					if( !pMap.mappingExists( connection ) ) {
-						pMap.serializeToDatabase( connection ) ;
-					}
-					//
-					// Record the mapping between external id and internal id...
-					this.patientMappings.put( pMap.getPatient_ide(), pMap.getPatient_num() ) ;
-				}
-				else {
-					countPatientIdsNull++ ;
-					log.debug( "Row with no id: " + countPatientIdsNull ) ;
-				}
-																
+				// Write encounter mapping and visit dimension to i2b2
+				encounter.serializeToDatabase( Base.getSimpleConnectionPG() ) ;
+																				
 			} // end of outer while - processing row
 			
 		}
