@@ -8,8 +8,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.* ;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -22,7 +21,7 @@ import java.sql.Statement;
  */
 public class OntologyBranch {
 	
-	private static Log log = LogFactory.getLog( OntologyBranch.class ) ;
+	private static Logger logger = Logger.getLogger( OntologyBranch.class ) ;
 	
 	public static enum Type {
 	    NUMERIC, 
@@ -306,7 +305,7 @@ public class OntologyBranch {
 			if( !this.projectId.equals( that.projectId ) ) {
 				String message = "Project ids differ. Project this: [" + this.projectId + 
 						         "] whilst Project that: [" + that.projectId + "]" ;
-				log.error( message ) ;
+				logger.error( message ) ;
 				throw new UploaderException( message ) ;
 			}
 				
@@ -329,16 +328,16 @@ public class OntologyBranch {
 					insertDate( connection ) ;
 				default:
 					String message = "Differences must be enumerations (numerics or strings) or dates. Type was: " + this.type ;
-					log.error( message ) ;
+					logger.error( message ) ;
 					throw new UploaderException( message ) ;
 				}
 			}
 			else if( units.equalsIgnoreCase( "text" ) ) {
-				log.debug( "units as text with column name: " + this.colName ) ;
+				logger.debug( "units as text with column name: " + this.colName ) ;
 			}
 			else {
 				String message = "Differences must be marked as enumerations. Units were: " + units ;
-				log.error( message ) ;
+				logger.error( message ) ;
 				throw new UploaderException() ;
 			}
 					
@@ -479,7 +478,7 @@ public class OntologyBranch {
 				metadataxml = metadataxml.replace( "<data-type-goes-here>", "PosFloat" ) ; 
 				metadataxml = metadataxml.replace( "<units-go-here>", units ) ;
 				
-				log.debug( "For ontCode " + ontCode + " numeric units are: " + units ) ;
+				logger.debug( "For ontCode " + ontCode + " numeric units are: " + units ) ;
 				
 				sqlCmd = sqlCmd.replaceAll( "<DB_SCHEMA_NAME>", projectId ) ;
 				sqlCmd = sqlCmd.replace( "<PROJECT_METADATA_TABLE>", projectId ) ;				
@@ -580,7 +579,7 @@ public class OntologyBranch {
 				numberOfDigits++ ;
 			}
 			String formatString = "%0" + String.valueOf( numberOfDigits ) + "d" ;
-			log.debug( "format string is " + formatString ) ;
+			logger.debug( "format string is " + formatString ) ;
 			
 			//
 			// If the total range of values is below 21, we use just endpoints
@@ -786,7 +785,7 @@ public class OntologyBranch {
 				metadataxml = metadataxml.replace( "<data-type-goes-here>", "String" ) ; 
 				metadataxml = metadataxml.replace( "<units-go-here>", "" ) ;
 
-				log.debug( "For ontCode " + ontCode + " units are: " + units ) ;
+				logger.debug( "For ontCode " + ontCode + " units are: " + units ) ;
 
 				sqlCmd = sqlCmd.replaceAll( "<DB_SCHEMA_NAME>", projectId ) ;
 				sqlCmd = sqlCmd.replace( "<PROJECT_METADATA_TABLE>", projectId ) ;			
@@ -828,7 +827,7 @@ public class OntologyBranch {
 				||
 				colName.equalsIgnoreCase( "DEATH" ) ) {
 					
-				log.debug( "About to process " + colName ) ;
+				logger.debug( "About to process " + colName ) ;
 					
 			}
 			//
@@ -984,14 +983,14 @@ public class OntologyBranch {
 		    }
 		    else {
 		    	String message = "Failed to detect whether concept code was in DB or not. Count retrieved no result." ;
-				log.error( message ) ;
+				logger.error( message ) ;
 				throw new UploaderException( message ) ;
 		    }
 			return exists ;
 		}
 		catch( SQLException sqlx ) {
 			String message = "Failed to detect whether concept code was in DB or not." ;
-			log.error( message, sqlx ) ;
+			logger.error( message, sqlx ) ;
 			throw new UploaderException( message, sqlx ) ;
 		}
 		finally {
@@ -1035,7 +1034,7 @@ public class OntologyBranch {
 	 * @param entry: the name of the method entered
 	 */
 	public static void enterTrace( String entry ) {
-		I2B2Project.enterTrace( log, entry ) ;
+		I2B2Project.enterTrace( logger, entry ) ;
 	}
 
     /**
@@ -1045,7 +1044,7 @@ public class OntologyBranch {
      * @param entry: the name of the method exited
      */
     public static void exitTrace( String entry ) {
-    	I2B2Project.exitTrace( log, entry ) ;
+    	I2B2Project.exitTrace( logger, entry ) ;
 	}
     
     private static Type extractDataTypeFromMetadataXml( String metadataxml ) {
