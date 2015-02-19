@@ -338,7 +338,7 @@ public class I2B2ProjectTests extends TestCase {
 		}
 	}
 
-	public void test12_ReadSpreadsheet() {
+	public void _test12_ReadSpreadsheet() {
 		enterTrace( "==>>test12_ReadSpreadsheet()" ) ;
 //		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-02.xls").getFile());
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/EG1-laheart.xlsx").getFile());		
@@ -591,6 +591,91 @@ public class I2B2ProjectTests extends TestCase {
 	}
 	
 	
+	public synchronized void test19_Threading() { 
+		enterTrace( "==>>test19_Threading()" ) ;
+		File[] spreadSheetFiles = {
+				new File( getClass().getClassLoader().getResource( "spreadsheets/EG1-laheart.xlsx").getFile() ),
+				new File( getClass().getClassLoader().getResource( "spreadsheets/GP_CUT1.xlsx").getFile() ),
+				new File( getClass().getClassLoader().getResource( "spreadsheets/test-01-obsdatecol.xls").getFile() ),
+				new File( getClass().getClassLoader().getResource( "spreadsheets/test-01-with-empty-row.xls").getFile() ),
+				new File( getClass().getClassLoader().getResource( "spreadsheets/Pharma1-shortened.xls").getFile() ),
+				new File( getClass().getClassLoader().getResource( "spreadsheets/pharma2-shortened.xlsx").getFile() ),
+				new File( getClass().getClassLoader().getResource( "spreadsheets/test-03-startdatecol.xls").getFile() ),
+				new File( getClass().getClassLoader().getResource( "spreadsheets/EG1-laheart.xlsx").getFile() ),
+				new File( getClass().getClassLoader().getResource( "spreadsheets/GP_CUT1_more_than_maxrows.xlsx").getFile() ),
+				new File( getClass().getClassLoader().getResource( "spreadsheets/GP_CUT1.xlsx").getFile() ),
+		} ;
+		
+		String[] projectIds = {
+				"threadtest1",
+				"threadtest2",
+				"threadtest3",
+				"threadtest4",
+				"threadtest5",
+				"threadtest6",
+				"threadtest7",
+				"threadtest8",
+				"threadtest9",
+				"threadtest10"				
+		} ;
+		boolean[] locksFreed = {
+				false,
+				false,
+				false,
+				false,
+				false,
+				false,
+				false,
+				false,
+				false,
+				false
+		} ;
+				
+		try {
+			for( int i=0; i<projectIds.length; i++ ) {			
+				ConcurrencyTest ct = new ConcurrencyTest( projectIds[i], spreadSheetFiles[i], i ) ;
+				Thread thread = new Thread( ct ) ;	
+				thread.start() ;
+				Thread.sleep( 10000 ) ;
+			}
+			whileLoop: while( true ) {
+				
+				for( int i=0; i<projectIds.length; i++ ) {
+					synchronized( projectIds[i] ) {
+						try {
+							if( locksFreed[i] == false ) {
+								projectIds[i].wait() ;
+								locksFreed[i] = true ;
+							}							
+						}
+						catch( InterruptedException ex ) {
+							logger.error( ex ) ;
+						}
+					}	
+				}
+				int count = 0 ;
+				for( int i=0; i<projectIds.length; i++ ) {
+					if( locksFreed[i] == true ) {
+						count++ ;
+					}
+					if( count == projectIds.length ) {
+						break whileLoop ;
+					}
+				}
+
+			}					
+		}
+		catch( Exception ex ) {			
+			logger.error( "Exception thrown", ex ) ;
+			fail( "Exception thrown: " + ex.getLocalizedMessage() ) ;
+		}
+		finally {
+			exitTrace( "==>>test19_Threading()" ) ;
+		}
+		
+	}
+	
+	
 	/**
 	 * Utility routine to enter a structured message in the trace log that the given method 
 	 * has been entered. 
@@ -610,5 +695,52 @@ public class I2B2ProjectTests extends TestCase {
     public static void exitTrace( String entry ) {
     	I2B2Project.exitTrace( logger, entry ) ;
 	}
+    
+    
+    public static class ConcurrencyTest implements Runnable {
+
+    	I2B2ProjectTests tests ;
+    	String projectId ;
+    	File spreadsheetFile ;
+    	int threadNumber ;
+    	
+    	ConcurrencyTest( String projectId, File spreadsheetFile, int threadNumber ) {
+    		this.projectId = projectId ;
+    		this.spreadsheetFile = spreadsheetFile ;
+    		this.threadNumber = threadNumber ;
+    	}
+    	
+		@Override
+		public synchronized void run() {
+			enterTrace( "ConcurrencyTest.run() " + threadNumber ) ;
+			I2B2Project project = null ;
+			try {
+				//
+				// Delete project if it already exists...
+				I2B2Project.Factory.deleteIfProjectExists( projectId ) ;
+				//
+				// Create new project with all it db artifacts
+				project = I2B2Project.Factory.newInstance( projectId ) ;
+				//
+				// Process the spreadsheet...
+				project.processSpreadsheet( spreadsheetFile ) ;
+				project.dispose();
+				project = null ;
+			}
+			catch( UploaderException cex ) {			
+				logger.error( "Thread number " + threadNumber + " failed.", cex ) ;
+			}
+			finally {
+				if( project != null ) {	try{ project.dispose() ; } catch( Exception ex ) { ; } }
+				exitTrace( "ConcurrencyTest.run() " + threadNumber ) ;
+				synchronized( projectId ) {
+					projectId.notifyAll() ;
+				}
+				
+			}
+			
+		}
+    	
+    }
 	
 }
