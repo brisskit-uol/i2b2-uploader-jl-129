@@ -35,7 +35,11 @@ public class CreateDBPG extends Base {
 	
 	private static Logger logger = Logger.getLogger( CreateDBPG.class ) ;
 	
-	public static void createI2B2Database( String projectId ) throws UploaderException {
+	public CreateDBPG() throws UploaderException {
+		super() ;
+	}
+	
+	public void createI2B2Database( String projectId ) throws UploaderException {
 		enterTrace( "CreateDBPG.createI2B2Database()" ) ;
 		
 		try {
@@ -59,7 +63,7 @@ public class CreateDBPG extends Base {
 	}
 
 	
-	private static void runScript( String projectId, String fileName ) throws UploaderException {
+	private void runScript( String projectId, String fileName ) throws UploaderException {
 		enterTrace( "CreateDBPG.runScript()" ) ;
 		
 		String s = new String();
@@ -133,7 +137,7 @@ public class CreateDBPG extends Base {
 	}
 	
 	
-	private static void insertProcedures() throws UploaderException {
+	private void insertProcedures() throws UploaderException {
 		enterTrace( "CreateDBPG.insertProcedures()" ) ;
 		Connection connection = null ;
 		try {
@@ -213,7 +217,7 @@ public class CreateDBPG extends Base {
 	}
 	
 	
-	protected static void undeployFromJBoss( String projectId ) throws UploaderException {
+	public void undeployFromJBoss( String projectId ) throws UploaderException {
 		enterTrace( "CreateDBPG.undeployFromJBoss()" ) ;
 
 		try {
@@ -252,7 +256,7 @@ public class CreateDBPG extends Base {
 	}
 	
 	
-	private static void deployToJBoss( String projectId ) throws UploaderException {
+	private void deployToJBoss( String projectId ) throws UploaderException {
 		enterTrace( "CreateDBPG.deployToJBoss()" ) ;
 		
 		StringBuilder sb = new StringBuilder() ;
