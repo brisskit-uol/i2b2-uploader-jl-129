@@ -106,7 +106,7 @@ public class I2B2Project {
 	
 	private static Logger logger = Logger.getLogger( I2B2Project.class ) ;
 	
-	private static StringBuffer logIndent = null ;
+	private static StringBuffer logIndent = new StringBuffer() ;
 	
 	private String projectId ;
     private File spreadsheetFile ;
@@ -1474,8 +1474,12 @@ public class I2B2Project {
 	}
 	
 	public static void enterTrace( Logger logger, String entry ) {
-		logger.trace( getIndent().toString() + "enter: " + entry ) ;
-		indentPlus() ;
+		if( logger.isTraceEnabled() ) {
+			synchronized( logIndent ) {
+				logger.trace( logIndent.toString() + "enter: " + entry ) ;
+				indentPlus() ;
+	    	}
+		}				
 	}
 
     /**
@@ -1489,44 +1493,29 @@ public class I2B2Project {
 	}
     
 	public static void exitTrace( Logger logger, String entry ) {
-		indentMinus() ;
-		logger.trace( getIndent().toString() + "exit: " + entry ) ;
+		if( logger.isTraceEnabled() ) {
+			synchronized( logIndent ) {
+				indentMinus() ;
+				logger.trace( logIndent.toString() + "exit: " + entry ) ;
+	    	}
+		}		
 	}
 	
     /**
      * Utility method used to maintain the structured trace log.
      */
-    public static void indentPlus() {
-		getIndent().append( ' ' ) ;
+    private static void indentPlus() {
+    	logIndent.append( ' ' ) ;		
 	}
 	
     /**
      * Utility method used to maintain the structured trace log.
      */
-    public static void indentMinus() {
-        if( logIndent.length() > 0 ) {
-            getIndent().deleteCharAt( logIndent.length()-1 ) ;
-        }
+    private static void indentMinus() {
+    	if( logIndent.length() > 0 ) {
+    		logIndent.deleteCharAt( logIndent.length()-1 ) ;
+    	}        
 	}
-	
-    /**
-     * Utility method used for indenting the structured trace log.
-     */
-    public static StringBuffer getIndent() {
-	    if( logIndent == null ) {
-	       logIndent = new StringBuffer() ;	
-	    }
-	    return logIndent ;	
-	}
-    
-    @SuppressWarnings("unused")
-	private static void resetIndent() {
-        if( logIndent != null ) { 
-            if( logIndent.length() > 0 ) {
-               logIndent.delete( 0, logIndent.length() )  ;
-            }
-        }   
-    }
 	
 	public String getProjectId() {
 		return projectId;
@@ -1579,6 +1568,7 @@ public class I2B2Project {
 		
 		public static I2B2Project newInstance( String projectId ) throws UploaderException {
 			enterTrace( "I2B2Project.Factory.newInstance()" ) ;
+			projectId = projectId.toLowerCase() ;
 			I2B2Project project = new I2B2Project( projectId.toLowerCase() ) ;
 			try {
 				if( projectExists( project ) ) {
@@ -1723,6 +1713,7 @@ public class I2B2Project {
 		
 		public static boolean projectExists( String projectId ) throws UploaderException {
 			enterTrace( "I2B2Project.Factory.projectExists(I2B2Project)" ) ;	
+			projectId = projectId.toLowerCase() ;
 			boolean exists ;
 			try {
 				I2B2Project project = new I2B2Project( projectId ) ;

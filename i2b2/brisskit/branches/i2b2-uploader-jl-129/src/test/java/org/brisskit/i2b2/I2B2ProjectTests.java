@@ -19,6 +19,45 @@ import junit.framework.TestCase;
 public class I2B2ProjectTests extends TestCase {
 	
 	private static Logger logger = Logger.getLogger( I2B2ProjectTests.class ) ;
+	
+	private File[] spreadSheetFiles = {
+			new File( getClass().getClassLoader().getResource( "spreadsheets/EG1-laheart.xlsx").getFile() ),
+			new File( getClass().getClassLoader().getResource( "spreadsheets/GP_CUT1.xlsx").getFile() ),
+			new File( getClass().getClassLoader().getResource( "spreadsheets/test-01-obsdatecol.xls").getFile() ),
+			new File( getClass().getClassLoader().getResource( "spreadsheets/test-01-with-empty-row.xls").getFile() ),
+			new File( getClass().getClassLoader().getResource( "spreadsheets/Pharma1-shortened.xls").getFile() ),
+			new File( getClass().getClassLoader().getResource( "spreadsheets/pharma2-shortened.xlsx").getFile() ),
+			new File( getClass().getClassLoader().getResource( "spreadsheets/test-03-startdatecol.xls").getFile() ),
+			new File( getClass().getClassLoader().getResource( "spreadsheets/EG1-laheart.xlsx").getFile() ),
+			new File( getClass().getClassLoader().getResource( "spreadsheets/GP_CUT1_more_than_maxrows.xlsx").getFile() ),
+			new File( getClass().getClassLoader().getResource( "spreadsheets/GP_CUT1.xlsx").getFile() ),
+	} ;
+	
+	private String[] projectIds = {
+			"threadtest1",
+			"threadtest2",
+			"threadtest3",
+			"threadtest4",
+			"threadtest5",
+			"threadtest6",
+			"threadtest7",
+			"threadtest8",
+			"threadtest9",
+			"threadtest10"				
+	} ;
+	
+	private boolean[] locksFreed = {
+			false,
+			false,
+			false,
+			false,
+			false,
+			false,
+			false,
+			false,
+			false,
+			false
+	} ;
 
 	public I2B2ProjectTests(String name) {
 		super(name);
@@ -591,86 +630,51 @@ public class I2B2ProjectTests extends TestCase {
 	}
 	
 	
+	public void freeLock( int i ) {
+		synchronized( this.locksFreed ) {
+			this.locksFreed[i] = true ;
+		}		
+	}
+	
+	public boolean getLock( int i ) {
+		synchronized( this.locksFreed ) {
+			return this.locksFreed[i] ;
+		}
+	}
+	
+	
 	public synchronized void test19_Threading() { 
-		enterTrace( "==>>test19_Threading()" ) ;
-		File[] spreadSheetFiles = {
-				new File( getClass().getClassLoader().getResource( "spreadsheets/EG1-laheart.xlsx").getFile() ),
-				new File( getClass().getClassLoader().getResource( "spreadsheets/GP_CUT1.xlsx").getFile() ),
-				new File( getClass().getClassLoader().getResource( "spreadsheets/test-01-obsdatecol.xls").getFile() ),
-				new File( getClass().getClassLoader().getResource( "spreadsheets/test-01-with-empty-row.xls").getFile() ),
-				new File( getClass().getClassLoader().getResource( "spreadsheets/Pharma1-shortened.xls").getFile() ),
-				new File( getClass().getClassLoader().getResource( "spreadsheets/pharma2-shortened.xlsx").getFile() ),
-				new File( getClass().getClassLoader().getResource( "spreadsheets/test-03-startdatecol.xls").getFile() ),
-				new File( getClass().getClassLoader().getResource( "spreadsheets/EG1-laheart.xlsx").getFile() ),
-				new File( getClass().getClassLoader().getResource( "spreadsheets/GP_CUT1_more_than_maxrows.xlsx").getFile() ),
-				new File( getClass().getClassLoader().getResource( "spreadsheets/GP_CUT1.xlsx").getFile() ),
-		} ;
-		
-		String[] projectIds = {
-				"threadtest1",
-				"threadtest2",
-				"threadtest3",
-				"threadtest4",
-				"threadtest5",
-				"threadtest6",
-				"threadtest7",
-				"threadtest8",
-				"threadtest9",
-				"threadtest10"				
-		} ;
-		boolean[] locksFreed = {
-				false,
-				false,
-				false,
-				false,
-				false,
-				false,
-				false,
-				false,
-				false,
-				false
-		} ;
-				
+		logger.debug( "==>>test19_Threading()" ) ;			
 		try {
 			for( int i=0; i<projectIds.length; i++ ) {			
-				ConcurrencyTest ct = new ConcurrencyTest( projectIds[i], spreadSheetFiles[i], i ) ;
+				ConcurrencyTest ct = new ConcurrencyTest( this, projectIds[i], spreadSheetFiles[i], i ) ;
 				Thread thread = new Thread( ct ) ;	
 				thread.start() ;
-				Thread.sleep( 10000 ) ;
+				Thread.sleep( 1000 ) ;
 			}
-			whileLoop: while( true ) {
-				
-				for( int i=0; i<projectIds.length; i++ ) {
-					synchronized( projectIds[i] ) {
-						try {
-							if( locksFreed[i] == false ) {
-								projectIds[i].wait() ;
-								locksFreed[i] = true ;
-							}							
-						}
-						catch( InterruptedException ex ) {
-							logger.error( ex ) ;
-						}
-					}	
-				}
+			
+			Thread.sleep( 10000 ) ;
+			
+			whileLoop: while( true ) {				
 				int count = 0 ;
 				for( int i=0; i<projectIds.length; i++ ) {
-					if( locksFreed[i] == true ) {
+					if( getLock(i) == true ) {
 						count++ ;
 					}
 					if( count == projectIds.length ) {
 						break whileLoop ;
 					}
 				}
-
-			}					
+				Thread.sleep( 10000 ) ;
+			}
+			
 		}
 		catch( Exception ex ) {			
 			logger.error( "Exception thrown", ex ) ;
 			fail( "Exception thrown: " + ex.getLocalizedMessage() ) ;
 		}
 		finally {
-			exitTrace( "==>>test19_Threading()" ) ;
+			logger.debug( "<<==test19_Threading()" ) ;
 		}
 		
 	}
@@ -704,22 +708,23 @@ public class I2B2ProjectTests extends TestCase {
     	File spreadsheetFile ;
     	int threadNumber ;
     	
-    	ConcurrencyTest( String projectId, File spreadsheetFile, int threadNumber ) {
+    	public ConcurrencyTest( I2B2ProjectTests tests, String projectId, File spreadsheetFile, int threadNumber ) {
+    		this.tests = tests ;
     		this.projectId = projectId ;
     		this.spreadsheetFile = spreadsheetFile ;
     		this.threadNumber = threadNumber ;
     	}
     	
 		@Override
-		public synchronized void run() {
-			enterTrace( "ConcurrencyTest.run() " + threadNumber ) ;
+		public void run() {
+			logger.debug( "==>>ConcurrencyTest.run() " + threadNumber ) ;
 			I2B2Project project = null ;
 			try {
 				//
 				// Delete project if it already exists...
 				I2B2Project.Factory.deleteIfProjectExists( projectId ) ;
 				//
-				// Create new project with all it db artifacts
+				// Create new project with all its db artifacts
 				project = I2B2Project.Factory.newInstance( projectId ) ;
 				//
 				// Process the spreadsheet...
@@ -732,11 +737,13 @@ public class I2B2ProjectTests extends TestCase {
 			}
 			finally {
 				if( project != null ) {	try{ project.dispose() ; } catch( Exception ex ) { ; } }
-				exitTrace( "ConcurrencyTest.run() " + threadNumber ) ;
-				synchronized( projectId ) {
-					projectId.notifyAll() ;
+				try {
+					tests.freeLock( threadNumber ) ;
 				}
-				
+				catch( Exception ex ) {
+					logger.error( "freelock failed [" + threadNumber + "]", ex ) ;
+				}
+				logger.debug( "<<==ConcurrencyTest.run() " + threadNumber ) ;				
 			}
 			
 		}
