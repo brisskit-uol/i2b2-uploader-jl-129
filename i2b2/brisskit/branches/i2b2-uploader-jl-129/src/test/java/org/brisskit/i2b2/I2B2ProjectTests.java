@@ -72,7 +72,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 	
 	
-	public void _test01_CreateNewProject_WithEmptyRow() { 
+	public void test01_CreateNewProject_WithEmptyRow() { 
 		enterTrace( "==>>test01_CreateNewProject_WithEmptyRow()" ) ;
 		File spreadsheetFile = 
 				new File( getClass().getClassLoader().getResource( "spreadsheets/test-01-with-empty-row.xls").getFile() ) ;		
@@ -96,7 +96,7 @@ public class I2B2ProjectTests extends TestCase {
 		
 	}
 	
-	public void _test02_SpreadsheetBeyondMaxRows() { 
+	public void test02_SpreadsheetBeyondMaxRows() { 
 		enterTrace( "==>>test02_SpreadsheetBeyondMaxRows()" ) ;
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/GP_CUT1_more_than_maxrows.xlsx").getFile());		
 		String projectId = "maxrowsexceeded" ;
@@ -119,7 +119,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 
 	
-	public void _test03_CreateNewLaHeartProject() { 
+	public void test03_CreateNewLaHeartProject() { 
 		enterTrace( "==>>test03_CreateNewLaHeartProject()" ) ;
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/EG1-laheart.xlsx").getFile());		
 		String projectId = "laheart" ;
@@ -142,7 +142,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 	
 	
-	public void _test04_CreateNewTest01Project() { 
+	public void test04_CreateNewTest01Project() { 
 		enterTrace( "==>>test04_CreateNewTest01Project()" ) ;
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());		
 		String projectId = "test01" ;
@@ -165,7 +165,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 	
 	
-	public void _test05_CreateNewProjectWithStartDateColumn() { 
+	public void test05_CreateNewProjectWithStartDateColumn() { 
 		enterTrace( "==>>test05_CreateNewProjectWithStartDateColumn()" ) ;
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-03-startdatecol.xls").getFile() ) ;	
 		String projectId = "startdatecol" ;
@@ -189,7 +189,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 
 	
-	public void _test06_SupplementingExistingProject() { 
+	public void test06_SupplementingExistingProject() { 
 		enterTrace( "==>>test06_SupplementingExistingProject()" ) ;
 		File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());
 		File spreadsheetFile2 = new File(getClass().getClassLoader().getResource("spreadsheets/test-02.xls").getFile());
@@ -226,7 +226,7 @@ public class I2B2ProjectTests extends TestCase {
 		
 	}
 	
-	public void _test07_SupplementingExistingProject_AdditionalData() { 
+	public void test07_SupplementingExistingProject_AdditionalData() { 
 		enterTrace( "==>>test07_SupplementingExistingProject_AdditionalData()" ) ;
 		File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());
 		File spreadsheetFile2 = new File(getClass().getClassLoader().getResource("spreadsheets/test-01-samepeople.xls").getFile());
@@ -264,7 +264,7 @@ public class I2B2ProjectTests extends TestCase {
 	
 	
 	
-	public void _test08_SupplementingExistingProject_AddionalMetadata() { 
+	public void test08_SupplementingExistingProject_AddionalMetadata() { 
 		enterTrace( "==>>test08_SupplementingExistingProject_AddionalMetadata()" ) ;
 		File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());
 		File spreadsheetFile2 = new File(getClass().getClassLoader().getResource("spreadsheets/test-02-additionalmetadata.xls").getFile());		
@@ -302,7 +302,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 		
 		
-		public void _test09_SupplementingExistingProject_SameInstance() { 
+		public void test09_SupplementingExistingProject_SameInstance() { 
 			enterTrace( "==>>test09_SupplementingExistingProject_SameInstance()" ) ;
 			File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());
 			File spreadsheetFile2 = new File(getClass().getClassLoader().getResource("spreadsheets/test-02.xls").getFile());	
@@ -336,7 +336,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 	
 	
-	public void _test10_DeletionOfProject() { 
+	public void test10_DeletionOfProject() { 
 		enterTrace( "==>>test10_DeletionOfProject()" ) ;
 		String projectId = "test02dele" ;
 		I2B2Project project = null ;
@@ -363,7 +363,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 
 	
-	public void _test11_DeletionOfNonExistentProject() {
+	public void test11_DeletionOfNonExistentProject() {
 		enterTrace( "==>>test11_DeletionOfNonExistentProject()" ) ;
 		try {
 			I2B2Project.Factory.delete( "projectX" ) ;
@@ -377,7 +377,7 @@ public class I2B2ProjectTests extends TestCase {
 		}
 	}
 
-	public void _test12_ReadSpreadsheet() {
+	public void test12_ReadSpreadsheet() {
 		enterTrace( "==>>test12_ReadSpreadsheet()" ) ;
 //		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-02.xls").getFile());
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/EG1-laheart.xlsx").getFile());		
@@ -445,7 +445,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 	
 	
-	public void _test13_SpreadsheetWithLotsEmptyRows() { 
+	public void test13_SpreadsheetWithLotsEmptyRows() { 
 		enterTrace( "==>>test13_SpreadsheetWithLotsEmptyRows()" ) ;
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/GP_CUT1.xlsx").getFile());		
 		String projectId = "gpcut1" ;
@@ -469,7 +469,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 
 	
-	public void _test14_SupplementingExistingProject_MalcsProblem() { 
+	public void test14_SupplementingExistingProject_MalcsProblem() { 
 		enterTrace( "==>>_test14_SupplementingExistingProject_MalcsProblem()" ) ;
 		File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/Pharma1-shortened.xls").getFile());
 		File spreadsheetFile2 = new File(getClass().getClassLoader().getResource("spreadsheets/pharma2-shortened.xlsx").getFile());
@@ -507,7 +507,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 	
 	
-	public void _test15_TranslateSpecialCharacters() { 
+	public void test15_TranslateSpecialCharacters() { 
 		enterTrace( "==>>TranslateSpecialCharacters()" ) ;
 
 		String awkwardString = 
@@ -542,7 +542,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 	
 	
-	public void _test16_CreateBiomed2_duffdatecolumn() { 
+	public void test16_CreateBiomed2_duffdatecolumn() { 
 		enterTrace( "==>>test16_CreateBiomed2_duffdatecolumn()" ) ;
 		File spreadsheetFile1 = new File(getClass().getClassLoader().getResource( "spreadsheets/Biomed2.xlsx").getFile() ) ;
 		String projectId = "biomed2" ;
@@ -570,7 +570,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 	
 	
-	public void _test17_Create_test01v01jeff() { 
+	public void test17_Create_test01v01jeff() { 
 		enterTrace( "==>>test17_Create_test01v01jeff()" ) ;
 		File spreadsheetFile1 = new File(getClass().getClassLoader().getResource( "spreadsheets/test-01.xls").getFile() ) ;
 		String projectId = "test01v01jeff" ;
@@ -600,7 +600,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 	
 	
-	public void _test18_Create_test01obsdatecol() { 
+	public void test18_Create_test01obsdatecol() { 
 		enterTrace( "==>>_test18_Create_test01obsdatecol()" ) ;
 		File spreadsheetFile1 = new File(getClass().getClassLoader().getResource( "spreadsheets/test-01-obsdatecol.xls").getFile() ) ;
 		String projectId = "test01obsdatecol" ;
@@ -643,11 +643,11 @@ public class I2B2ProjectTests extends TestCase {
 	}
 	
 	
-	public synchronized void test19_Threading() { 
+	public synchronized void _test19_Threading() { 
 		logger.debug( "==>>test19_Threading()" ) ;			
 		try {
 			for( int i=0; i<projectIds.length; i++ ) {			
-				ConcurrencyTest ct = new ConcurrencyTest( this, projectIds[i], spreadSheetFiles[i], i+1 ) ;
+				ConcurrencyTest ct = new ConcurrencyTest( this, projectIds[i], spreadSheetFiles[i], i ) ;
 				Thread thread = new Thread( ct ) ;	
 				thread.start() ;
 				Thread.sleep( 1000 ) ;
@@ -717,7 +717,7 @@ public class I2B2ProjectTests extends TestCase {
     	
 		@Override
 		public void run() {
-			logger.debug( "==>>ConcurrencyTest.run() " + threadNumber ) ;
+			logger.debug( "==>>ConcurrencyTest.run() " + (threadNumber+1) ) ;
 			I2B2Project project = null ;
 			try {
 				//
@@ -733,7 +733,7 @@ public class I2B2ProjectTests extends TestCase {
 				project = null ;
 			}
 			catch( UploaderException cex ) {			
-				logger.error( "Thread number " + threadNumber + " failed.", cex ) ;
+				logger.error( "Thread number " + (threadNumber+1) + " failed.", cex ) ;
 			}
 			finally {
 				if( project != null ) {	try{ project.dispose() ; } catch( Exception ex ) { ; } }
@@ -741,9 +741,9 @@ public class I2B2ProjectTests extends TestCase {
 					tests.freeLock( threadNumber ) ;
 				}
 				catch( Exception ex ) {
-					logger.error( "freelock failed [" + threadNumber + "]", ex ) ;
+					logger.error( "freelock failed [" + (threadNumber+1) + "]", ex ) ;
 				}
-				logger.debug( "<<==ConcurrencyTest.run() " + threadNumber ) ;				
+				logger.debug( "<<==ConcurrencyTest.run() " + (threadNumber+1) ) ;				
 			}
 			
 		}
