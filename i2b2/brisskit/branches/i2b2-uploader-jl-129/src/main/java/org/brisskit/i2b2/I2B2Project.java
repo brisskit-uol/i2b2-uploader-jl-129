@@ -1474,12 +1474,14 @@ public class I2B2Project {
 	}
 	
 	public static void enterTrace( Logger logger, String entry ) {
-		if( logger.isTraceEnabled() ) {
-			synchronized( logIndent ) {
-				logger.trace( logIndent.toString() + "enter: " + entry ) ;
-				indentPlus() ;
-	    	}
-		}				
+		if( false ) {
+			if( logger.isTraceEnabled() ) {
+				synchronized( logIndent ) {
+					logger.trace( logIndent.toString() + "enter: " + entry ) ;
+					indentPlus() ;
+		    	}
+			}	
+		}					
 	}
 
     /**
@@ -1493,12 +1495,14 @@ public class I2B2Project {
 	}
     
 	public static void exitTrace( Logger logger, String entry ) {
-		if( logger.isTraceEnabled() ) {
-			synchronized( logIndent ) {
-				indentMinus() ;
-				logger.trace( logIndent.toString() + "exit: " + entry ) ;
-	    	}
-		}		
+		if( false ) {
+			if( logger.isTraceEnabled() ) {
+				synchronized( logIndent ) {
+					indentMinus() ;
+					logger.trace( logIndent.toString() + "exit: " + entry ) ;
+		    	}
+			}	
+		}			
 	}
 	
     /**
