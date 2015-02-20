@@ -647,7 +647,7 @@ public class I2B2ProjectTests extends TestCase {
 		logger.debug( "==>>test19_Threading()" ) ;			
 		try {
 			for( int i=0; i<projectIds.length; i++ ) {			
-				ConcurrencyTest ct = new ConcurrencyTest( this, projectIds[i], spreadSheetFiles[i], i ) ;
+				ConcurrencyTest ct = new ConcurrencyTest( this, projectIds[i], spreadSheetFiles[i], i+1 ) ;
 				Thread thread = new Thread( ct ) ;	
 				thread.start() ;
 				Thread.sleep( 1000 ) ;

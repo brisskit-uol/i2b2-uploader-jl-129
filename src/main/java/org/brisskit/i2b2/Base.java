@@ -83,7 +83,7 @@ public class Base {
 
 	
 	public Connection getSimpleConnectionPG() throws UploaderException {
-		enterTrace( "Base.getSimpleConnectionPG()" ) ;
+//		enterTrace( "Base.getSimpleConnectionPG()" ) ;
 		try {
 			if( disposed ) {
 				String message = "Attempting to use JDBC connection after dispose call." ;
@@ -117,7 +117,7 @@ public class Base {
 			throw new UploaderException( sqlex ) ;
 		}
 		finally {
-			exitTrace( "Base.getSimpleConnectionPG()" ) ;
+//			exitTrace( "Base.getSimpleConnectionPG()" ) ;
 		}	
 	}
 	

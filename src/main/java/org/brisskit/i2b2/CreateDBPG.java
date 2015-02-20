@@ -53,7 +53,7 @@ public class CreateDBPG extends Base {
 			}
 			//
 			// Create project specific database procedures...
-			insertProcedures() ;			
+//			insertProcedures() ;			
 			//
 			// Deploy the JBoss dataset definitions required by new project...
 			deployToJBoss( projectId ) ;
@@ -106,14 +106,9 @@ public class CreateDBPG extends Base {
 				if (!inst[i].trim().equals("")) {
 
 					try {
-						logger.debug( ">>>>>>>>" ) ;
 						logger.debug( inst[i] ) ;
-						
 						st.executeUpdate(inst[i]);
-						logger.debug( "" ) ;
-						logger.debug( "OK" ) ;
-						logger.debug( "<<<<<<<<" ) ;
-						
+						logger.debug( "OK" ) ;					
 					} catch (Exception e) {
 						logger.error( "ERROR on statement : " + inst[i] ) ;
 						throw e ;
@@ -139,6 +134,7 @@ public class CreateDBPG extends Base {
 	}
 	
 	
+	@SuppressWarnings("unused")
 	private synchronized void insertProcedures() throws UploaderException {
 		enterTrace( "CreateDBPG.insertProcedures()" ) ;
 		Connection connection = null ;
