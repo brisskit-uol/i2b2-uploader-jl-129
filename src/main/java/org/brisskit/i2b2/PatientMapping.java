@@ -19,9 +19,7 @@ public class PatientMapping {
 	private static Logger logger = Logger.getLogger( PatientMapping.class ) ;
 	
 	public static final String PATIENT_MAP_INSERT_COMMAND = 
-			"SET SCHEMA '<DB_SCHEMA_NAME>';" +
-			"" +
-			"INSERT INTO <DB_SCHEMA_NAME>.PATIENT_MAPPING" +
+			"INSERT INTO PATIENT_MAPPING" +
 			    "( PATIENT_IDE" + 			//  VARCHAR(200)  NOT NULL,
 			    ", PATIENT_IDE_SOURCE" + 	//	VARCHAR(50)  NOT NULL,
 			    ", PATIENT_IDE_STATUS" + 	//	VARCHAR(50) NULL,
@@ -63,8 +61,7 @@ public class PatientMapping {
 	public void serializeToDatabase( Connection connection ) throws UploaderException {
 		enterTrace( "PatientMapping.serializeToDatabase()" ) ;
 		try {
-			String sqlCmd = PATIENT_MAP_INSERT_COMMAND ;			
-			sqlCmd = sqlCmd.replaceAll( "<DB_SCHEMA_NAME>", schema_name ) ;			
+			String sqlCmd = PATIENT_MAP_INSERT_COMMAND ;					
 			sqlCmd = sqlCmd.replace( "<PATIENT_IDE>", utils.enfoldString( patient_ide ) ) ;
 			sqlCmd = sqlCmd.replace( "<PATIENT_IDE_SOURCE>", utils.enfoldString( patient_ide_source ) ) ;
 			sqlCmd = sqlCmd.replace( "<PROJECT_ID>", utils.enfoldString( project_id ) ) ;

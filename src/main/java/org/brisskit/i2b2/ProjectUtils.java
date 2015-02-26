@@ -16,7 +16,11 @@ public class ProjectUtils {
 	
 	//
 	// 
-	private CreateDBPG dbAccess = new CreateDBPG() ;
+	private CreateDBPG dbAccess ;
+	
+	//
+	//
+	private TransactionControl txnControl ;
 	
 	//
 	// Postgres example of TIMESTAMP ’2004-10-19 10:23:54’
@@ -66,6 +70,8 @@ public class ProjectUtils {
 	
 	
 	public ProjectUtils() throws UploaderException {
+		this.dbAccess = new CreateDBPG() ;
+		this.txnControl = new TransactionControl( dbAccess.getSimpleConnectionPG() ) ;
 	}
 	
 	
@@ -145,7 +151,7 @@ public class ProjectUtils {
 		}	
 	}
 	
-	public String getValueAsString( Cell cell ) {
+	public String _getValueAsString( Cell cell ) {
 		String value = stringFormat.formatCellValue( cell ) ;
 		if( value != null ) {
 			value = value.trim() ;
@@ -154,7 +160,7 @@ public class ProjectUtils {
 	}
 	
 	
-	public String _getValueAsString( Cell cell ) {
+	public String getValueAsString( Cell cell ) {
 		if( cell == null ) {
 			return "" ;
 		}
@@ -175,7 +181,6 @@ public class ProjectUtils {
 				value = value.trim() ;
 				return value ;
 			}
-			return "" ;
         default:
             return "" ;
 		}
@@ -298,6 +303,10 @@ public class ProjectUtils {
 
 	public void setDbAccess(CreateDBPG dbAccess) {
 		this.dbAccess = dbAccess;
+	}
+
+	public TransactionControl getTxnControl() {
+		return txnControl;
 	}
 	
 }

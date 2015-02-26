@@ -21,9 +21,7 @@ public class PatientDimension {
 	private static Logger logger = Logger.getLogger( PatientDimension.class ) ;
 	
 	public static final String PATIENT_DIM_INSERT_COMMAND = 
-			"SET SCHEMA '<DB_SCHEMA_NAME>';" +
-			"" +
-			"INSERT INTO <DB_SCHEMA_NAME>.PATIENT_DIMENSION" +
+			"INSERT INTO PATIENT_DIMENSION" +
 	               "( PATIENT_NUM" +      
 			       ", VITAL_STATUS_CD" + 
 			       ", BIRTH_DATE" +
@@ -94,8 +92,6 @@ public class PatientDimension {
 		try {
 
 			String sqlCmd = PATIENT_DIM_INSERT_COMMAND ;
-			
-			sqlCmd = sqlCmd.replaceAll( "<DB_SCHEMA_NAME>", schema_name ) ;
 					
 			sqlCmd = sqlCmd.replace( "<PATIENT_NUM>", utils.enfoldInteger( patient_num ) ) ;
 			sqlCmd = sqlCmd.replace( "<VITAL_STATUS_CD>", utils.enfoldNullableString( vital_status_cd ) ) ;
