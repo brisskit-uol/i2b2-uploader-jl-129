@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -39,21 +40,6 @@ import org.brisskit.i2b2.OntologyBranch.Type;
  */
 public class I2B2Project {
 		
-	public static final String BREAKDOWNS_SQL_INSERT_COMMAND = 
-			"SET SCHEMA '<DB_SCHEMA_NAME>';" +
-			"" +
-			"INSERT INTO <DB_SCHEMA_NAME>.QT_BREAKDOWN_PATH" +
-			                "( NAME" +
-			                ", VALUE" +
-			                ", CREATE_DATE" +
-			                ", UPDATE_DATE" +
-			                ", USER_ID ) " +
-	         "VALUES( <LONG_NAME>" +
-	               ", <PATH>" +
-	               ", now()" +
-	               ", now()" +
-	               ", NULL ) ;" ;	
-	
 	/*
 	 * This set of commands will delete a project AND ALL OF ITS DATA!!!
 	 */
@@ -188,13 +174,13 @@ public class I2B2Project {
     	enterTrace( "I2B2Project.processSpreadsheet(File,Date)" ) ;
     	try {
     		this.spreadsheetFile = spreadSheetFile ;
-    			readSpreadsheet() ;
-    			produceOntology() ;
-    			producePatientMapping() ;
-    			producePatientDimension() ;
-    			produceEncounters( defaultObservationDate ) ;
-    			produceFacts( defaultObservationDate ) ;
-    			newProject = false ;    		
+    		readSpreadsheet() ;
+    		produceOntology() ;
+    		producePatientMapping() ;
+    		producePatientDimension() ;
+    		produceEncounters( defaultObservationDate ) ;
+    		produceFacts( defaultObservationDate ) ;
+    		newProject = false ;    		
     	}
     	catch( Exception ex ) {
     		if( ex instanceof UploaderException ) {
@@ -210,6 +196,7 @@ public class I2B2Project {
 	
 	protected void readSpreadsheet() throws UploaderException {
 		enterTrace( "readSpreadsheet()" ) ;
+		logger.debug( "===>> Reading spreadsheet" ) ;
 		try {
 			//
 			// We read the file and create the workbook
@@ -589,8 +576,8 @@ public class I2B2Project {
 			String breakdownName = null ;
 			String headingName = null ;
 			String path = null ;
-			String sqlCmd = null ;
-			Statement st = this.utils.getDbAccess().getSimpleConnectionPG().createStatement() ;
+			PreparedStatement ps = 
+					utils.getTxnControl().getPreparedStatement( OntologyBranch.BREAKDOWNS_INSERT_SQL_KEY ) ;
 			for( int i=0; i<STANDARD_BREAKDOWNS.length; i++ ) {
 				breakdownName = STANDARD_BREAKDOWNS[i][0] ;
 				//
@@ -605,12 +592,10 @@ public class I2B2Project {
 				//
 				// Only write them to the DB if a new project...
 				headingName = breakdowns.get( breakdownName ) ;
-				path = "\\\\" + projectId + "\\" + projectId + "\\" + headingName + "\\" ;
-				sqlCmd = BREAKDOWNS_SQL_INSERT_COMMAND ;				
-				sqlCmd = sqlCmd.replaceAll( "<DB_SCHEMA_NAME>", projectId ) ;
-				sqlCmd = sqlCmd.replace( "<LONG_NAME>", utils.enfoldString( STANDARD_BREAKDOWNS[i][1] ) ) ;
-				sqlCmd = sqlCmd.replace( "<PATH>", utils.enfoldString( path ) ) ;				
-				st.execute( sqlCmd ) ;				
+				path = "\\\\" + projectId + "\\" + projectId + "\\" + headingName + "\\" ;				
+				ps.setString( 1, STANDARD_BREAKDOWNS[i][1] ) ;
+				ps.setString( 2, path ) ;
+				ps.addBatch() ;
 			}			
 		}
 		catch( SQLException sqlex ) {
@@ -624,6 +609,7 @@ public class I2B2Project {
 	
 	protected void producePatientMapping() throws UploaderException {
 		enterTrace( "producePatientMapping()" ) ;
+		logger.debug( "===>> Producing patient mapping" ) ;
 		String value = null ;
 		String name = null ;
 		int countPatientIdsNull = 0 ;
@@ -690,6 +676,7 @@ public class I2B2Project {
 	
 	protected void producePatientDimension() throws UploaderException {
 		enterTrace( "producePatientDimension()" ) ;
+		logger.debug( "===>> Producing patient dimension" ) ;
 		String value = null ;
 		String code = null ;
 		String name = null ;
@@ -805,6 +792,7 @@ public class I2B2Project {
 	//	Encounter_ide_source =  filename + : + sheet name
 	protected void produceEncounters( Date defaultEncounterStartDate ) throws UploaderException {
 		enterTrace( "produceEncounters()" ) ;
+		logger.debug( "===>> Producing encounters" ) ;
 		String value = null ;
 		String name = null ;
 		Date encounterStartDate = null ;
@@ -887,8 +875,10 @@ public class I2B2Project {
 	}
 	
 	
-	protected void produceOntology() throws UploaderException {
+	protected synchronized void produceOntology() throws UploaderException {
 		enterTrace( "produceOntology()" ) ;
+		logger.debug( "===>> Producing ontology" ) ;
+		OntologyBranch obThis = null ;
 		try {
 			Row codesRow = dataSheet.getRow( ONTOLOGY_CODES_ROW_INDEX ) ;
 			String colName = null ;
@@ -914,6 +904,11 @@ public class I2B2Project {
 				//
 				// The source patient id should not be processed as a fact (and therefore no ontological data)...
 				if( colName.equalsIgnoreCase( "ID" ) ) {
+					continue ;
+				}
+				//
+				// Any observation start date should not be processed as a fact (and therefore no ontological data)...
+				if( colName.equalsIgnoreCase( "OBS_START_DATE" ) ) {
 					continue ;
 				}
 				//
@@ -1028,7 +1023,7 @@ public class I2B2Project {
 			
 			//
 			// Process ontology branches into the database ...
-			OntologyBranch obThis = null ;
+			utils.getTxnControl().setCommitSize( (ontBranches.size() * 2) ) ;
 			OntologyBranch obThat = null ;
 			Iterator<OntologyBranch> itOb = ontBranches.values().iterator() ;
 			while( itOb.hasNext() ) {
@@ -1043,7 +1038,7 @@ public class I2B2Project {
 														   , lookups
 														   , utils ) ;
 				if( obThat == null ) {				
-					obThis.serializeToDatabase( this.utils.getDbAccess().getSimpleConnectionPG() ) ;
+					obThis.serializeToDatabase() ;
 				}
 				//
 				// But if this is an existing ontology, 
@@ -1052,10 +1047,10 @@ public class I2B2Project {
 					//
 					// If there's a difference, we need to write the differences...
 					if( !obThis.equals( obThat ) ) {
-						obThis.serializeDifferencesToDatabase( this.utils.getDbAccess().getSimpleConnectionPG() 
-								                             , obThat ) ;
+						obThis.serializeDifferencesToDatabase( obThat ) ;
 					}
 				}
+				utils.getTxnControl().commit( obThis.getBatchUsePreparedStatements(), false ) ;
 			}
 			
 			//
@@ -1066,15 +1061,33 @@ public class I2B2Project {
 	    	buildBreakdowns() ;
 			
 		}
+		catch( SQLException sqlex ) {
+			String message = "Failure inserting metadata" ;
+			logger.error( message, sqlex ) ;
+			throw new UploaderException( message, sqlex ) ;
+		}
 		finally {
+			//
+			// Attempt (at best) release of SQL prepared statements...
+			if( obThis != null ) { 
+				try { obThis.unloadStatements() ; } 
+				catch( SQLException sqlex ) {
+					String message = "Failure to commit metadata." ;
+					logger.error( message, sqlex ) ;
+					throw new UploaderException( message, sqlex ) ;
+				} 
+			}
 			exitTrace( "produceOntology()" ) ;
 		}		
 	}
 	
 	
-	protected void produceFacts( Date defaultObservationStartDate ) throws UploaderException {
+	protected synchronized void produceFacts( Date defaultObservationStartDate ) throws UploaderException {
 		enterTrace( "I2B2Project.produceFacts()" ) ;
-		try {
+		logger.debug( "===>> Producing facts" ) ;
+		ObservationFact of = null ;
+		try {			
+			utils.getTxnControl().setCommitSize( 1000 ) ;			
 			Iterator<Row> rowIt = dataSheet.iterator() ;
 			Date observationStartDate = null ;
 			//
@@ -1137,13 +1150,13 @@ public class I2B2Project {
 						continue ;
 					}
 					else if( ontCode.equalsIgnoreCase( "OBS_START_DATE" ) ) {
+						logger.debug( "Observation start date found as an ont code" ) ;
 						continue ;
 					}
 					else {
 						OntologyBranch ontBranch = getOntologyBranch( ontCode ) ;
 						OntologyBranch.Type type = ontBranch.getType() ;
-						String units = ontBranch.getUnits() ;
-						ObservationFact of = null ;						
+						String units = ontBranch.getUnits() ;					
 						switch ( type ) {
 						case DATE:
 							of = produceDateFact( encounterNumber
@@ -1172,15 +1185,23 @@ public class I2B2Project {
 						
 						//
 						// Write fact to i2b2...
-						of.serializeToDatabase( this.utils.getDbAccess().getSimpleConnectionPG() ) ;
-						
+						of.serializeToDatabase() ;					
 					}
 					
 				} // end of inner while - processing cell	
 				
 			} // end of outer while - processing row
+			
+		}
+		catch( SQLException sqlex ) {
+			String message = "Failure inserting observation facts" ;
+			logger.error( message, sqlex ) ;
+			throw new UploaderException( message, sqlex ) ;
 		}
 		finally {
+			//
+			// Attempt (at best) release of SQL prepared statements...
+			if( of != null ) { try { of.unloadStatements() ; } catch( SQLException sqlex ) {} }
 			exitTrace( "I2B2Project.produceFacts()" ) ;
 		}		
 	}
@@ -1473,6 +1494,7 @@ public class I2B2Project {
 		enterTrace( logger, entry ) ;
 	}
 	
+	@SuppressWarnings("unused")
 	public static void enterTrace( Logger logger, String entry ) {
 		if( false ) {
 			if( logger.isTraceEnabled() ) {
@@ -1494,6 +1516,7 @@ public class I2B2Project {
     	exitTrace( logger, entry ) ;
 	}
     
+	@SuppressWarnings("unused")
 	public static void exitTrace( Logger logger, String entry ) {
 		if( false ) {
 			if( logger.isTraceEnabled() ) {
@@ -1573,7 +1596,7 @@ public class I2B2Project {
 		public static I2B2Project newInstance( String projectId ) throws UploaderException {
 			enterTrace( "I2B2Project.Factory.newInstance()" ) ;
 			projectId = projectId.toLowerCase() ;
-			I2B2Project project = new I2B2Project( projectId.toLowerCase() ) ;
+			I2B2Project project = new I2B2Project( projectId ) ;
 			try {
 				if( projectExists( project ) ) {
 					project.newProject = false ;
@@ -1581,6 +1604,9 @@ public class I2B2Project {
 				else {
 					project.utils.getDbAccess().createI2B2Database( projectId ) ;
 				}
+				//
+				// Switching db schema to project schema for the lifetime of this instance...
+				project.utils.getDbAccess().setSchema( projectId ) ;
 				return project ;
 			}
 			finally {

@@ -20,9 +20,7 @@ public class Encounter {
 	private static Logger logger = Logger.getLogger( Encounter.class ) ;
 	
 	public static final String ENCOUNTER_MAP_INSERT_COMMAND = 
-			"SET SCHEMA '<DB_SCHEMA_NAME>';" +
-			"" +
-			"INSERT INTO <DB_SCHEMA_NAME>.ENCOUNTER_MAPPING" +  
+			"INSERT INTO ENCOUNTER_MAPPING" +  
 			    "( ENCOUNTER_IDE" +
 			    ", ENCOUNTER_IDE_SOURCE" +
 			    ", PROJECT_ID" +
@@ -51,9 +49,7 @@ public class Encounter {
 	
 	
 	public static final String VISIT_DIM_INSERT_COMMAND = 
-			"SET SCHEMA '<DB_SCHEMA_NAME>';" +
-			"" +
-			"INSERT INTO <DB_SCHEMA_NAME>.VISIT_DIMENSION" +
+			"INSERT INTO VISIT_DIMENSION" +
 			       "( ENCOUNTER_NUM" + 			// INT NOT NULL,
 				   ", PATIENT_NUM" + 			// INT NOT NULL,
 				   ", ACTIVE_STATUS_CD" + 		// VARCHAR(50) NULL,
@@ -115,7 +111,6 @@ public class Encounter {
 			//
 			// Do the encounter mapping first...
 			String sqlCmd = ENCOUNTER_MAP_INSERT_COMMAND ;			
-			sqlCmd = sqlCmd.replaceAll( "<DB_SCHEMA_NAME>", schema_name ) ;	
 			sqlCmd = sqlCmd.replace( "<ENCOUNTER_IDE>", utils.enfoldString( encounter_ide ) ) ;
 			sqlCmd = sqlCmd.replace( "<ENCOUNTER_IDE_SOURCE>", utils.enfoldString( encounter_ide_source ) ) ;
 			sqlCmd = sqlCmd.replace( "<PROJECT_ID>", utils.enfoldString( project_id ) ) ;
@@ -131,7 +126,6 @@ public class Encounter {
 			//
 			// Do the visit dimension second...
 			sqlCmd = VISIT_DIM_INSERT_COMMAND ;			
-			sqlCmd = sqlCmd.replaceAll( "<DB_SCHEMA_NAME>", schema_name ) ;	
 			sqlCmd = sqlCmd.replace( "<ENCOUNTER_NUM>", utils.enfoldInteger( encounter_num ) ) ;
 			sqlCmd = sqlCmd.replace( "<PATIENT_NUM>", utils.enfoldInteger( patient_num ) ) ;
 			sqlCmd = sqlCmd.replace( "<START_DATE>", utils.enfoldDate( this.startDate ) ) ;			
