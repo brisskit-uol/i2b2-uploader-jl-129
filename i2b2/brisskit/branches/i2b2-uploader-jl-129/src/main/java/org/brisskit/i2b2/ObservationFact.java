@@ -32,7 +32,6 @@ public class ObservationFact {
 private static Logger logger = Logger.getLogger( ObservationFact.class ) ;
 
 public static final String OBSERVATION_FACT_INSERT_SQL_KEY = "OBSERVATION_FACT_INSERT_SQL" ;
-
 public static final String OBSERVATION_FACT_INSERT_SQL = 
 		"INSERT INTO OBSERVATION_FACT" +
                "( " +
@@ -79,6 +78,8 @@ public static final String OBSERVATION_FACT_INSERT_SQL =
 			   ", ?" +
 			   ", NULL ) ;" ;				// upload id
 
+private PreparedStatement batchUsedPreparedStatement ;
+
 private ProjectUtils utils ;
 
 private String schema_name ;
@@ -105,107 +106,99 @@ public ObservationFact( ProjectUtils utils ) {
 	this.utils = utils ;
 }
 
+//public PreparedStatement getBatchUsePreparedStatement() throws UploaderException {
+//	try {
+//		if( batchUsedPreparedStatement ==  null ) {
+//			batchUsedPreparedStatement = utils.getDbAccess()
+//					  						  .getSimpleConnectionPG()
+//					  						  .prepareStatement( OBSERVATION_FACT_INSERT_SQL ) ;
+//		}
+//		else if( batchUsedPreparedStatement.isClosed() ) {
+//			batchUsedPreparedStatement = utils.getDbAccess()
+//					  .getSimpleConnectionPG()
+//					  .prepareStatement( OBSERVATION_FACT_INSERT_SQL ) ;
+//		}
+//		return batchUsedPreparedStatement ;
+//	}
+//	catch( SQLException sqlex ) {
+//		logger.error( "Failed to prepare statement:\n\"" + OBSERVATION_FACT_INSERT_SQL_KEY + "\"", sqlex ) ;
+//		throw new UploaderException( sqlex ) ;
+//	}		
+//}
 
-public void loadStatements() throws SQLException  {
-	TransactionControl txnControl = utils.getTxnControl() ;
-	if( txnControl.getPreparedStatement( OBSERVATION_FACT_INSERT_SQL_KEY ) != null ) {
-		if( !txnControl.getPreparedStatement( OBSERVATION_FACT_INSERT_SQL_KEY ).isClosed() ) {
-			return ;
-		}
-	}
-	txnControl.loadPreparedStatement( OBSERVATION_FACT_INSERT_SQL_KEY
-									, OBSERVATION_FACT_INSERT_SQL ) ;	
-}
-
-public void unloadStatements() throws SQLException  {
-	TransactionControl txnControl = utils.getTxnControl() ;
-	if( txnControl.getPreparedStatement( OBSERVATION_FACT_INSERT_SQL_KEY ) != null ) {
-		txnControl.unloadPreparedStatement( OBSERVATION_FACT_INSERT_SQL_KEY ) ;
-	}	
-}
-
-public PreparedStatement[] getBatchUsePreparedStatements() throws SQLException {
-	TransactionControl txnControl = utils.getTxnControl() ;
-	PreparedStatement[] pss = new PreparedStatement[1] ;
-	pss[0] = txnControl.getPreparedStatement( OBSERVATION_FACT_INSERT_SQL_KEY ) ;
-	return pss ;
-}
-
-
+ 
 public void serializeToDatabase() throws UploaderException {
 	enterTrace( "ObservationFact.serializeToDatabase()" ) ;
-	TransactionControl txnControl = utils.getTxnControl() ;
 	try {
-		loadStatements() ;
-		PreparedStatement preparedStatement = txnControl.getPreparedStatement( OBSERVATION_FACT_INSERT_SQL_KEY ) ;
-				
-		preparedStatement.setInt( 1, encounter_num ) ;
-		preparedStatement.setInt( 2, patient_num ) ;
-		preparedStatement.setString( 3, concept_cd ) ;
-		preparedStatement.setString( 4, provider_id ) ;
-		preparedStatement.setTimestamp( 5, new java.sql.Timestamp( start_date.getTime() ) ) ;
+		PreparedStatement ps = utils.getPsHolder().getPreparedStatement( OBSERVATION_FACT_INSERT_SQL_KEY) ;
+				    
+		ps.setInt( 1, encounter_num ) ;
+		ps.setInt( 2, patient_num ) ;
+		ps.setString( 3, concept_cd ) ;
+		ps.setString( 4, provider_id ) ;
+		ps.setTimestamp( 5, new java.sql.Timestamp( start_date.getTime() ) ) ;
 		if( valtype_cd == null ) {
-			preparedStatement.setNull( 6, java.sql.Types.VARCHAR ) ;
+			ps.setNull( 6, java.sql.Types.VARCHAR ) ;
 		}
 		else {
-			preparedStatement.setString( 6, valtype_cd ) ;
+			ps.setString( 6, valtype_cd ) ;
 		}
 		if( tval_char == null ) {
-			preparedStatement.setNull( 7, java.sql.Types.VARCHAR ) ;
+			ps.setNull( 7, java.sql.Types.VARCHAR ) ;
 		}
 		else {
-			preparedStatement.setString( 7, tval_char ) ;
+			ps.setString( 7, tval_char ) ;
 		}
 		if( nval_num == null ) {
-			preparedStatement.setNull( 8, java.sql.Types.DOUBLE ) ; 
+			ps.setNull( 8, java.sql.Types.DOUBLE ) ; 
 		}
 		else {
-			preparedStatement.setDouble( 8, nval_num ) ;
+			ps.setDouble( 8, nval_num ) ;
 		}
 		if( valueflag_cd == null ) {
-			preparedStatement.setNull( 9, java.sql.Types.VARCHAR ) ;
+			ps.setNull( 9, java.sql.Types.VARCHAR ) ;
 		}
 		else {
-			preparedStatement.setString( 9, valueflag_cd ) ;
+			ps.setString( 9, valueflag_cd ) ;
 		}
 		if( quantity_num == null ) {
-			preparedStatement.setNull( 10, java.sql.Types.DOUBLE ) ;
+			ps.setNull( 10, java.sql.Types.DOUBLE ) ;
 		}
 		else {
-			preparedStatement.setDouble( 10, quantity_num ) ;
+			ps.setDouble( 10, quantity_num ) ;
 		}		
 		if( units_cd == null ) {
-			preparedStatement.setNull( 11, java.sql.Types.VARCHAR ) ;     
+			ps.setNull( 11, java.sql.Types.VARCHAR ) ;     
 		}
 		else {
-			preparedStatement.setString( 11, units_cd ) ;
+			ps.setString( 11, units_cd ) ;
 		}
 		if( end_date == null ) {
-			preparedStatement.setNull( 12, java.sql.Types.TIMESTAMP ) ;     // end_date
+			ps.setNull( 12, java.sql.Types.TIMESTAMP ) ;     // end_date
 		}
 		else {
-			preparedStatement.setTimestamp( 12, new java.sql.Timestamp( end_date.getTime() ) ) ;
+			ps.setTimestamp( 12, new java.sql.Timestamp( end_date.getTime() ) ) ;
 		}
 		if( location_cd == null ) {
-			preparedStatement.setNull( 13, java.sql.Types.VARCHAR ) ;    
+			ps.setNull( 13, java.sql.Types.VARCHAR ) ;    
 		}
 		else {
-			preparedStatement.setString( 13, location_cd ) ;
+			ps.setString( 13, location_cd ) ;
 		}
 		if( confidence_num == null ) {
-			preparedStatement.setNull( 14, java.sql.Types.DOUBLE ) ;    
+			ps.setNull( 14, java.sql.Types.DOUBLE ) ;    
 		}
 		else {
-			preparedStatement.setDouble( 14, confidence_num ) ; 
+			ps.setDouble( 14, confidence_num ) ; 
 		}
 		if( sourcesystem_cd == null ) {
-			preparedStatement.setNull( 15, java.sql.Types.VARCHAR ) ;  
+			ps.setNull( 15, java.sql.Types.VARCHAR ) ;  
 		}
 		else {
-			preparedStatement.setString( 15, sourcesystem_cd ) ;
+			ps.setString( 15, sourcesystem_cd ) ;
 		}
 
-		preparedStatement.addBatch() ;
+		ps.addBatch() ;
 
 	}
 	catch( SQLException sqlx ) {
