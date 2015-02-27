@@ -106,31 +106,11 @@ public ObservationFact( ProjectUtils utils ) {
 	this.utils = utils ;
 }
 
-//public PreparedStatement getBatchUsePreparedStatement() throws UploaderException {
-//	try {
-//		if( batchUsedPreparedStatement ==  null ) {
-//			batchUsedPreparedStatement = utils.getDbAccess()
-//					  						  .getSimpleConnectionPG()
-//					  						  .prepareStatement( OBSERVATION_FACT_INSERT_SQL ) ;
-//		}
-//		else if( batchUsedPreparedStatement.isClosed() ) {
-//			batchUsedPreparedStatement = utils.getDbAccess()
-//					  .getSimpleConnectionPG()
-//					  .prepareStatement( OBSERVATION_FACT_INSERT_SQL ) ;
-//		}
-//		return batchUsedPreparedStatement ;
-//	}
-//	catch( SQLException sqlex ) {
-//		logger.error( "Failed to prepare statement:\n\"" + OBSERVATION_FACT_INSERT_SQL_KEY + "\"", sqlex ) ;
-//		throw new UploaderException( sqlex ) ;
-//	}		
-//}
-
  
 public void serializeToDatabase() throws UploaderException {
 	enterTrace( "ObservationFact.serializeToDatabase()" ) ;
 	try {
-		PreparedStatement ps = utils.getPsHolder().getPreparedStatement( OBSERVATION_FACT_INSERT_SQL_KEY) ;
+		PreparedStatement ps = utils.getPsHolder().getPreparedStatement( OBSERVATION_FACT_INSERT_SQL_KEY ) ;
 				    
 		ps.setInt( 1, encounter_num ) ;
 		ps.setInt( 2, patient_num ) ;

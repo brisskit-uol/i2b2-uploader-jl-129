@@ -1248,17 +1248,17 @@ public class I2B2Project {
 			
 				cycleCount++ ;
 				if( cycleCount == cycleCommitCount ) {
-					psHolder.getPreparedStatement( ObservationFact.OBSERVATION_FACT_INSERT_SQL_KEY).executeBatch() ;
+					psHolder.getPreparedStatement( ObservationFact.OBSERVATION_FACT_INSERT_SQL_KEY ).executeBatch() ;
 					connection.setSavepoint() ;
 					cycleCount = 0 ;
 				}
 			} // end of outer while - processing row
 			
 			if( cycleCount > 0 ) {
-				psHolder.getPreparedStatement( ObservationFact.OBSERVATION_FACT_INSERT_SQL_KEY).executeBatch();		
+				psHolder.getPreparedStatement( ObservationFact.OBSERVATION_FACT_INSERT_SQL_KEY ).executeBatch();		
 			}
 			connection.commit() ;
-			psHolder.getPreparedStatement( ObservationFact.OBSERVATION_FACT_INSERT_SQL_KEY).executeBatch() ;
+			psHolder.getPreparedStatement( ObservationFact.OBSERVATION_FACT_INSERT_SQL_KEY ).close() ;
 		}
 		catch( SQLException sqlex ) {
 			try{ 
