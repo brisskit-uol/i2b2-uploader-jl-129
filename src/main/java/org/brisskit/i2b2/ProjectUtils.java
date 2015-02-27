@@ -17,10 +17,9 @@ public class ProjectUtils {
 	//
 	// 
 	private CreateDBPG dbAccess ;
-	
 	//
 	//
-	private TransactionControl txnControl ;
+	private PreparedStatementHolder psHolder ;
 	
 	//
 	// Postgres example of TIMESTAMP ’2004-10-19 10:23:54’
@@ -71,7 +70,7 @@ public class ProjectUtils {
 	
 	public ProjectUtils() throws UploaderException {
 		this.dbAccess = new CreateDBPG() ;
-		this.txnControl = new TransactionControl( dbAccess.getSimpleConnectionPG() ) ;
+		this.psHolder = new PreparedStatementHolder( this.dbAccess.getSimpleConnectionPG() ) ;
 	}
 	
 	
@@ -305,8 +304,9 @@ public class ProjectUtils {
 		this.dbAccess = dbAccess;
 	}
 
-	public TransactionControl getTxnControl() {
-		return txnControl;
+
+	public PreparedStatementHolder getPsHolder() {
+		return psHolder;
 	}
 	
 }
