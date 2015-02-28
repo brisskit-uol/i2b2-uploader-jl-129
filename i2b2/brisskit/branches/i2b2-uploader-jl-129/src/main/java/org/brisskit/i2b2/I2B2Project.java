@@ -752,6 +752,9 @@ public class I2B2Project {
 		String name = null ;
 		String sourceSystemPatientID = null ;
 		int countPatientIdsNull = 0 ;
+		int cycleCommitCount = 1000 ;
+		int cycleCount = 0 ;
+		Connection connection = utils.getDbAccess().getSimpleConnectionPG() ;
 		try {
 			Iterator<Row> rowIt = dataSheet.rowIterator() ;
 			//
@@ -759,6 +762,16 @@ public class I2B2Project {
 			rowIt.next() ;
 			rowIt.next() ;
 			rowIt.next() ;
+			//
+			// Begin a transaction ...
+			connection.setTransactionIsolation( Connection.TRANSACTION_SERIALIZABLE ) ;
+			connection.setAutoCommit( false ) ;
+			PreparedStatementHolder psHolder = utils.getPsHolder() ;
+			psHolder.setPreparedStatement( PatientDimension.PATIENT_DIM_INSERT_SQL_KEY
+					 					 , PatientDimension.PATIENT_DIM_INSERT_SQL
+					 					 , true ) ; // I want the auto generated keys
+			psHolder.setPreparedStatement( PatientDimension.PATIENT_DIM_SELECT_SQL_KEY
+					 					 , PatientDimension.PATIENT_DIM_SELECT_SQL ) ;
 			//
 			// Process data rows...
 			while( rowIt.hasNext() ) {
@@ -836,9 +849,13 @@ public class I2B2Project {
 				//
 				// Write patient dimension to i2b2...
 				if( pDim.getPatient_num() != null ) {
-					Connection connection = this.utils.getDbAccess().getSimpleConnectionPG() ;
-					if( !pDim.patientExists( connection ) ) {
-						pDim.serializeToDatabase( connection ) ;
+					if( !pDim.patientExists() ) {
+						pDim.serializeToDatabase() ;
+						cycleCount++ ;
+						if( cycleCount == cycleCommitCount ) {
+							connection.setSavepoint() ;
+							cycleCount = 0 ;
+						}
 					}
 				}
 				else {
@@ -847,8 +864,30 @@ public class I2B2Project {
 				}
 													
 			} // end of outer while - processing row
+			
+			connection.commit() ;
+			connection.setAutoCommit( true ) ;
+		}
+		catch( SQLException sqlex ) {
+			try{ 
+				connection.rollback() ; 
+			} 
+			catch( SQLException rbex ) {
+				logger.error( "Rollback failed in I2B2Project.producePatientMapping()" ) ;
+			}
+			String message = "Failure inserting patient mapping" ;
+			logger.error( message, sqlex ) ;
+			throw new UploaderException( message, sqlex ) ;
 		}
 		catch( ParseException pex ) {
+			if( cycleCount > 0 ) {
+				try{ 
+					connection.rollback() ; 
+				} 
+				catch( SQLException rbex ) {
+					logger.error( "Rollback failed in I2B2Project.producePatientMapping()" ) ;
+				}
+			}
 			throw new UploaderException( "Failed to parse date: " + value, pex ) ;
 		}
 		finally {
@@ -866,6 +905,9 @@ public class I2B2Project {
 		String value = null ;
 		String name = null ;
 		Date encounterStartDate = null ;
+		int cycleCommitCount = 1000 ;
+		int cycleCount = 0 ;
+		Connection connection = utils.getDbAccess().getSimpleConnectionPG() ;
 		try {
 			Iterator<Row> rowIt = dataSheet.iterator() ;
 			//
@@ -873,6 +915,16 @@ public class I2B2Project {
 			rowIt.next() ;
 			rowIt.next() ;
 			rowIt.next() ;
+			//
+			// Begin a transaction ...
+			connection.setTransactionIsolation( Connection.TRANSACTION_SERIALIZABLE ) ;
+			connection.setAutoCommit( false ) ;
+			PreparedStatementHolder psHolder = utils.getPsHolder() ;
+			psHolder.setPreparedStatement( Encounter.ENCOUNTER_MAP_INSERT_SQL_KEY
+					 					 , Encounter.ENCOUNTER_MAP_INSERT_SQL
+					 					 , true ) ; // I want the auto generated keys
+			psHolder.setPreparedStatement( Encounter.VISIT_DIM_INSERT_SQL_KEY
+					 					 , Encounter.VISIT_DIM_INSERT_SQL ) ;
 			//
 			// Process data rows...
 			while( rowIt.hasNext() ) {
@@ -882,7 +934,6 @@ public class I2B2Project {
 				}
 				
 				Encounter encounter = new Encounter( utils ) ;
-				encounter.setSchema_name( projectId ) ;
 				encounter.setProject_id( projectId ) ;
 				encounter.setSourcesystem_id( projectId ) ;
 				encounter.setEncounter_ide_status( "?" ) ;
@@ -930,14 +981,32 @@ public class I2B2Project {
 		
 				//
 				// Write encounter mapping and visit dimension to i2b2
-				encounter.serializeToDatabase( this.utils.getDbAccess().getSimpleConnectionPG() ) ;
-				
+				encounter.serializeToDatabase() ;
+				cycleCount++ ;
+				if( cycleCount == cycleCommitCount ) {
+					connection.setSavepoint() ;
+					cycleCount = 0 ;
+				}
 				//
 				// Record the mapping between external id and internal id...
 				this.encounterMappings.put( encounter.getEncounter_ide(), encounter.getEncounter_num() ) ;
 																				
 			} // end of outer while - processing row
 			
+			connection.commit() ;
+			connection.setAutoCommit( true ) ;
+			
+		}
+		catch( SQLException sqlex ) {
+			try{ 
+				connection.rollback() ; 
+			} 
+			catch( SQLException rbex ) {
+				logger.error( "Rollback failed in I2B2Project.produceEncounters()" ) ;
+			}
+			String message = "Failure inserting encounters" ;
+			logger.error( message, sqlex ) ;
+			throw new UploaderException( message, sqlex ) ;
 		}
 		finally {
 			exitTrace( "produceEncounters()" ) ;

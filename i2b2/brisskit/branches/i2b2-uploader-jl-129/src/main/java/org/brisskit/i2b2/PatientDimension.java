@@ -21,48 +21,6 @@ public class PatientDimension {
 	
 	private static Logger logger = Logger.getLogger( PatientDimension.class ) ;
 	
-//	public static final String PATIENT_DIM_INSERT_COMMAND = 
-//			"INSERT INTO PATIENT_DIMENSION" +
-//	               "( PATIENT_NUM" +      
-//			       ", VITAL_STATUS_CD" + 
-//			       ", BIRTH_DATE" +
-//			       ", DEATH_DATE" + 
-//			       ", SEX_CD" +
-//			       ", AGE_IN_YEARS_NUM" +
-//			       ", LANGUAGE_CD" +
-//			       ", RACE_CD" +
-//			       ", MARITAL_STATUS_CD" +
-//			       ", RELIGION_CD" +
-//			       ", ZIP_CD" + 			//  VARCHAR(10) NULL,
-//			       ", STATECITYZIP_PATH" + 	//	VARCHAR(700) NULL,
-//			       ", INCOME_CD" + 			//	VARCHAR(50) NULL,
-//			       ", PATIENT_BLOB" + 		//  TEXT NULL,
-//			       ", UPDATE_DATE" + 		//  TIMESTAMP NULL,
-//			       ", DOWNLOAD_DATE" + 		//  TIMESTAMP NULL,
-//			       ", IMPORT_DATE" + 		//  TIMESTAMP NULL,
-//			       ", SOURCESYSTEM_CD" + 	//  VARCHAR(50) NULL,
-//			       ", UPLOAD_ID" + 			//  INT NULL, 		   
-//				   ") " +
-//			 "VALUES( <PATIENT_NUM>" +
-//				   ", <VITAL_STATUS_CD>" +
-//				   ", <BIRTH_DATE>" +
-//				   ", <DEATH_DATE>" +         
-//				   ", <SEX_CD>" +   
-//				   ", <AGE_IN_YEARS_NUM>" +
-//				   ", <LANGUAGE_CD>" +
-//				   ", <RACE_CD>" +
-//				   ", <MARITAL_STATUS_CD>" +
-//				   ", <RELIGION_CD>" +
-//				   ", <ZIP_CD>" +
-//				   ", <STATECITYZIP_PATH>" +
-//				   ", <INCOME_CD>" +
-//				   ", NULL" +			// patient blob
-//				   ", now()" +
-//				   ", now()" +
-//				   ", now()" +
-//				   ", <SOURCESYSTEM_CD>" +
-//				   ", NULL ) ;" ;		// upload id
-	
 	public static final String PATIENT_DIM_INSERT_SQL_KEY = "PATIENT_DIM_INSERT_SQL" ;
 	public static final String PATIENT_DIM_INSERT_SQL = 
 			"INSERT INTO PATIENT_DIMENSION" +
@@ -236,17 +194,17 @@ public class PatientDimension {
 		}
 	}
 	
-	public boolean patientExists( Connection connection ) throws UploaderException {
+	public boolean patientExists() throws UploaderException {
 		enterTrace( "PatientDimension.patientExists()" ) ;
 		boolean exists = false ;
 		try {
 			//
 			// See whether the appropriate patient already exists in the db...
-			Statement st = connection.createStatement() ;
-			st.executeQuery( "select COUNT(*) from " + schema_name + ".PATIENT_DIMENSION "  
-				           + " where " 
-				           + " PATIENT_NUM = '" + patient_num + "' ;" ) ;			
-		    ResultSet rs = st.getResultSet() ;
+			PreparedStatement ps =
+					utils.getPsHolder()
+						 .getPreparedStatement( PatientDimension.PATIENT_DIM_SELECT_SQL_KEY ) ;
+			ps.setInt( 1, patient_num ) ;					
+		    ResultSet rs = ps.executeQuery() ;
 		    if( rs.next() ) {
 		    	int count = rs.getInt(1) ;
 		    	if( count > 0 ) {
