@@ -681,7 +681,6 @@ public class I2B2Project {
 				}
 				
 				PatientMapping	pMap = new PatientMapping( utils ) ;
-				pMap.setSchema_name( projectId ) ;
 				pMap.setSourcesystem_id( projectId ) ;
 				
 				Iterator<Cell> cellIt = dataRow.iterator() ;
