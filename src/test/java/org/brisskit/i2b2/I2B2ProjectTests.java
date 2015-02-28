@@ -36,6 +36,65 @@ public class I2B2ProjectTests extends TestCase {
 	}
 	
 	
+	public void _test00_MajorCleanup() { 
+		enterTrace( "==>>test00_MajorCleanup()" ) ;
+		String[] projectIds = {
+			"threadtest1",
+			"threadtest2",	
+			"threadtest3",	
+			"threadtest4",	
+			"threadtest5",	
+			"threadtest6",	
+			"threadtest7",	
+			"threadtest8",	
+			"threadtest9",	
+			"threadtest10",	
+			"testaddmoredata",	
+			"testnn",	
+			"test01_with_empty_row",	
+			"lahearts",	
+			"testthreading",	
+			"project3",	
+			"project1",	
+			"test01v01jeff",	
+			"maxrowsexceeded",	
+			"startdatecol",
+			"project5",
+			"project2",
+			"project6",
+			"project7",
+			"project8",
+			"project0",
+			"project1",
+			"project9",
+			"project10",
+			"test01",
+			"biomed2",
+			"test01portalversion",
+			"project4",
+			"testaddnewmeta",
+			"gpcut1",
+			"laheart",
+			"test03_startdatecols",
+			"testnnsi",
+			"test01obsdatecol",
+			"pharma",
+		} ;
+		try {
+			for( int i=0; i<projectIds.length; i++ ) {
+				I2B2Project.Factory.deleteIfProjectExists( projectIds[i] ) ;
+			}
+		}
+		catch( UploaderException cex ) {			
+			cex.printStackTrace( System.out ) ;
+			fail( "UploaderException thrown: " + cex.getLocalizedMessage() ) ;
+		}
+		finally {
+			exitTrace( "==>>test00_MajorCleanup()" ) ;
+		}
+		
+	}
+	
 	public void _test01_CreateNewProject_WithEmptyRow() { 
 		enterTrace( "==>>test01_CreateNewProject_WithEmptyRow()" ) ;
 		File spreadsheetFile = 
@@ -106,7 +165,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 	
 	
-	public void test04_CreateNewTest01Project() { 
+	public void _test04_CreateNewTest01Project() { 
 		enterTrace( "==>>test04_CreateNewTest01Project()" ) ;
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());		
 		String projectId = "test01" ;
@@ -594,7 +653,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 
 	
-	public void _test19_Threading() { 
+	public void test19_Threading() { 
 		logger.debug( "==>>test19_Threading()" ) ;
 		ClassLoader cl = getClass().getClassLoader() ;
 		File[] spreadsheets = {
