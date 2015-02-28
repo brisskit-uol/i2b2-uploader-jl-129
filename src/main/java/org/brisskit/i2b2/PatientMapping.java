@@ -4,6 +4,7 @@
 package org.brisskit.i2b2;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -18,7 +19,32 @@ public class PatientMapping {
 
 	private static Logger logger = Logger.getLogger( PatientMapping.class ) ;
 	
-	public static final String PATIENT_MAP_INSERT_COMMAND = 
+//	public static final String PATIENT_MAP_INSERT_COMMAND = 
+//			"INSERT INTO PATIENT_MAPPING" +
+//			    "( PATIENT_IDE" + 			//  VARCHAR(200)  NOT NULL,
+//			    ", PATIENT_IDE_SOURCE" + 	//	VARCHAR(50)  NOT NULL,
+//			    ", PATIENT_IDE_STATUS" + 	//	VARCHAR(50) NULL,
+//			    ", PROJECT_ID" + 			//  VARCHAR(50) NOT NULL,
+//			    ", UPLOAD_DATE" + 			//  TIMESTAMP NULL,
+//			    ", UPDATE_DATE" + 			//  TIMESTAMP NULL,
+//			    ", DOWNLOAD_DATE" + 		//  TIMESTAMP NULL,
+//			    ", IMPORT_DATE" + 			//  TIMESTAMP NULL,
+//			    ", SOURCESYSTEM_CD" + 		//  VARCHAR(50) NULL,
+//			    ", UPLOAD_ID ) " + 			//  INT NULL,
+//			"VALUES" +
+//			   "( <PATIENT_IDE>" +
+//			   ", <PATIENT_IDE_SOURCE>" +
+//			   ", NULL" + 					// patient_ide_status        
+//			   ", <PROJECT_ID>" +   
+//			   ", now()" +
+//			   ", now()" +
+//			   ", now()" +
+//			   ", now()" +
+//			   ", <SOURCESYSTEM_CD>" +
+//			   ", NULL ) ;" ;				// upload id
+	
+	public static final String PATIENT_MAP_INSERT_SQL_KEY = "PATIENT_MAP_INSERT_SQL" ;
+	public static final String PATIENT_MAP_INSERT_SQL = 
 			"INSERT INTO PATIENT_MAPPING" +
 			    "( PATIENT_IDE" + 			//  VARCHAR(200)  NOT NULL,
 			    ", PATIENT_IDE_SOURCE" + 	//	VARCHAR(50)  NOT NULL,
@@ -31,16 +57,26 @@ public class PatientMapping {
 			    ", SOURCESYSTEM_CD" + 		//  VARCHAR(50) NULL,
 			    ", UPLOAD_ID ) " + 			//  INT NULL,
 			"VALUES" +
-			   "( <PATIENT_IDE>" +
-			   ", <PATIENT_IDE_SOURCE>" +
+			   "( ?" +
+			   ", ?" +
 			   ", NULL" + 					// patient_ide_status        
-			   ", <PROJECT_ID>" +   
+			   ", ?" +   
 			   ", now()" +
 			   ", now()" +
 			   ", now()" +
 			   ", now()" +
-			   ", <SOURCESYSTEM_CD>" +
+			   ", ?" +
 			   ", NULL ) ;" ;				// upload id
+	
+	public static final String PATIENT_MAP_SELECT_SQL_KEY = "PATIENT_MAP_SELECT_SQL" ;
+	public static final String PATIENT_MAP_SELECT_SQL =  "select PATIENT_NUM from PATIENT_MAPPING "  
+	           + " where " 
+	           + " PATIENT_IDE = ? " 
+		       + "  and " 
+	           + " PATIENT_IDE_SOURCE = ? " 
+		       + "  and "
+	           + " PROJECT_ID = ? "  ;			
+	
 	
 	private ProjectUtils utils ;
 	
@@ -58,17 +94,17 @@ public class PatientMapping {
 	}
 	
 	
-	public void serializeToDatabase( Connection connection ) throws UploaderException {
+	public void serializeToDatabase() throws UploaderException {
 		enterTrace( "PatientMapping.serializeToDatabase()" ) ;
 		try {
-			String sqlCmd = PATIENT_MAP_INSERT_COMMAND ;					
-			sqlCmd = sqlCmd.replace( "<PATIENT_IDE>", utils.enfoldString( patient_ide ) ) ;
-			sqlCmd = sqlCmd.replace( "<PATIENT_IDE_SOURCE>", utils.enfoldString( patient_ide_source ) ) ;
-			sqlCmd = sqlCmd.replace( "<PROJECT_ID>", utils.enfoldString( project_id ) ) ;
-			sqlCmd = sqlCmd.replace( "<SOURCESYSTEM_CD>", utils.enfoldNullableString( sourcesystem_id ) ) ;			
-			Statement st = connection.createStatement();			
-			st.execute( sqlCmd ) ;
-			ResultSet rs = st.executeQuery( "select currval( 'PATIENT_MAPPING_PATIENT_NUM_seq');" ) ;
+			PreparedStatement ps = utils.getPsHolder()
+										.getPreparedStatement( PatientMapping.PATIENT_MAP_INSERT_SQL_KEY ) ;
+			ps.setString( 1, patient_ide ) ;
+			ps.setString( 2, patient_ide_source ) ;
+			ps.setString( 3, project_id ) ;
+			ps.setString( 4, sourcesystem_id ) ;			
+			ps.executeUpdate() ;
+			ResultSet rs = ps.getGeneratedKeys() ;
 			rs.next();
 			patient_num = rs.getInt(1) ;		
 			rs.close() ;
@@ -82,21 +118,18 @@ public class PatientMapping {
 	}
 	
 	
-	public boolean mappingExists( Connection connection ) throws UploaderException {
+	public boolean mappingExists() throws UploaderException {
 		enterTrace( "PatientMapping.mappingExists()" ) ;
 		boolean exists = false ;
 		try {
 			//
 			// See whether the appropriate patient mapping already exists in the db...
-			Statement st = connection.createStatement() ;
-			st.executeQuery( "select PATIENT_NUM from " + schema_name + ".PATIENT_MAPPING "  
-				           + " where " 
-				           + " PATIENT_IDE = '" + patient_ide + "' " 
-					       + "  and " 
-				           + " PATIENT_IDE_SOURCE = '" + patient_ide_source + "' " 
-					       + "  and "
-				           + " PROJECT_ID = '" + project_id + "' ;" ) ;			
-		    ResultSet rs = st.getResultSet() ;
+			PreparedStatement ps = utils.getPsHolder()
+									    .getPreparedStatement( PatientMapping.PATIENT_MAP_SELECT_SQL_KEY ) ;
+			ps.setString( 1, patient_ide ) ;
+			ps.setString( 2, patient_ide_source ) ;
+			ps.setString( 3, project_id ) ;
+			ResultSet rs = ps.executeQuery() ;
 		    if( rs.next() ) {
 		    	patient_num = rs.getInt(1) ;			    
 			    exists = true ;

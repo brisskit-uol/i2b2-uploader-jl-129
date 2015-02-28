@@ -39,21 +39,6 @@ import org.brisskit.i2b2.OntologyBranch.Type;
  *
  */
 public class I2B2Project {
-	
-//	public static final String BREAKDOWNS_SQL_INSERT_COMMAND = 
-//			"SET SCHEMA '<DB_SCHEMA_NAME>';" +
-//			"" +
-//			"INSERT INTO <DB_SCHEMA_NAME>.QT_BREAKDOWN_PATH" +
-//			                "( NAME" +
-//			                ", VALUE" +
-//			                ", CREATE_DATE" +
-//			                ", UPDATE_DATE" +
-//			                ", USER_ID ) " +
-//	         "VALUES( <LONG_NAME>" +
-//	               ", <PATH>" +
-//	               ", now()" +
-//	               ", now()" +
-//	               ", NULL ) ;" ;	
 		
 	/*
 	 * This set of commands will delete a project AND ALL OF ITS DATA!!!
@@ -667,6 +652,9 @@ public class I2B2Project {
 		String value = null ;
 		String name = null ;
 		int countPatientIdsNull = 0 ;
+		int cycleCommitCount = 1000 ;
+		int cycleCount = 0 ;
+		Connection connection = utils.getDbAccess().getSimpleConnectionPG() ;
 		try {
 			Iterator<Row> rowIt = dataSheet.iterator() ;
 			//
@@ -674,6 +662,16 @@ public class I2B2Project {
 			rowIt.next() ;
 			rowIt.next() ;
 			rowIt.next() ;
+			//
+			// Begin a transaction ...
+			connection.setTransactionIsolation( Connection.TRANSACTION_SERIALIZABLE ) ;
+			connection.setAutoCommit( false ) ;
+			PreparedStatementHolder psHolder = utils.getPsHolder() ;
+			psHolder.setPreparedStatement( PatientMapping.PATIENT_MAP_INSERT_SQL_KEY
+					 					 , PatientMapping.PATIENT_MAP_INSERT_SQL
+					 					 , true ) ; // I want the auto generated keys
+			psHolder.setPreparedStatement( PatientMapping.PATIENT_MAP_SELECT_SQL_KEY
+					 					 , PatientMapping.PATIENT_MAP_SELECT_SQL ) ;
 			//
 			// Process data rows...
 			while( rowIt.hasNext() ) {
@@ -706,9 +704,14 @@ public class I2B2Project {
 				//
 				// Write mapping to i2b2
 				if( pMap.getPatient_ide() != null ) {
-					Connection connection = this.utils.getDbAccess().getSimpleConnectionPG() ;
-					if( !pMap.mappingExists( connection ) ) {
-						pMap.serializeToDatabase( connection ) ;
+					
+					if( !pMap.mappingExists() ) {
+						pMap.serializeToDatabase() ;
+						cycleCount++ ;
+						if( cycleCount == cycleCommitCount ) {
+							connection.setSavepoint() ;
+							cycleCount = 0 ;
+						}
 					}
 					//
 					// Record the mapping between external id and internal id...
@@ -721,6 +724,20 @@ public class I2B2Project {
 																
 			} // end of outer while - processing row
 			
+			connection.commit() ;
+			connection.setAutoCommit( true ) ;
+			
+		}
+		catch( SQLException sqlex ) {
+			try{ 
+				connection.rollback() ; 
+			} 
+			catch( SQLException rbex ) {
+				logger.error( "Rollback failed in I2B2Project.producePatientMapping()" ) ;
+			}
+			String message = "Failure inserting patient mapping" ;
+			logger.error( message, sqlex ) ;
+			throw new UploaderException( message, sqlex ) ;
 		}
 		finally {
 			exitTrace( "producePatientMapping()" ) ;
@@ -1123,7 +1140,6 @@ public class I2B2Project {
 
 				cycleCount++ ;
 				if( cycleCount == cycleCommitCount ) {
-//					psHolder.getPreparedStatement( OntologyBranch.METADATA_INSERT_SQL_KEY ).executeBatch() ;
 					psHolder.getPreparedStatement( OntologyBranch.CONCEPT_DIMENSION_INSERT_SQL_KEY ).executeBatch() ;
 					connection.setSavepoint() ;
 					cycleCount = 0 ;
@@ -1132,7 +1148,6 @@ public class I2B2Project {
 			} // end while
 			
 			if( cycleCount > 0 ) {
-//				psHolder.getPreparedStatement( OntologyBranch.METADATA_INSERT_SQL_KEY ).executeBatch() ;
 				psHolder.getPreparedStatement( OntologyBranch.CONCEPT_DIMENSION_INSERT_SQL_KEY ).executeBatch() ;	
 				connection.setSavepoint() ;
 			}
