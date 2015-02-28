@@ -585,51 +585,14 @@ public class I2B2Project {
 	}
 	
 	
-//	private void _buildBreakdowns() throws UploaderException {
-//		enterTrace( "i2b2Project.buildBreakdowns()" ) ;
-//		try {
-//			String breakdownName = null ;
-//			String headingName = null ;
-//			String path = null ;
-//			PreparedStatement ps = 
-//					utils.getTxnControl().getPreparedStatement( OntologyBranch.BREAKDOWNS_INSERT_SQL_KEY ) ;
-//			for( int i=0; i<STANDARD_BREAKDOWNS.length; i++ ) {
-//				breakdownName = STANDARD_BREAKDOWNS[i][0] ;
-//				//
-//				// The following conditional caters for the situation where
-//				// no breakdown sheet has been provided at all...
-//				if( !breakdowns.containsKey( breakdownName ) ) {
-//					breakdowns.put( STANDARD_BREAKDOWNS[i][0], STANDARD_BREAKDOWNS[i][0] ) ;
-//				}
-//				if( !newProject ) {
-//					continue ;
-//				}
-//				//
-//				// Only write them to the DB if a new project...
-//				headingName = breakdowns.get( breakdownName ) ;
-//				path = "\\\\" + projectId + "\\" + projectId + "\\" + headingName + "\\" ;				
-//				ps.setString( 1, STANDARD_BREAKDOWNS[i][1] ) ;
-//				ps.setString( 2, path ) ;
-//				ps.addBatch() ;
-//			}			
-//		}
-//		catch( SQLException sqlex ) {
-//			throw new UploaderException( sqlex ) ;
-//		}
-//		finally {
-//			exitTrace( "i2b2Project.buildBreakdowns()" ) ;
-//		}
-//	}
-//	
-	
 	private void buildBreakdowns() throws UploaderException {
 		enterTrace( "i2b2Project.buildBreakdowns()" ) ;
 		try {
 			String breakdownName = null ;
 			String headingName = null ;
 			String path = null ;
-			String sqlCmd = null ;
-			Statement st = this.utils.getDbAccess().getSimpleConnectionPG().createStatement() ;
+			PreparedStatement ps = 
+					utils.getPsHolder().getPreparedStatement( OntologyBranch.BREAKDOWNS_INSERT_SQL_KEY ) ;
 			for( int i=0; i<STANDARD_BREAKDOWNS.length; i++ ) {
 				breakdownName = STANDARD_BREAKDOWNS[i][0] ;
 				//
@@ -644,12 +607,10 @@ public class I2B2Project {
 				//
 				// Only write them to the DB if a new project...
 				headingName = breakdowns.get( breakdownName ) ;
-				path = "\\\\" + projectId + "\\" + projectId + "\\" + headingName + "\\" ;
-				sqlCmd = BREAKDOWNS_SQL_INSERT_COMMAND ;				
-				sqlCmd = sqlCmd.replaceAll( "<DB_SCHEMA_NAME>", projectId ) ;
-				sqlCmd = sqlCmd.replace( "<LONG_NAME>", utils.enfoldString( STANDARD_BREAKDOWNS[i][1] ) ) ;
-				sqlCmd = sqlCmd.replace( "<PATH>", utils.enfoldString( path ) ) ;				
-				st.execute( sqlCmd ) ;				
+				path = "\\\\" + projectId + "\\" + projectId + "\\" + headingName + "\\" ;				
+				ps.setString( 1, STANDARD_BREAKDOWNS[i][1] ) ;
+				ps.setString( 2, path ) ;
+				ps.addBatch() ;
 			}			
 		}
 		catch( SQLException sqlex ) {
@@ -659,6 +620,45 @@ public class I2B2Project {
 			exitTrace( "i2b2Project.buildBreakdowns()" ) ;
 		}
 	}
+	
+	
+//	private void buildBreakdowns() throws UploaderException {
+//		enterTrace( "i2b2Project.buildBreakdowns()" ) ;
+//		try {
+//			String breakdownName = null ;
+//			String headingName = null ;
+//			String path = null ;
+//			String sqlCmd = null ;
+//			Statement st = this.utils.getDbAccess().getSimpleConnectionPG().createStatement() ;
+//			for( int i=0; i<STANDARD_BREAKDOWNS.length; i++ ) {
+//				breakdownName = STANDARD_BREAKDOWNS[i][0] ;
+//				//
+//				// The following conditional caters for the situation where
+//				// no breakdown sheet has been provided at all...
+//				if( !breakdowns.containsKey( breakdownName ) ) {
+//					breakdowns.put( STANDARD_BREAKDOWNS[i][0], STANDARD_BREAKDOWNS[i][0] ) ;
+//				}
+//				if( !newProject ) {
+//					continue ;
+//				}
+//				//
+//				// Only write them to the DB if a new project...
+//				headingName = breakdowns.get( breakdownName ) ;
+//				path = "\\\\" + projectId + "\\" + projectId + "\\" + headingName + "\\" ;
+//				sqlCmd = BREAKDOWNS_SQL_INSERT_COMMAND ;				
+//				sqlCmd = sqlCmd.replaceAll( "<DB_SCHEMA_NAME>", projectId ) ;
+//				sqlCmd = sqlCmd.replace( "<LONG_NAME>", utils.enfoldString( STANDARD_BREAKDOWNS[i][1] ) ) ;
+//				sqlCmd = sqlCmd.replace( "<PATH>", utils.enfoldString( path ) ) ;				
+//				st.execute( sqlCmd ) ;				
+//			}			
+//		}
+//		catch( SQLException sqlex ) {
+//			throw new UploaderException( sqlex ) ;
+//		}
+//		finally {
+//			exitTrace( "i2b2Project.buildBreakdowns()" ) ;
+//		}
+//	}
 	
 	
 	protected void producePatientMapping() throws UploaderException {
@@ -1076,10 +1076,26 @@ public class I2B2Project {
 			
 			
 			//
-			// Process ontology branches into the database ...
-//			utils.getTxnControl().setCommitSize( (ontBranches.size() * 2) ) ;
+			// Process ontology branches into the database.
+			// The process begins with starting a transaction...
+			Connection connection = utils.getDbAccess().getSimpleConnectionPG() ;
+			connection.setTransactionIsolation( Connection.TRANSACTION_SERIALIZABLE ) ;
+			connection.setAutoCommit( false ) ;
+			PreparedStatementHolder psHolder = utils.getPsHolder() ;
+			psHolder.setPreparedStatement( OntologyBranch.BREAKDOWNS_INSERT_SQL_KEY
+					 					 , OntologyBranch.BREAKDOWNS_INSERT_SQL ) ;
+			psHolder.setPreparedStatement( OntologyBranch.CONCEPT_CODE_SELECT_SQL_KEY
+					 					 , OntologyBranch.CONCEPT_CODE_SELECT_SQL ) ;
+			psHolder.setPreparedStatement( OntologyBranch.CONCEPT_COUNT_SELECT_SQL_KEY
+					 					 , OntologyBranch.CONCEPT_COUNT_SELECT_SQL ) ;
+			psHolder.setPreparedStatement( OntologyBranch.CONCEPT_DIMENSION_INSERT_SQL_KEY
+					 					 , OntologyBranch.CONCEPT_DIMENSION_INSERT_SQL ) ;
+			psHolder.setPreparedStatement( OntologyBranch.METADATA_INSERT_SQL_KEY
+					 					 , OntologyBranch.METADATA_INSERT_SQL ) ;
 			OntologyBranch obThat = null ;
 			Iterator<OntologyBranch> itOb = ontBranches.values().iterator() ;
+			int cycleCommitCount = 1000 ;
+			int cycleCount = 0 ;
 			while( itOb.hasNext() ) {
 				obThis = itOb.next() ;
 				//
@@ -1092,7 +1108,7 @@ public class I2B2Project {
 														   , lookups
 														   , utils ) ;
 				if( obThat == null ) {				
-					obThis.serializeToDatabase( utils.getDbAccess().getSimpleConnectionPG() ) ;   
+					obThis.serializeToDatabase() ;   
 				}
 				//
 				// But if this is an existing ontology, 
@@ -1101,11 +1117,23 @@ public class I2B2Project {
 					//
 					// If there's a difference, we need to write the differences...
 					if( !obThis.equals( obThat ) ) {
-						obThis.serializeDifferencesToDatabase( utils.getDbAccess().getSimpleConnectionPG()
-								                             , obThat ) ;
+						obThis.serializeDifferencesToDatabase( obThat ) ;
 					}
 				}
-//				utils.getTxnControl().commit( obThis.getBatchUsePreparedStatements(), false ) ;
+
+				cycleCount++ ;
+				if( cycleCount == cycleCommitCount ) {
+					psHolder.getPreparedStatement( OntologyBranch.METADATA_INSERT_SQL_KEY ).executeBatch() ;
+					psHolder.getPreparedStatement( OntologyBranch.CONCEPT_DIMENSION_INSERT_SQL_KEY ).executeBatch() ;
+					connection.setSavepoint() ;
+					cycleCount = 0 ;
+				}
+							
+			} // end while
+			
+			if( cycleCount > 0 ) {
+				psHolder.getPreparedStatement( OntologyBranch.METADATA_INSERT_SQL_KEY ).executeBatch() ;
+				psHolder.getPreparedStatement( OntologyBranch.CONCEPT_DIMENSION_INSERT_SQL_KEY ).executeBatch() ;		
 			}
 			
 			//
@@ -1114,13 +1142,20 @@ public class I2B2Project {
 	    	// in order for breakdowns not to raise errors.
 	    	// So we build all breakdowns here (defaulting if need be)...
 	    	buildBreakdowns() ;
-			
+	    	psHolder.getPreparedStatement( OntologyBranch.BREAKDOWNS_INSERT_SQL_KEY ).executeBatch() ;		
+			connection.commit();
 		}
-//		catch( SQLException sqlex ) {
-//			String message = "Failure inserting metadata" ;
-//			logger.error( message, sqlex ) ;
-//			throw new UploaderException( message, sqlex ) ;
-//		}
+		catch( SQLException sqlex ) {
+			try{ 
+				utils.getDbAccess().getSimpleConnectionPG().rollback() ; 
+			} 
+			catch( SQLException rbex ) {
+				logger.error( "Rollback failed in I2B2Project.produceOntology()" ) ;
+			}
+			String message = "Failure inserting metadata" ;
+			logger.error( message, sqlex ) ;
+			throw new UploaderException( message, sqlex ) ;
+		}
 		finally {
 			//
 			// Attempt (at best) release of SQL prepared statements...
@@ -1272,8 +1307,6 @@ public class I2B2Project {
 			throw new UploaderException( message, sqlex ) ;
 		}
 		finally {
-			//
-			// Attempt (at best) release of SQL prepared statements...
 			exitTrace( "I2B2Project.produceFacts()" ) ;
 		}		
 	}
