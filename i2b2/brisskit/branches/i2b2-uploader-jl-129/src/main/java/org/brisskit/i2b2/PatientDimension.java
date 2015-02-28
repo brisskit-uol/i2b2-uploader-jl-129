@@ -4,6 +4,7 @@
 package org.brisskit.i2b2;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -20,7 +21,50 @@ public class PatientDimension {
 	
 	private static Logger logger = Logger.getLogger( PatientDimension.class ) ;
 	
-	public static final String PATIENT_DIM_INSERT_COMMAND = 
+//	public static final String PATIENT_DIM_INSERT_COMMAND = 
+//			"INSERT INTO PATIENT_DIMENSION" +
+//	               "( PATIENT_NUM" +      
+//			       ", VITAL_STATUS_CD" + 
+//			       ", BIRTH_DATE" +
+//			       ", DEATH_DATE" + 
+//			       ", SEX_CD" +
+//			       ", AGE_IN_YEARS_NUM" +
+//			       ", LANGUAGE_CD" +
+//			       ", RACE_CD" +
+//			       ", MARITAL_STATUS_CD" +
+//			       ", RELIGION_CD" +
+//			       ", ZIP_CD" + 			//  VARCHAR(10) NULL,
+//			       ", STATECITYZIP_PATH" + 	//	VARCHAR(700) NULL,
+//			       ", INCOME_CD" + 			//	VARCHAR(50) NULL,
+//			       ", PATIENT_BLOB" + 		//  TEXT NULL,
+//			       ", UPDATE_DATE" + 		//  TIMESTAMP NULL,
+//			       ", DOWNLOAD_DATE" + 		//  TIMESTAMP NULL,
+//			       ", IMPORT_DATE" + 		//  TIMESTAMP NULL,
+//			       ", SOURCESYSTEM_CD" + 	//  VARCHAR(50) NULL,
+//			       ", UPLOAD_ID" + 			//  INT NULL, 		   
+//				   ") " +
+//			 "VALUES( <PATIENT_NUM>" +
+//				   ", <VITAL_STATUS_CD>" +
+//				   ", <BIRTH_DATE>" +
+//				   ", <DEATH_DATE>" +         
+//				   ", <SEX_CD>" +   
+//				   ", <AGE_IN_YEARS_NUM>" +
+//				   ", <LANGUAGE_CD>" +
+//				   ", <RACE_CD>" +
+//				   ", <MARITAL_STATUS_CD>" +
+//				   ", <RELIGION_CD>" +
+//				   ", <ZIP_CD>" +
+//				   ", <STATECITYZIP_PATH>" +
+//				   ", <INCOME_CD>" +
+//				   ", NULL" +			// patient blob
+//				   ", now()" +
+//				   ", now()" +
+//				   ", now()" +
+//				   ", <SOURCESYSTEM_CD>" +
+//				   ", NULL ) ;" ;		// upload id
+	
+	public static final String PATIENT_DIM_INSERT_SQL_KEY = "PATIENT_DIM_INSERT_SQL" ;
+	public static final String PATIENT_DIM_INSERT_SQL = 
 			"INSERT INTO PATIENT_DIMENSION" +
 	               "( PATIENT_NUM" +      
 			       ", VITAL_STATUS_CD" + 
@@ -42,25 +86,29 @@ public class PatientDimension {
 			       ", SOURCESYSTEM_CD" + 	//  VARCHAR(50) NULL,
 			       ", UPLOAD_ID" + 			//  INT NULL, 		   
 				   ") " +
-			 "VALUES( <PATIENT_NUM>" +
-				   ", <VITAL_STATUS_CD>" +
-				   ", <BIRTH_DATE>" +
-				   ", <DEATH_DATE>" +         
-				   ", <SEX_CD>" +   
-				   ", <AGE_IN_YEARS_NUM>" +
-				   ", <LANGUAGE_CD>" +
-				   ", <RACE_CD>" +
-				   ", <MARITAL_STATUS_CD>" +
-				   ", <RELIGION_CD>" +
-				   ", <ZIP_CD>" +
-				   ", <STATECITYZIP_PATH>" +
-				   ", <INCOME_CD>" +
+			 "VALUES( ?" +
+				   ", ?" +
+				   ", ?" +
+				   ", ?" +         
+				   ", ?" +   
+				   ", ?" +
+				   ", ?" +
+				   ", ?" +
+				   ", ?" +
+				   ", ?" +
+				   ", ?" +
+				   ", ?" +
+				   ", ?" +
 				   ", NULL" +			// patient blob
 				   ", now()" +
 				   ", now()" +
 				   ", now()" +
-				   ", <SOURCESYSTEM_CD>" +
+				   ", ?" +
 				   ", NULL ) ;" ;		// upload id
+	
+	public static final String PATIENT_DIM_SELECT_SQL_KEY = "PATIENT_DIM_SELECT_SQL" ;
+	public static final String PATIENT_DIM_SELECT_SQL =
+			"SELECT COUNT(*) FROM PATIENT_DIMENSION WHERE PATIENT_NUM = ?"  ;			
 	
 	private ProjectUtils utils ;
 
@@ -87,36 +135,98 @@ public class PatientDimension {
 	}
 	
 	
-	public void serializeToDatabase( Connection connection ) throws UploaderException {
+	public void serializeToDatabase() throws UploaderException {
 		enterTrace( "PatientDimension.serializeToDatabase()" ) ;
 		try {
-
-			String sqlCmd = PATIENT_DIM_INSERT_COMMAND ;
-					
-			sqlCmd = sqlCmd.replace( "<PATIENT_NUM>", utils.enfoldInteger( patient_num ) ) ;
-			sqlCmd = sqlCmd.replace( "<VITAL_STATUS_CD>", utils.enfoldNullableString( vital_status_cd ) ) ;
-			sqlCmd = sqlCmd.replace( "<BIRTH_DATE>", utils.enfoldNullableDate( birth_date ) ) ;
-			sqlCmd = sqlCmd.replace( "<DEATH_DATE>", utils.enfoldNullableDate( death_date ) ) ;
-			sqlCmd = sqlCmd.replace( "<SEX_CD>", utils.enfoldNullableString( sex_cd ) ) ;
-			sqlCmd = sqlCmd.replace( "<AGE_IN_YEARS_NUM>", utils.enfoldNullableInteger( age_in_years ) ) ;
-			sqlCmd = sqlCmd.replace( "<LANGUAGE_CD>", utils.enfoldNullableString( language_cd ) ) ;
-			sqlCmd = sqlCmd.replace( "<RACE_CD>", utils.enfoldNullableString( race_cd ) ) ;
-			sqlCmd = sqlCmd.replace( "<MARITAL_STATUS_CD>",  utils.enfoldNullableString( marital_status_cd ) ) ;
-			sqlCmd = sqlCmd.replace( "<RELIGION_CD>",  utils.enfoldNullableString( religion_cd ) ) ;
-			sqlCmd = sqlCmd.replace( "<ZIP_CD>",  utils.enfoldNullableString( zip_cd ) ) ;
-			sqlCmd = sqlCmd.replace( "<STATECITYZIP_PATH>",  utils.enfoldNullableString( statecityzip_path ) ) ;
-			sqlCmd = sqlCmd.replace( "<INCOME_CD>",  utils.enfoldNullableString( income_cd ) ) ;
-			// PATIENT_BLOB   missed out
-			// UPDATE_DATE    defaults to now()
-			// DOWNLOAD_DATE  defaults to now()
-			// IMPORT_DATE    defaults to now()		
-			sqlCmd = sqlCmd.replace( "<SOURCESYSTEM_CD>",  utils.enfoldNullableString( sourcesystem_cd ) ) ;
-			// UPLOAD_ID missed out
-			
-			Statement st = connection.createStatement();
-			
-			st.execute( sqlCmd ) ;
-
+			PreparedStatement ps = 
+					utils.getPsHolder()
+						 .getPreparedStatement( PatientDimension.PATIENT_DIM_INSERT_SQL_KEY ) ;
+			ps.setInt( 1, patient_num ) ;
+			if( vital_status_cd == null ) {
+				ps.setNull( 2, java.sql.Types.VARCHAR ) ;
+			}
+			else {
+				ps.setString( 2, vital_status_cd ) ;
+			}
+			if( birth_date == null ) {
+				ps.setNull( 3, java.sql.Types.TIMESTAMP ) ;
+			}
+			else {
+				ps.setTimestamp( 3, new java.sql.Timestamp( birth_date.getTime() ) ) ;
+			}
+			if( death_date == null ) {
+				ps.setNull( 4, java.sql.Types.TIMESTAMP ) ;
+			}
+			else {
+				ps.setTimestamp( 4, new java.sql.Timestamp( death_date.getTime() ) ) ;
+			}
+			if( sex_cd == null ) {
+				ps.setNull( 5, java.sql.Types.VARCHAR ) ;
+			}
+			else {
+				ps.setString( 5, sex_cd ) ;
+			}
+			if( age_in_years == null ) {
+				ps.setNull( 6, java.sql.Types.INTEGER ) ;
+			}
+			else {
+				ps.setInt( 6, age_in_years ) ;
+			}
+			if( language_cd == null ) {
+				ps.setNull( 7, java.sql.Types.VARCHAR ) ;
+			}
+			else {
+				ps.setString( 7, language_cd ) ;
+			}
+			if( race_cd == null ) {
+				ps.setNull( 8, java.sql.Types.VARCHAR ) ;
+			}
+			else {
+				ps.setString( 8, race_cd ) ;
+			}
+			if( marital_status_cd == null ) {
+				ps.setNull( 9, java.sql.Types.VARCHAR ) ;
+			}
+			else {
+				ps.setString( 9, marital_status_cd ) ;
+			}
+			if( marital_status_cd == null ) {
+				ps.setNull( 9, java.sql.Types.VARCHAR ) ;
+			}
+			else {
+				ps.setString( 9, marital_status_cd ) ;
+			}
+			if( religion_cd == null ) {
+				ps.setNull( 10, java.sql.Types.VARCHAR ) ;
+			}
+			else {
+				ps.setString( 10, religion_cd ) ;
+			}
+			if( zip_cd == null ) {
+				ps.setNull( 11, java.sql.Types.VARCHAR ) ;
+			}
+			else {
+				ps.setString( 11, zip_cd ) ;
+			}
+			if( statecityzip_path == null ) {
+				ps.setNull( 12, java.sql.Types.VARCHAR ) ;
+			}
+			else {
+				ps.setString( 12, statecityzip_path ) ;
+			}
+			if( income_cd == null ) {
+				ps.setNull( 13, java.sql.Types.VARCHAR ) ;
+			}
+			else {
+				ps.setString( 13, income_cd ) ;
+			}
+			if( sourcesystem_cd == null ) {
+				ps.setNull( 14, java.sql.Types.VARCHAR ) ;
+			}
+			else {
+				ps.setString( 14, sourcesystem_cd ) ;
+			}
+			ps.executeUpdate() ;
 		}
 		catch( SQLException sqlx ) {
 			throw new UploaderException( "Failed to insert into patient dimension.", sqlx ) ;
