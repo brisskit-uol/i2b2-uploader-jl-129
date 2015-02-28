@@ -1612,7 +1612,7 @@ public class I2B2Project {
 		int oneBasedArrayNumber = dataRow.getRowNum() + 1 ;
 		try {			
 			if( logger.isDebugEnabled() ) {
-				logger.debug( "dataRow number: [" + oneBasedArrayNumber + "] aligns with sourcePatientNo: [" + sourcePatientNoAsString + "]" ) ;
+//				logger.debug( "dataRow number: [" + oneBasedArrayNumber + "] aligns with sourcePatientNo: [" + sourcePatientNoAsString + "]" ) ;
 			}
 			//
 			// NB: If the source column is empty, we return -999
