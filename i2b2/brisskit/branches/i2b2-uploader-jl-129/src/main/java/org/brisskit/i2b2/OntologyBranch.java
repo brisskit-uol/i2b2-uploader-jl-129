@@ -495,7 +495,7 @@ public class OntologyBranch {
 							  , fullName
 							  , fullName
 							  , projectId ) ;					
-				ps.addBatch() ;
+				ps.execute() ;
 			}			
 		}
 		catch( SQLException sqlx ) {
@@ -584,7 +584,7 @@ public class OntologyBranch {
 							  , toolTip
 							  , projectId ) ;
 				
-				ps.addBatch() ;
+				ps.execute() ;
 				//
 				// Insert concept into concept dimension...
 				insertIntoConceptDimension( fullName, ontCode, colName ) ;
@@ -626,7 +626,7 @@ public class OntologyBranch {
 						      , fullName
 						      , fullName
 						      , projectId ) ;
-				ps.addBatch() ;
+				ps.execute() ;
 			}
 			
 			//
@@ -688,7 +688,7 @@ public class OntologyBranch {
 									  , endPointFullName
 									  , toolTip + ":" + paddedValue
 									  , projectId ) ;					
-						ps.addBatch() ;
+						ps.execute() ;
 						//
 						// Insert concept into concept dimension...
 						insertIntoConceptDimension( endPointFullName
@@ -728,7 +728,7 @@ public class OntologyBranch {
 									  , rangeFullName
 									  , toolTip + ": " + rangeShortName
 									  , projectId ) ;
-						ps.addBatch() ;						
+						ps.execute() ;						
 					}	
 					
 					//
@@ -752,7 +752,7 @@ public class OntologyBranch {
 										  , endPointFullName
 										  , toolTip + ":" + paddedValue
 										  , projectId ) ;
-							ps.addBatch() ;
+							ps.execute() ;
 							//
 							// Insert concept into concept dimension...
 							insertIntoConceptDimension( endPointFullName
@@ -839,7 +839,7 @@ public class OntologyBranch {
 							  , fullName
 							  , toolTip
 							  , projectId ) ;
-				ps.addBatch() ;
+				ps.execute() ;
 				//
 				// Insert concept into concept dimension...
 				insertIntoConceptDimension( fullName, ontCode, colName ) ;
@@ -885,7 +885,7 @@ public class OntologyBranch {
 							  , fullName
 							  , toolTip
 							  , projectId ) ;
-				ps.addBatch() ;
+				ps.execute() ;
 				//
 				// Insert concept into concept dimension...
 				insertIntoConceptDimension( fullName, ontCode, colName ) ;
@@ -937,7 +937,7 @@ public class OntologyBranch {
 							  , fullName
 							  , toolTip
 							  , projectId ) ;		
-				ps.addBatch() ;
+				ps.execute() ;
 			}
 					
 			//
@@ -981,7 +981,7 @@ public class OntologyBranch {
 								  , fullName
 								  , toolTip
 								  , projectId ) ;
-					ps.addBatch() ;			
+					ps.execute() ;			
 					//
 					// Insert concept into concept dimension...
 					conceptName = formEnumeratedConceptName( colName, lookup) ;
@@ -1050,8 +1050,7 @@ public class OntologyBranch {
 			// See whether the base code exists in the db...
 			PreparedStatement ps = utils.getPsHolder().getPreparedStatement( CONCEPT_COUNT_SELECT_SQL_KEY ) ;
 			ps.setString( 1, fullName ) ;
-			ps.executeQuery() ;			
-		    ResultSet rs = ps.getResultSet() ;
+			ResultSet rs = ps.executeQuery() ;			
 		    if( rs.next() ) {
 		    	int count = rs.getInt(1) ;
 			    if( count > 0 ) {
@@ -1201,7 +1200,8 @@ public class OntologyBranch {
     		enterTrace( "OntologyBranch.Factory.newInstance(using DB)" ) ;
     		OntologyBranch ob = new OntologyBranch( projectId, utils ) ;
     		try {
-    			PreparedStatement ps = utils.getPsHolder().getPreparedStatement( CONCEPT_CODE_SELECT_SQL_KEY ) ;
+    			PreparedStatement ps = utils.getPsHolder()
+    								 		.getPreparedStatement( CONCEPT_CODE_SELECT_SQL_KEY ) ;
     			ps.setString( 1, ontCode + "%" ) ;
     			ps.executeQuery() ;
     			ResultSet rs = ps.getResultSet() ;
