@@ -40,20 +40,20 @@ import org.brisskit.i2b2.OntologyBranch.Type;
  */
 public class I2B2Project {
 	
-	public static final String BREAKDOWNS_SQL_INSERT_COMMAND = 
-			"SET SCHEMA '<DB_SCHEMA_NAME>';" +
-			"" +
-			"INSERT INTO <DB_SCHEMA_NAME>.QT_BREAKDOWN_PATH" +
-			                "( NAME" +
-			                ", VALUE" +
-			                ", CREATE_DATE" +
-			                ", UPDATE_DATE" +
-			                ", USER_ID ) " +
-	         "VALUES( <LONG_NAME>" +
-	               ", <PATH>" +
-	               ", now()" +
-	               ", now()" +
-	               ", NULL ) ;" ;	
+//	public static final String BREAKDOWNS_SQL_INSERT_COMMAND = 
+//			"SET SCHEMA '<DB_SCHEMA_NAME>';" +
+//			"" +
+//			"INSERT INTO <DB_SCHEMA_NAME>.QT_BREAKDOWN_PATH" +
+//			                "( NAME" +
+//			                ", VALUE" +
+//			                ", CREATE_DATE" +
+//			                ", UPDATE_DATE" +
+//			                ", USER_ID ) " +
+//	         "VALUES( <LONG_NAME>" +
+//	               ", <PATH>" +
+//	               ", now()" +
+//	               ", now()" +
+//	               ", NULL ) ;" ;	
 		
 	/*
 	 * This set of commands will delete a project AND ALL OF ITS DATA!!!
@@ -1085,13 +1085,13 @@ public class I2B2Project {
 			psHolder.setPreparedStatement( OntologyBranch.BREAKDOWNS_INSERT_SQL_KEY
 					 					 , OntologyBranch.BREAKDOWNS_INSERT_SQL ) ;
 			psHolder.setPreparedStatement( OntologyBranch.CONCEPT_CODE_SELECT_SQL_KEY
-					 					 , OntologyBranch.CONCEPT_CODE_SELECT_SQL ) ;
+					 					 , OntologyBranch.CONCEPT_CODE_SELECT_SQL.replace( "<PROJECT_METADATA_TABLE>", projectId ) ) ;
 			psHolder.setPreparedStatement( OntologyBranch.CONCEPT_COUNT_SELECT_SQL_KEY
-					 					 , OntologyBranch.CONCEPT_COUNT_SELECT_SQL ) ;
+					 					 , OntologyBranch.CONCEPT_COUNT_SELECT_SQL.replace( "<PROJECT_METADATA_TABLE>", projectId ) ) ;
 			psHolder.setPreparedStatement( OntologyBranch.CONCEPT_DIMENSION_INSERT_SQL_KEY
 					 					 , OntologyBranch.CONCEPT_DIMENSION_INSERT_SQL ) ;
 			psHolder.setPreparedStatement( OntologyBranch.METADATA_INSERT_SQL_KEY
-					 					 , OntologyBranch.METADATA_INSERT_SQL ) ;
+					 					 , OntologyBranch.METADATA_INSERT_SQL.replace( "<PROJECT_METADATA_TABLE>", projectId ) ) ;
 			OntologyBranch obThat = null ;
 			Iterator<OntologyBranch> itOb = ontBranches.values().iterator() ;
 			int cycleCommitCount = 1000 ;
@@ -1123,7 +1123,7 @@ public class I2B2Project {
 
 				cycleCount++ ;
 				if( cycleCount == cycleCommitCount ) {
-					psHolder.getPreparedStatement( OntologyBranch.METADATA_INSERT_SQL_KEY ).executeBatch() ;
+//					psHolder.getPreparedStatement( OntologyBranch.METADATA_INSERT_SQL_KEY ).executeBatch() ;
 					psHolder.getPreparedStatement( OntologyBranch.CONCEPT_DIMENSION_INSERT_SQL_KEY ).executeBatch() ;
 					connection.setSavepoint() ;
 					cycleCount = 0 ;
@@ -1132,8 +1132,9 @@ public class I2B2Project {
 			} // end while
 			
 			if( cycleCount > 0 ) {
-				psHolder.getPreparedStatement( OntologyBranch.METADATA_INSERT_SQL_KEY ).executeBatch() ;
-				psHolder.getPreparedStatement( OntologyBranch.CONCEPT_DIMENSION_INSERT_SQL_KEY ).executeBatch() ;		
+//				psHolder.getPreparedStatement( OntologyBranch.METADATA_INSERT_SQL_KEY ).executeBatch() ;
+				psHolder.getPreparedStatement( OntologyBranch.CONCEPT_DIMENSION_INSERT_SQL_KEY ).executeBatch() ;	
+				connection.setSavepoint() ;
 			}
 			
 			//
@@ -1144,6 +1145,7 @@ public class I2B2Project {
 	    	buildBreakdowns() ;
 	    	psHolder.getPreparedStatement( OntologyBranch.BREAKDOWNS_INSERT_SQL_KEY ).executeBatch() ;		
 			connection.commit();
+			connection.setAutoCommit( true ) ;
 		}
 		catch( SQLException sqlex ) {
 			try{ 
@@ -1294,6 +1296,7 @@ public class I2B2Project {
 			}
 			connection.commit() ;
 			psHolder.getPreparedStatement( ObservationFact.OBSERVATION_FACT_INSERT_SQL_KEY ).close() ;
+			connection.setAutoCommit( true ) ;
 		}
 		catch( SQLException sqlex ) {
 			try{ 
