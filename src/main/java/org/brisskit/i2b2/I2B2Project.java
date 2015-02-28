@@ -768,8 +768,7 @@ public class I2B2Project {
 			connection.setAutoCommit( false ) ;
 			PreparedStatementHolder psHolder = utils.getPsHolder() ;
 			psHolder.setPreparedStatement( PatientDimension.PATIENT_DIM_INSERT_SQL_KEY
-					 					 , PatientDimension.PATIENT_DIM_INSERT_SQL
-					 					 , true ) ; // I want the auto generated keys
+					 					 , PatientDimension.PATIENT_DIM_INSERT_SQL ) ;
 			psHolder.setPreparedStatement( PatientDimension.PATIENT_DIM_SELECT_SQL_KEY
 					 					 , PatientDimension.PATIENT_DIM_SELECT_SQL ) ;
 			//
