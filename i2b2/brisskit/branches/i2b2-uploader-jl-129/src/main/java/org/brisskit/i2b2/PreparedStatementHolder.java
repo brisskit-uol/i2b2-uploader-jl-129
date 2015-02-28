@@ -24,18 +24,29 @@ public class PreparedStatementHolder {
 		this.connection = connection ;
 	}
 	
-	public void setPreparedStatement( String key, String sql ) throws UploaderException {	
+	public void setPreparedStatement( String key, String sql, boolean autogenerateKeys ) throws UploaderException {	
 		try {
+			PreparedStatement ps = null ;
 			if( psMap.containsKey( key ) ) {
 				throw new UploaderException( "PreparedStatement key: [" + key + "] already exists." ) ;
-	 		}
-			PreparedStatement ps = connection.prepareStatement( sql ) ;
+	 		}			
+			if( autogenerateKeys == true ) {
+				ps = connection.prepareStatement( sql, PreparedStatement.RETURN_GENERATED_KEYS ) ;
+			}
+			else {
+				ps = connection.prepareStatement( sql ) ;
+			}	
 			psMap.put( key, ps ) ;
 		}
 		catch( SQLException sqlex ) {
 			logger.error( "Failed to prepare statement:\n\"" + sql + "\"", sqlex ) ;
 			throw new UploaderException( sqlex ) ;
 		}
+	}
+	
+	
+	public void setPreparedStatement( String key, String sql ) throws UploaderException {	
+		setPreparedStatement( key, sql, false ) ;
 	}
 	
 	public PreparedStatement getPreparedStatement( String key ) throws UploaderException {	
