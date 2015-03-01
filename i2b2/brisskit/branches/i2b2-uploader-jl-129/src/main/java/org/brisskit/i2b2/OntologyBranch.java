@@ -312,7 +312,10 @@ public class OntologyBranch {
 	
 	public void serializeToDatabase() throws UploaderException {
 		enterTrace( "OntologyBranch.serializeToDatabase()" ) ;
-		try {			
+		try {		
+			if( this.colName.equalsIgnoreCase( "weight" ) ) {
+				logger.debug( "time for a debug" ) ;
+			}
 			insertRoot() ;
 			
 			switch( type ) {
@@ -355,7 +358,10 @@ public class OntologyBranch {
 				logger.error( message ) ;
 				throw new UploaderException( message ) ;
 			}
-				
+			
+			logger.debug( "\nontThis colName: [" + this.colName + "] \nontThat colName: [" + that.getColName() + "]" ) ;
+			logger.debug( "\nontThis units: [" + this.units + "] \nontThat units: [" + that.getUnits() + "]" ) ;	
+			logger.debug( "\nontThis type: [" + this.type + "] \nontThat type: [" + that.getType() + "]" ) ;
 			//
 			// If we get this far in the process, all additions must be enumerations...
 			if( units.equalsIgnoreCase( "enum" ) ) {
@@ -383,7 +389,7 @@ public class OntologyBranch {
 				logger.debug( "units as text with column name: " + this.colName ) ;
 			}
 			else {
-				String message = "Differences must be marked as enumerations. Units were: " + units ;
+				String message = "Differences must be marked as enumerations. Units were: [" + units + "]";
 				logger.error( message ) ;
 				throw new UploaderException() ;
 			}		
@@ -535,6 +541,9 @@ public class OntologyBranch {
 		}
 		if( metadataxml == null ) {
 			ps.setNull( 7, java.sql.Types.LONGVARCHAR ) ;
+		}
+		else {
+			ps.setString( 7, metadataxml ) ;
 		}
 		ps.setString( 8, columnDataType ) ;
 		ps.setString( 9, operator ) ;
@@ -1203,8 +1212,7 @@ public class OntologyBranch {
     			PreparedStatement ps = utils.getPsHolder()
     								 		.getPreparedStatement( CONCEPT_CODE_SELECT_SQL_KEY ) ;
     			ps.setString( 1, ontCode + "%" ) ;
-    			ps.executeQuery() ;
-    			ResultSet rs = ps.getResultSet() ;
+    			ResultSet rs = ps.executeQuery() ;
     			if( !rs.next() ) {
     				//
         			// NB: Returning a object null indicates this code does not exist in the database:
@@ -1214,6 +1222,10 @@ public class OntologyBranch {
     				ob.projectId = projectId ;
     				ob.colName = colName ;
     				ob.ontCode = ontCode ; 
+    				logger.debug( "\n" +
+    						"ontCode: " + ontCode + "\n" +
+    						"rs ontCode: " + rs.getString( "C_BASECODE" ) 
+    				) ;
     				ob.toolTip = tooltip ;
     				ob.lookups = lookups ;
     				ob.utils = utils ;    				
