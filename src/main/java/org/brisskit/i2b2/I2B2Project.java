@@ -1115,14 +1115,8 @@ public class I2B2Project {
 						String value = it.next() ;
 						if( utils.isNumeric( value ) ) {
 							if( type == null ) {
-								type = Type.NUMERIC ;
+								type = Type.NUMERIC ;					
 							}
-							else if( type == Type.NUMERIC ){
-								; // do nothing
-							}
-							else {
-								type = Type.STRING ;
-							}						
 						}
 						else if( utils.isDate( value ) ) {
 							if( type == null ) {
@@ -1139,6 +1133,9 @@ public class I2B2Project {
 							type = Type.STRING ;
 						}
 					} // end while
+				}
+				if( type == null ) {
+					logger.error( "Could not generate a type" ) ;
 				}
 				
 				//
