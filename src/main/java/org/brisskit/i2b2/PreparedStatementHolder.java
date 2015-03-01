@@ -3,6 +3,7 @@ package org.brisskit.i2b2;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -63,6 +64,19 @@ public class PreparedStatementHolder {
 			throw new UploaderException( "PreparedStatement key: [" + key + "] could be closed.", sqlex ) ;
 		}		
 		return ps ;
+	}
+	
+	public void empty() {
+		Iterator<PreparedStatement> it = psMap.values().iterator() ;
+		while( it.hasNext() ) {
+			try {
+				it.next().close() ;
+			}
+			catch( SQLException sqlex ) {
+				logger.info( "Failed to close prepared statement" ) ;
+			}
+		}
+		psMap.clear() ;
 	}
 	
 }

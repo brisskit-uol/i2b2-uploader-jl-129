@@ -189,6 +189,7 @@ public class I2B2Project {
     		throw new UploaderException( "Internal Error.", ex ) ;
     	}
     	finally {
+    		this.utils.getPsHolder().empty() ;
     		exitTrace( "I2B2Project.processSpreadsheet(File,Date)" ) ;
     	}
     }
@@ -198,6 +199,11 @@ public class I2B2Project {
 		enterTrace( "readSpreadsheet()" ) ;
 		logger.debug( "===>> Reading spreadsheet" ) ;
 		try {
+			//
+			//
+//			if( spreadsheetFile.length() > 50000000 ) {
+//				throw new UploaderException( "The spreadsheet file exceeds the maximum allowed." ) ;
+//			}
 			//
 			// We read the file and create the workbook
 			InputStream inp = new FileInputStream( spreadsheetFile ) ;
