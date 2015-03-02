@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -119,7 +120,7 @@ public class I2B2ProjectTests extends TestCase {
 		
 	}
 	
-	public void test02_SpreadsheetBeyondMaxRows() { 
+	public void _test02_SpreadsheetBeyondMaxRows() { 
 		enterTrace( "==>>test02_SpreadsheetBeyondMaxRows()" ) ;
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/GP_CUT1_more_than_maxrows.xlsx").getFile());		
 		String projectId = "maxrowsexceeded" ;
@@ -287,8 +288,8 @@ public class I2B2ProjectTests extends TestCase {
 	
 	
 	
-	public void test08_SupplementingExistingProject_AddionalMetadata() { 
-		enterTrace( "==>>test08_SupplementingExistingProject_AddionalMetadata()" ) ;
+	public void test08_SupplementingExistingProject_AdditionalMetadata() { 
+		enterTrace( "==>>test08_SupplementingExistingProject_AdditionalMetadata()" ) ;
 		File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/test-01.xls").getFile());
 		File spreadsheetFile2 = new File(getClass().getClassLoader().getResource("spreadsheets/test-02-additionalmetadata.xls").getFile());		
 		String projectId = "testaddnewmeta" ;
@@ -319,7 +320,7 @@ public class I2B2ProjectTests extends TestCase {
 		}
 		finally {
 			if( project != null ) {	try{ project.dispose() ; } catch( Exception ex ) { ; } }
-			exitTrace( "==>>test08_SupplementingExistingProject_AddionalMetadata()" ) ;
+			exitTrace( "==>>test08_SupplementingExistingProject_AdditionalMetadata()" ) ;
 		}
 		
 	}
@@ -470,13 +471,16 @@ public class I2B2ProjectTests extends TestCase {
 	
 	public void test13_SpreadsheetWithLotsEmptyRows() { 
 		enterTrace( "==>>test13_SpreadsheetWithLotsEmptyRows()" ) ;
+		logger.debug( "==>>test13 GP_CUT1" ) ;
 		File spreadsheetFile = new File(getClass().getClassLoader().getResource("spreadsheets/GP_CUT1.xlsx").getFile());		
 		String projectId = "gpcut1" ;
 		I2B2Project project = null ;
 		try {
 			I2B2Project.Factory.deleteIfProjectExists( projectId ) ;
 			project = I2B2Project.Factory.newInstance( projectId ) ;
+			logger.debug( "About to process spreadsheet" ) ;
 			project.processSpreadsheet( spreadsheetFile ) ;
+			logger.debug( "Finished processing spreadsheet" ) ;
 			project.dispose() ;
 			project = null ;
 		}
@@ -487,6 +491,7 @@ public class I2B2ProjectTests extends TestCase {
 		}
 		finally {
 			if( project != null ) {	try{ project.dispose() ; } catch( Exception ex ) { ; } }
+			logger.debug( "<<==test13 GP_CUT1" ) ;
 			exitTrace( "==>>test13_SpreadsheetWithLotsEmptyRows()" ) ;
 		}	
 	}
@@ -694,6 +699,52 @@ public class I2B2ProjectTests extends TestCase {
 		}
 		finally {
 			logger.debug( "<<==test19_Threading()" ) ;
+		}
+		
+	}
+	
+	
+	public void test20_Dates() { 
+		enterTrace( "==>>_test20_Dates()" ) ;
+
+		Date parsedDate = null ;
+		String dateString1 = "2015-03-02T12:59:56" ;
+		String dateString2 = "2015/03/02T12:59:56" ;
+		String dateString3 = "02/03/2015" ;
+		ProjectUtils utils = new ProjectUtils() ;		
+		try {
+			
+			parsedDate = utils.parseDateIfDate( dateString1 ) ;
+			if( parsedDate == null ) {				
+				logger.debug( "Unrecognized date: " + dateString2 ) ;
+				fail( "Could not process date: " + dateString1 ) ;
+			}
+			else {
+				logger.debug( "Date was successfully parsed: " + parsedDate ) ;
+			}
+			parsedDate = utils.parseDateIfDate( dateString2 ) ;
+			if( parsedDate == null ) {				
+				logger.debug( "Unrecognized date: " + dateString2 ) ;
+				fail( "Could not process date: " + dateString2 ) ;
+			}
+			else {
+				logger.debug( "Date was successfully parsed: " + parsedDate ) ;
+			}
+			parsedDate = utils.parseDateIfDate( dateString3 ) ;
+			if( parsedDate == null ) {				
+				logger.debug( "Unrecognized date: " + dateString3 ) ;
+				fail( "Could not process date: " + dateString3 ) ;
+			}
+			else {
+				logger.debug( "Date was successfully parsed: " + parsedDate ) ;
+			}
+		}
+		catch( Exception cex ) {			
+			cex.printStackTrace( System.out ) ;
+			fail( "Could not process date: " + cex.getLocalizedMessage() ) ;
+		}
+		finally {
+			exitTrace( "==>>_test20_Dates()" ) ;
 		}
 		
 	}
