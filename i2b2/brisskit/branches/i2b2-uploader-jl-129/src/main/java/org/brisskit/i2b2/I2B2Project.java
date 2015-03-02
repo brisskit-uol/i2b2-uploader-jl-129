@@ -228,13 +228,13 @@ public class I2B2Project {
 			}
 			//
 			// Check we do not have too many data rows and columns...
-			if( numberRows > 5000 || numberColumns > 50 ) {
-				if( limitsExceeded( dataSheet ) ) {
-					//
-					// The exception for columns exceeded is thrown lower in the code.
-					throw new UploaderException( "The workbook exceeds the maximum of 5000 rows containing data." ) ;
-				}			
-			}		 	    
+//			if( numberRows > 5000 || numberColumns > 50 ) {
+//				if( limitsExceeded( dataSheet ) ) {
+//					//
+//					// The exception for columns exceeded is thrown lower in the code.
+//					throw new UploaderException( "The workbook exceeds the maximum of 5000 rows containing data." ) ;
+//				}			
+//			}		 	    
 		    
 	    	//
 	    	// Injest any lookups and breakdowns described in additional sheets...
