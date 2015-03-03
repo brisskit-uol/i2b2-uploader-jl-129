@@ -40,13 +40,6 @@ public class ProjectUtils {
 	//
 	// We are accepting dates in spreadsheet cells only in the following 
 	// long or short formats (to begin with!)...
-	private SimpleDateFormat yyyymmddThhmmss = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss" ) ;
-	private SimpleDateFormat yyyymmddhhmmss = new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss" ) ;
-	private SimpleDateFormat ddmmyyyyThhmmss = new SimpleDateFormat( "dd-MM-yyyy'T'HH:mm:ss" ) ;
-	private SimpleDateFormat ddmmyyyyhhmmss = new SimpleDateFormat( "dd-MM-yyyy HH:mm:ss" ) ;
-	private SimpleDateFormat yyyymmdd = new SimpleDateFormat( "yyyy-MM-dd" ) ;
-	private SimpleDateFormat ddmmyyyy = new SimpleDateFormat( "dd-MM-yyyy" ) ;
-	
 	private Object[][] patternsAndDateFormats = {
 			{ Pattern.compile( "^(\\d{4})\\-(\\d{2})\\-(\\d{2})T(\\d{2}):(\\d{2}):(\\d{2})$" ) , new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss" ) },
 			{ Pattern.compile( "^(\\d{4})\\/(\\d{2})\\/(\\d{2})T(\\d{2}):(\\d{2}):(\\d{2})$" ) , new SimpleDateFormat( "yyyy/MM/dd'T'HH:mm:ss" ) },
@@ -173,7 +166,7 @@ public class ProjectUtils {
 	}
 	
 	
-	public Date parseDateIfDate( String value ) throws ParseException {
+	public Date parseDateIfDate( String value ) {
 		for( int i=0; i<patternsAndDateFormats.length; i++ ) {
 			if( ((Pattern)patternsAndDateFormats[i][0]).matcher(value).matches() ) {
 				try {
@@ -186,86 +179,7 @@ public class ProjectUtils {
 		}
 		return null ;
 	}
-	
-	
-	public boolean __isDate( String value ) {
-		if( value.matches( "....-..-..*:..:.." ) ) {
-			try {
-				this.yyyymmddThhmmss.parse( value ) ;
-				return true ;
-			}
-			catch( ParseException pex1 ) {
-				try {
-					this.yyyymmddhhmmss.parse( value ) ;
-					return true ;
-				}
-				catch( ParseException pex2 ) {
-					return false ;
-				}
-			}
-		}
-		else if( value.matches( "..-..-....*:..:.." ) ) {
-			try {
-				this.ddmmyyyyThhmmss.parse( value ) ;
-				return true ;
-			}
-			catch( ParseException pex1 ) {
-				try {
-					this.ddmmyyyyhhmmss.parse( value ) ;
-					return true ;
-				}
-				catch( ParseException pex2 ) {
-					return false ;
-				}
-			}
-		}
-		else if( value.matches( "....-..-.." ) ) {
-			try {
-				this.yyyymmdd.parse( value ) ;
-				return true ;
-			}
-			catch( ParseException pex1 ) {
-				return false ;
-			}
-		}
-		else if( value.matches( "..-..-...." ) ) {
-			try {
-				this.ddmmyyyy.parse( value ) ;
-				return true ;
-			}
-			catch( ParseException pex1 ) {
-				return false ;
-			}
-		}
-		return false ;
-	}
 
-	
-	public Date __parseDate( String value ) throws ParseException {
-		if( value.matches( "....-..-..*:..:.." ) ) {
-			try {
-				return this.yyyymmddThhmmss.parse( value ) ;
-			}
-			catch( ParseException pex1 ) {
-				return this.yyyymmddhhmmss.parse( value ) ;
-			}
-		}
-		else if( value.matches( "..-..-....*:..:.." ) ) {
-			try {
-				return this.ddmmyyyyThhmmss.parse( value ) ;
-			}
-			catch( ParseException pex1 ) {
-				return this.ddmmyyyyhhmmss.parse( value ) ;
-			}
-		}
-		else if( value.matches( "....-..-.." ) ) {
-			return this.yyyymmdd.parse( value ) ;
-		}
-		else if( value.matches( "..-..-...." ) ) {
-			return this.ddmmyyyy.parse( value ) ;
-		}
-		throw new ParseException( "String is not a valid date: " + value, 0 ) ;
-	}
 	
 	public String formatDate( Date date ) {
 		return dateFormat.format( date ) ;
