@@ -556,7 +556,7 @@ public class I2B2ProjectTests extends TestCase {
 			translatedString = OntologyBranch.formEnumeratedValue( awkwardString ) ;
 			if( !translatedString.equals( expectedString ) ) {
 				logger.debug( "translatedString: " + translatedString ) ;
-				fail( "Could not translate special characters. Before and after strings did not match." ) ;
+				fail( "Could not translate special characters. After strings did not match." ) ;
 			}
 		}
 		catch( Exception cex ) {			
