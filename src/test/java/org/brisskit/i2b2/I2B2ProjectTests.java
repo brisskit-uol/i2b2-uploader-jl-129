@@ -80,6 +80,7 @@ public class I2B2ProjectTests extends TestCase {
 			"testnnsi",
 			"test01obsdatecol",
 			"pharma",
+			"test21manydfs"
 		} ;
 		try {
 			for( int i=0; i<projectIds.length; i++ ) {
