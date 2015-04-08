@@ -281,11 +281,15 @@ public class I2B2Project {
 		    // It may not have have the required columns for suitable breakdowns:
 		    // If the latter is the case, we create a column with all its values "unknown"...
 		    String columnName = null ;
-		    for( int i=0; i<STANDARD_BREAKDOWNS.length; i++ ) {
-		    	columnName = breakdowns.get( STANDARD_BREAKDOWNS[i][0] ) ;
-		    	if( !breakdownExists( columnName ) ) {
-		    		addDefaultBreakdown( columnName ) ;
-		    	}
+		    //
+		    // Only for a new project (after Saj's problem) ...
+		    if( this.newProject == true ) {
+		    	for( int i=0; i<STANDARD_BREAKDOWNS.length; i++ ) {
+			    	columnName = breakdowns.get( STANDARD_BREAKDOWNS[i][0] ) ;
+			    	if( !breakdownExists( columnName ) ) {
+			    		addDefaultBreakdown( columnName ) ;
+			    	}
+			    }
 		    }
 		    
 		    //
@@ -1390,8 +1394,10 @@ public class I2B2Project {
 			catch( SQLException rbex ) {
 				logger.error( "Rollback failed in I2B2Project.produceFacts()" ) ;
 			}
-			String message = "Failure inserting observation facts" ;
-			logger.error( message, sqlex ) ;
+			String message = "First message: Failure inserting observation facts" ;
+			logger.error( message ) ;
+			logger.error( "Second message: " + sqlex.getLocalizedMessage() ) ;
+			logger.error( "Third message: " + sqlex.getNextException().getLocalizedMessage() ) ;
 			throw new UploaderException( message, sqlex ) ;
 		}
 		finally {

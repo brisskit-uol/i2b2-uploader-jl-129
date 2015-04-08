@@ -80,7 +80,8 @@ public class I2B2ProjectTests extends TestCase {
 			"testnnsi",
 			"test01obsdatecol",
 			"pharma",
-			"test21manydfs"
+			"test21manydfs",
+			"testsajaddnewmeta"
 		} ;
 		try {
 			for( int i=0; i<projectIds.length; i++ ) {
@@ -751,7 +752,7 @@ public class I2B2ProjectTests extends TestCase {
 	}
 	
 	
-	public void test21_ManyDateFormats() { 
+	public void _test21_ManyDateFormats() { 
 		enterTrace( "==>>test21_ManyDateFormats()" ) ;
 		File spreadsheetFile1 = new File(getClass().getClassLoader().getResource( "spreadsheets/test-01-manydateformats.xls").getFile() ) ;
 		String projectId = "test21manydfs" ;
@@ -776,6 +777,44 @@ public class I2B2ProjectTests extends TestCase {
 		finally {
 			if( project != null ) {	try{ project.dispose() ; } catch( Exception ex ) { ; } }
 			exitTrace( "==>>test21_ManyDateFormats()" ) ;
+		}
+		
+	}
+	
+	
+	public void test22_SupplementingWithAdditionalMetadata_SAJsProblem() { 
+		enterTrace( "==>>test22_SupplementingWithAdditionalMetadata_SAJsProblem()" ) ;
+		File spreadsheetFile1 = new File(getClass().getClassLoader().getResource("spreadsheets/patients.xls").getFile());
+		File spreadsheetFile2 = new File(getClass().getClassLoader().getResource("spreadsheets/ethnicity.xls").getFile());		
+		String projectId = "testsajaddnewmeta01" ;
+		I2B2Project project = null ;
+		try {
+			//
+			// Delete project if it already exists...
+			I2B2Project.Factory.deleteIfProjectExists( projectId ) ;
+			//
+			// Create new project with all it db artifacts
+			project = I2B2Project.Factory.newInstance( projectId ) ;
+			//
+			// Process the first spreadsheet...
+			project.processSpreadsheet( spreadsheetFile1 ) ;
+			project.dispose();
+			//
+			// Get a new instance of the project...
+			project = I2B2Project.Factory.newInstance( projectId ) ;
+			//
+			// And attempt to process subsequent spreadsheet...
+			project.processSpreadsheet( spreadsheetFile2 ) ;
+			project.dispose() ;
+			project = null ;
+		}
+		catch( UploaderException cex ) {			
+			cex.printStackTrace( System.out ) ;
+			fail( "UploaderException thrown: " + cex.getLocalizedMessage() ) ;
+		}
+		finally {
+			if( project != null ) {	try{ project.dispose() ; } catch( Exception ex ) { ; } }
+			exitTrace( "==>>test22_SupplementingWithAdditionalMetadata_SAJsProblem()" ) ;
 		}
 		
 	}
