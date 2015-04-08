@@ -1,0 +1,50 @@
+INSERT INTO OBSERVATION_FACT(   
+
+ENCOUNTER_NUM, 
+PATIENT_NUM   , 
+CONCEPT_CD    , 
+PROVIDER_ID   , 
+START_DATE    , 
+VALTYPE_CD    , 
+TVAL_CHAR     , 
+NVAL_NUM      , 
+VALUEFLAG_CD  , 
+QUANTITY_NUM  , 
+UNITS_CD      , 
+END_DATE      , 
+LOCATION_CD   , 
+OBSERVATION_BLOB, 
+CONFIDENCE_NUM, 
+UPDATE_DATE   , 
+DOWNLOAD_DATE , 
+IMPORT_DATE   , 
+SOURCESYSTEM_CD, 
+UPLOAD_ID ) 
+
+VALUES(   
+5, 
+3, 
+'RACE:unknown', 
+'@', 
+'2007-10-01 00:00:00.000000 +01:00:00', 
+'T', 
+'unknown', 
+NULL, 
+NULL, 
+NULL, 
+NULL, 
+NULL, 
+NULL, 
+NULL, 
+NULL, 
+now(), 
+now(), 
+now(), 
+'testsajaddnewmeta',
+NULL )  
+ 
+ was aborted.  Call getNextException to see the cause.
+ 
+ 01/10/2007 00:00:00
+ 
+	
