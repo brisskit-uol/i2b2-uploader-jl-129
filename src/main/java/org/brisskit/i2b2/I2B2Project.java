@@ -1484,7 +1484,9 @@ public class I2B2Project {
 			String value = utils.getValueAsString( cell ) ;	
 			//
 			// For dates, the value becomes the start date of the observation...
-			of.setStart_date( utils.parseDate( value ) ) ;			
+			of.setStart_date( utils.parseDate( value ) ) ;	
+			// default the end date to the start data...
+			of.setEnd_date( utils.parseDate( value ) ) ;
 			of.setValtype_cd( "T" ) ;
 			//
 			// For dates, the value is a choice between "yes" and "no"
@@ -1518,6 +1520,8 @@ public class I2B2Project {
 				
 			of.setProvider_id( "@" ) ;
 			of.setStart_date( observationStartDate ) ;
+			// default end date to start date...
+			of.setEnd_date( observationStartDate ) ;
 			
 			String value = utils.getValueAsString( cell ) ;			
 			//
@@ -1561,6 +1565,8 @@ public class I2B2Project {
 			
 			of.setProvider_id( "@" ) ;
 			of.setStart_date( observationStartDate ) ;
+			// default end date to start date...
+			of.setEnd_date( observationStartDate ) ;
 		
 			of.setValtype_cd( "T" ) ;					
 			String value = utils.getValueAsString( cell ) ;	
