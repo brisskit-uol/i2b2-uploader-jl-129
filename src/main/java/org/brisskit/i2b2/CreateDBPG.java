@@ -100,6 +100,7 @@ public class CreateDBPG extends Base {
 
 			while ((s = br.readLine()) != null) {
 
+				s = s.replaceAll( "<DB_NAME>", pg_db_name ) ;
 				s = s.replaceAll("<DB_SCHEMA_NAME>", projectId ) ;
 				s = s.replaceAll("<DB_USER_NAME>", projectId ) ;	
 				s = s.replaceAll("<DB_PASSWORD>", projectId ) ;

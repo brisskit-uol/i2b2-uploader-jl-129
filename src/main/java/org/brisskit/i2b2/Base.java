@@ -148,6 +148,7 @@ public class Base {
 		}
 	}
 	
+	
 	/**
 	 * Utility routine to enter a structured message in the trace log that the given method 
 	 * has been entered. 
@@ -167,4 +168,5 @@ public class Base {
     public static void exitTrace( String entry ) {
     	I2B2Project.exitTrace( logger, entry ) ;
 	}
+
 }
